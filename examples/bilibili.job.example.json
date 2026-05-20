@@ -1,0 +1,24 @@
+{
+	"jobVersion": 2,
+	"platform": "bilibili",
+	"targets": ["bilibili"],
+	"policy": {
+		"maxDirectAttachBytes": 1073741824
+	},
+	"publish": {
+		"mode": "semi",
+		"submit": "manual"
+	},
+	"bilibili": {
+		"sourceType": "original",
+		"partition": "知识",
+		"title": "Example title",
+		"description": "Example description",
+		"tags": ["demo", "auto-upload"]
+	},
+	"pageFields": [],
+	"assets": {
+		"localVideoPath": "/home/z/Downloads/covert to mp4/AI行业开始进入开发生态战争.mp4",
+		"localCoverPath": "/home/z/Downloads/covert to mp4/AI行业开始进入开发生态战争.png"
+	}
+}

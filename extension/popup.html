@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>auto-upload semi-auto</title>
+    <style>
+      body {
+        font: 13px system-ui, sans-serif;
+        width: 360px;
+        margin: 12px;
+      }
+
+      label {
+        display: block;
+        gap: 6px;
+      }
+
+      input {
+        width: 100%;
+        margin-top: 6px;
+        box-sizing: border-box;
+      }
+
+      button {
+        margin-top: 10px;
+        width: 100%;
+        padding: 8px 10px;
+      }
+
+      pre#autoUploadOutcome {
+        margin-top: 10px;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <label>
+      Absolute path to <code>job.json</code>
+      <input id="jobFilePathInput" autocomplete="off" spellcheck="false" />
+    </label>
+    <button id="uploadVideoButton" type="button">1. Upload video first</button>
+    <button id="fillFieldsButton" type="button">2. Fill fields (title, tags, custom)</button>
+    <pre id="autoUploadOutcome"></pre>
+    <script type="module" src="./dist/popup.js"></script>
+  </body>
+</html>

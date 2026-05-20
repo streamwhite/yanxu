@@ -1,0 +1,13 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Chrome: Bilibili + load extension (unpacked)",
+			"type": "pwa-chrome",
+			"request": "launch",
+			"url": "https://member.bilibili.com/",
+			"userDataDir": "${workspaceFolder}/.vscode/chrome-profile-dev",
+			"runtimeArgs": ["--load-extension=${workspaceFolder}/extension"]
+		}
+	]
+}

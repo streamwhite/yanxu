@@ -1,0 +1,55 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "off"
+			}
+		}
+	},
+	"formatter": {
+		"indentWidth": 2,
+		"lineWidth": 100,
+		"lineEnding": "lf"
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		}
+	},
+	"files": {
+		"includes": [
+			"biome.json",
+			"jest.config.cjs",
+			"tsconfig.base.json",
+			"tsconfig.test.json",
+			"package.json",
+			"pnpm-workspace.yaml",
+			".vscode/**/*.json",
+			"examples/**/*.json",
+			"docs/**/*.md",
+			"features-logs/**/*.md",
+			"scripts/**/*.mjs",
+			"packages/*/tsconfig.json",
+			"packages/*/tsconfig.*.json",
+			"packages/domain/src/**/*.ts",
+			"packages/domain/__tests__/**/*.ts",
+			"packages/native-host/src/**/*.ts",
+			"packages/native-host/__tests__/**/*.ts",
+			"extension/src/**/*.ts",
+			"tests/extension/**/*.ts"
+		]
+	},
+	"overrides": [
+		{
+			"includes": ["extension/manifest.json", "**/package.json"],
+			"linter": {
+				"enabled": false
+			},
+			"formatter": {
+				"enabled": false
+			}
+		}
+	]
+}

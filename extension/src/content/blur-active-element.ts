@@ -1,0 +1,4 @@
+export function blurActiveElement(): void {
+	const active = document.activeElement;
+	if (active instanceof HTMLElement) active.blur();
+}

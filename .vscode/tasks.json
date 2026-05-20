@@ -1,0 +1,28 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "auto-upload: dev (watch)",
+			"type": "shell",
+			"command": "pnpm dev",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "always",
+				"panel": "dedicated"
+			},
+			"runOptions": {
+				"instanceLimit": 1
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "auto-upload: build (once)",
+			"type": "shell",
+			"command": "pnpm build",
+			"problemMatcher": ["$tsc"]
+		}
+	]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "@auto-upload/native-host",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "auto-upload-native-host": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/ensure-native-host-executable.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@auto-upload/domain": "workspace:*"
+  }
+}
