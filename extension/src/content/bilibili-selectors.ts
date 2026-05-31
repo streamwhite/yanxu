@@ -30,7 +30,11 @@ export const BILIBILI_SOURCE_TYPE_LABEL_CLASS = "check-radio-v2-name" as const;
 
 export const BILIBILI_PARTITION_SECTION_HEADING_CLASS = "section-title-content-main" as const;
 
+export const BILIBILI_PARTITION_SELECTOR_CONTAINER_CLASS = "selector-container" as const;
+
 export const BILIBILI_PARTITION_SELECT_CONTROLLER_CLASS = "select-controller" as const;
+
+export const BILIBILI_PARTITION_SELECT_ITEM_ROW_CLASS = "select-item" as const;
 
 export const BILIBILI_PARTITION_SELECT_ITEM_CLASS = "select-item-cont" as const;
 
@@ -43,14 +47,36 @@ export const BILIBILI_TAG_SELECTORS = [
 	'input[placeholder*="tag" i]',
 ] as const;
 
+export const BILIBILI_CREATIVE_STATEMENT_PLACEHOLDER_HINT = "请选择符合您视频内容的创作声明" as const;
+
+export const BILIBILI_CREATIVE_STATEMENT_SELECT_CLASS = "bcc-select" as const;
+
+export const BILIBILI_CREATIVE_STATEMENT_INPUT_CLASS = "bcc-select-input-inner" as const;
+
+export const BILIBILI_CREATIVE_STATEMENT_OPTION_CLASS = "bcc-option" as const;
+
+export const BILIBILI_CREATIVE_STATEMENT_AUTH_CLASS = "auth-content" as const;
+
+export const BILIBILI_CREATIVE_STATEMENT_AUTH_TEXT_CLASS = "option-text" as const;
+
+export const BILIBILI_CREATIVE_STATEMENT_SECTION_CLASS = "statement-content" as const;
+
+export const BILIBILI_CREATIVE_STATEMENT_SELECTORS = [
+	`.${BILIBILI_CREATIVE_STATEMENT_SECTION_CLASS} .${BILIBILI_CREATIVE_STATEMENT_SELECT_CLASS}`,
+	`input.${BILIBILI_CREATIVE_STATEMENT_INPUT_CLASS}[placeholder*="${BILIBILI_CREATIVE_STATEMENT_PLACEHOLDER_HINT}"]`,
+] as const;
+
 export const BILIBILI_VIDEO_FILE_INPUT_SELECTORS = [
 	'input[type="file"][accept*="video"]',
 	'input[type="file"][accept*="mp4"]',
+	'input[type="file"]',
 ] as const;
 
 export const BILIBILI_COVER_EDIT_TEXT = "封面设置" as const;
 
 export const BILIBILI_COVER_UPLOAD_TEXT = "上传封面" as const;
+
+export const BILIBILI_VIDEO_UPLOAD_DRAG_TEXT = "点击上传或将视频拖拽到此区域" as const;
 
 export const BILIBILI_COVER_TRIGGER_SELECTORS = [".cover-img"] as const;
 
@@ -60,7 +86,7 @@ export const BILIBILI_COVER_FILE_INPUT_SELECTORS = [
 	'input[type="file"][accept*="image"]',
 	'input[type="file"][accept*="png"]',
 	'input[type="file"][accept*="jpeg"]',
-	'input[type="file"]',
+	'input[type="file"][accept*="jpg"]',
 ] as const;
 
 export const SEMI_AUTO_BANNER_ID = "auto_upload_semi_auto_banner" as const;

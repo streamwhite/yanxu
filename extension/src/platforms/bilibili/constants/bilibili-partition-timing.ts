@@ -1,0 +1,9 @@
+export const BILIBILI_PARTITION_DROPDOWN_POLL_MS = 50 as const;
+
+export const BILIBILI_PARTITION_DROPDOWN_WAIT_MS = 4_000 as const;
+
+export const BILIBILI_PARTITION_PRIMARY_SETTLE_MS = 250 as const;
+
+export const BILIBILI_PARTITION_AFTER_PICK_SETTLE_MS = 150 as const;
+
+export const BILIBILI_PARTITION_SELECTION_WAIT_MS = 2_000 as const;

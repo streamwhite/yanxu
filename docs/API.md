@@ -18,7 +18,19 @@ The job file consumed by `applyJobFromFile` is validated by [`CanonicalJobSchema
 - Text normalization: [`sanitizeText`](packages/domain/src/text/sanitize-text.ts), [`normalizeCanonicalJobTexts`](packages/domain/src/normalize/normalize-canonical-job-texts.ts)
 - Semi-auto guard for the extension MVP: [`assertExtensionSupportedPublishPolicy`](packages/domain/src/publish/assert-extension-supported-publish-policy.ts)
 
-Example job JSON: [`examples/bilibili.job.example.json`](examples/bilibili.job.example.json)
+Example job JSON (extension popup):
+
+- Batch (multi-tab, **required**): [`examples/batch.job.example.json`](examples/batch.job.example.json)
+
+Legacy v1/v2 single-platform examples remain for native-host / schema reference only: `examples/bilibili.job.example.json`, `examples/douyin.job.example.json`, `examples/channels.job.example.json`.
+
+**Job v2 `platform`:** `bilibili` | `douyin` | `channels`. `targets[0]` must match `platform`. Platform block (`bilibili`, `douyin`, `channels`) supplies default page fields; `pageFields` adds custom locators.
+
+**Job v3 batch:** `jobVersion: 3`, `assetsParentFolder` (absolute), `items[]` with **`name`** (title + file stem: `{name}.mp4`, `{name}.png`). Optional `publish` (defaults to `{ mode: "semi", submit: "manual" }`), `targets` (defaults to all three: `bilibili`, `douyin`, `channels`), `includeCover: false`, `description` (falls back to `name` when omitted or empty), Bilibili `tags` / `sourceType` / `partition` / `creativeStatement` / `creativeStatementAuth`. Use popup **Upload video (all tabs)** / **Fill fields (all tabs)**.
+
+**One tab per job item per platform:** count how many `items[]` list a platform in `targets` — that is how many upload tabs you need for that platform. Example with 2 items where both include `douyin`: open **2 Douyin upload tabs**; tab with the lower tab id gets item 0’s video, the next tab gets item 1’s video. Platforms with only one matching item need one tab. Upload-page URLs are preferred; among ties, lower tab id wins.
+
+**All-tab actions preflight every platform (bilibili, douyin, channels / 视频号); if any platform is short, nothing is uploaded.** Before **Upload video (all tabs)** or **Fill fields (all tabs)**, the native host runs `checkBatchJobAssetsFromFile`: every item must have `{name}.mp4` on disk; `{name}.png` is required too unless `includeCover: false`. Any missing video or cover path returns `batch_assets_missing` (all listed) and **no tab is updated**.
 
 **Job v2 `pageFields`:** each entry has `locator` (`css`, `id`, or `name`) and `value`. Optional `bilibili.title` / `description` / `tags` still map to default Bilibili selectors; `pageFields` are applied in addition. **`bilibili.tags`:** each tag is typed into the tag input and confirmed with **Enter** (not comma-separated).
 
@@ -26,7 +38,11 @@ Example job JSON: [`examples/bilibili.job.example.json`](examples/bilibili.job.e
 
 **`bilibili.partition`:** partition label under **分区** (e.g. `"vlog"`); opens `.select-controller` and clicks matching `.select-item-cont`.
 
-**Popup actions:** **1. Upload video first** (`videoOnly` phase) then **2. Fill fields** (`fieldsOnly`, small native reply — avoids message-port timeouts on large videos).
+**`bilibili.creativeStatement` / `bilibili.creativeStatementAuth`:** optional; default to **内容无需标注** and **内容为自制：未经作者允许，禁止转载** (`.statement-content .bcc-select` dropdown). Omitted from batch JSON when defaults apply.
+
+**Popup actions (batch only):** Click the toolbar icon to open a **persistent control window** (stays open until you close it). **Open all upload tabs** opens one tab per job item for each targeted platform (`bilibili`, `douyin`, `视频号`; canonical upload URLs in [`PLATFORM_UPLOAD_PAGE_URLS`](packages/domain/src/constants/platform-upload-page-urls.ts)). **Upload and fill (all tabs)** runs `videoOnly`, waits **`fieldsSettleMs`** (default 2000, configurable in popup, stored in `semiAutoFieldsSettleMs`), then `fieldsOnly` — platforms run in parallel; within each platform, items run in parallel with a random **1–3 s** stagger (视频号 / `channels` runs **sequentially** and activates each tab before upload/fill). Progress logs use short field names (e.g. `描述`, `标题`) instead of CSS selectors. Legacy runtime messages `runtime.uploadAllTabs` / `runtime.fillAllTabs` / `runtime.openPlatformTabs` remain for automation; use `runtime.openAllPlatformTabs` to open every platform at once. Non-batch job files return `batch_job_required`.
+
+**Host `inspectJobFromFile`:** returns `jobFileOutline` with `items[].itemIndex` and `targets` (no file attachments). **`applyBatchItemFromFile`** requires `itemIndex` + `platform` (including `0`) to project one batch item to v2 before attach. Tab _n_ (by tab id among upload URLs) maps to the *n*th item index for that platform.
 
 #### Limits / routing constants (`@auto-upload/domain`)
 
@@ -36,7 +52,7 @@ Configured in [`packages/domain/src/constants/limits.ts`](packages/domain/src/co
 - `DEFAULT_MAX_COVER_INLINE_BYTES`: max cover bytes eligible for inline base64 embedding
 - `DEFAULT_TRANSFER_CHUNK_BYTES`: host-side base64 chunk sizing for streaming large-but-still-under-cap videos through Native Messaging frames
 
-URLs allowed for content injection checks: [`isAllowedBilibiliMatchUrl`](packages/domain/src/url/is-allowed-bilibili-url.ts)
+URLs allowed for content injection: [`isAllowedPlatformUrl`](packages/domain/src/url/is-allowed-platform-url.ts), [`detectPlatformFromUrl`](packages/domain/src/url/detect-platform-from-url.ts). Bilibili helper: [`isAllowedBilibiliMatchUrl`](packages/domain/src/url/is-allowed-bilibili-url.ts).
 
 #### Chrome Native Messaging host (`@auto-upload/native-host`)
 
@@ -52,7 +68,13 @@ Common OS manifest locations (Chromium family):
 - macOS: `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/<name>.json`
 - Windows: registry + a JSON manifest on disk (see Chromium Native Messaging docs)
 
-Install (recommended on Linux):
+One-shot host setup (install, build, native manifest):
+
+```bash
+./scripts/setup-host.sh <your_id_from_chrome_extensions>
+```
+
+Or manually:
 
 ```bash
 pnpm build
@@ -70,9 +92,10 @@ Manual template [`com.auto_upload.upload_host.json.template`](packages/native-ho
 
 #### Chromium extension runtime messages
 
-Popup → service worker request:
+Popup → service worker (batch only):
 
-- Payload shape validated by [`RuntimeApplyJobFromFileMessageSchema`](extension/src/runtime/runtime-message.ts): `{ type: "runtime.applyJobFromFile", jobFilePath: string }`
+- [`RuntimeUploadAllTabsMessageSchema`](extension/src/runtime/runtime-message.ts): `{ type: "runtime.uploadAllTabs", jobFilePath: string }`
+- [`RuntimeFillAllTabsMessageSchema`](extension/src/runtime/runtime-message.ts): `{ type: "runtime.fillAllTabs", jobFilePath: string }`
 
 Host → browser (`applyJobReady.payload`) attachments:
 
@@ -82,7 +105,7 @@ Host → browser (`applyJobReady.payload`) attachments:
 - Multi-frame native host replies (stream + final `applyJobReady`) are collected by [`postNativeMessageSession`](extension/src/sw/post-native-message-session.ts)
 - `attachments.cover`:
   - `inlineBase64` if small enough for one frame; larger covers use `coverStreamStart` / `coverStreamChunk` (merged in the service worker); over policy max → `skipped`
-  - On **Fill fields**, all text/radio/tag/partition fields run first; **cover is last** (brief delay, then modal: `.cover-img` → `.upload-area` → `input[type=file]`). Close the modal manually after review.
+  - On **Fill fields**, all text/radio/tag/partition fields run first; **cover is last** on platforms with cover UI (bilibili: poll until cover trigger ready, then `.cover-img` → `.upload-area` → `input[type=file]`). Close the modal manually after review.
 
 Service worker → content script:
 
@@ -110,3 +133,12 @@ Chromium **does not** auto-reload unpacked extensions when `extension/dist/*` ch
 
 - Workspace build: [`pnpm build`](package.json) builds `@auto-upload/domain`, `@auto-upload/native-host`, and bundles `extension/dist/*` via [`scripts/build-extension.mjs`](scripts/build-extension.mjs)
 - Load unpacked: select the [`extension`](extension/manifest.json) directory (after `pnpm build`)
+
+## fields
+
+### bili
+
+{
+"creativeStatement": "含AI生成内容",
+"creativeStatementAuth": "内容为自制：未经作者允许，禁止转载"
+}

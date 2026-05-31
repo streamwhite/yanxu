@@ -1,35 +1,48 @@
 import { z } from "zod";
-import { ApplyPhase } from "@auto-upload/domain";
+import { ApplyPhase, PLATFORM_IDS } from "@auto-upload/domain";
+import { MAX_FIELDS_SETTLE_MS, MIN_FIELDS_SETTLE_MS } from "../shared/fields-settle-config.js";
 
 export const RuntimeMessageType = {
 	Ping: "runtime.ping",
-	UploadVideoFirst: "runtime.uploadVideoFirst",
-	FillFieldsFromFile: "runtime.fillFieldsFromFile",
-	ApplyJobFromFile: "runtime.applyJobFromFile",
+	UploadAllTabs: "runtime.uploadAllTabs",
+	FillAllTabs: "runtime.fillAllTabs",
+	UploadAndFillAllTabs: "runtime.uploadAndFillAllTabs",
+	OpenPlatformTabs: "runtime.openPlatformTabs",
+	OpenAllPlatformTabs: "runtime.openAllPlatformTabs",
 } as const;
 
-const RuntimeJobFileRequestBase = z.object({
+const RuntimeBatchJobRequestBase = z.object({
 	requestId: z.string().min(1),
 	jobFilePath: z.string().min(1),
-	tabId: z.number().int().positive().optional(),
 });
 
-export const RuntimeUploadVideoFirstMessageSchema = RuntimeJobFileRequestBase.extend({
-	type: z.literal(RuntimeMessageType.UploadVideoFirst),
+export const RuntimeUploadAllTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
+	type: z.literal(RuntimeMessageType.UploadAllTabs),
 });
 
-export const RuntimeFillFieldsMessageSchema = RuntimeJobFileRequestBase.extend({
-	type: z.literal(RuntimeMessageType.FillFieldsFromFile),
+export const RuntimeFillAllTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
+	type: z.literal(RuntimeMessageType.FillAllTabs),
 });
 
-export const RuntimeApplyJobFromFileMessageSchema = RuntimeJobFileRequestBase.extend({
-	type: z.literal(RuntimeMessageType.ApplyJobFromFile),
+export const RuntimeUploadAndFillAllTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
+	type: z.literal(RuntimeMessageType.UploadAndFillAllTabs),
+	fieldsSettleMs: z.number().int().min(MIN_FIELDS_SETTLE_MS).max(MAX_FIELDS_SETTLE_MS).optional(),
+});
+
+const PlatformIdSchema = z.enum(PLATFORM_IDS);
+
+export const RuntimeOpenPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
+	type: z.literal(RuntimeMessageType.OpenPlatformTabs),
+	platform: PlatformIdSchema,
+});
+
+export const RuntimeOpenAllPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
+	type: z.literal(RuntimeMessageType.OpenAllPlatformTabs),
 });
 
 export type ApplyJobFromRuntimeResult = { ok: true } | { ok: false; code: string; message: string };
 
 export const RUNTIME_APPLY_PHASE_BY_MESSAGE_TYPE = {
-	[RuntimeMessageType.UploadVideoFirst]: ApplyPhase.VideoOnly,
-	[RuntimeMessageType.FillFieldsFromFile]: ApplyPhase.FieldsOnly,
-	[RuntimeMessageType.ApplyJobFromFile]: ApplyPhase.Full,
+	[RuntimeMessageType.UploadAllTabs]: ApplyPhase.VideoOnly,
+	[RuntimeMessageType.FillAllTabs]: ApplyPhase.FieldsOnly,
 } as const;

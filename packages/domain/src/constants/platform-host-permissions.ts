@@ -1,0 +1,9 @@
+import { BILIBILI_HOST_PERMISSIONS } from "./bilibili";
+import { CHANNELS_HOST_PERMISSIONS } from "./channels";
+import { DOUYIN_HOST_PERMISSIONS } from "./douyin";
+
+export const ALL_PLATFORM_HOST_PERMISSIONS = [
+	...BILIBILI_HOST_PERMISSIONS,
+	...DOUYIN_HOST_PERMISSIONS,
+	...CHANNELS_HOST_PERMISSIONS,
+] as const;

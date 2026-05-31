@@ -1,13 +1,8 @@
-import {
-	HostOutboundMessageSchema,
-	type AppliedJobPayload,
-	type HostOutboundMessage,
-} from "@auto-upload/domain";
-import { mergeStreamsIntoApplyPayload } from "./merge-streams-into-payload.js";
+import { HostOutboundMessageSchema, type HostOutboundMessage } from "@auto-upload/domain";
 import type { NativeSessionResult } from "./post-native-message-session.js";
 
 export type ResolvedApplyJob =
-	| { ok: true; payload: AppliedJobPayload }
+	| { ok: true; batch: HostOutboundMessage[] }
 	| { ok: false; code: string; message: string };
 
 function parseOutboundBatch(batch: HostOutboundMessage[]): ResolvedApplyJob {
@@ -31,20 +26,15 @@ function parseOutboundBatch(batch: HostOutboundMessage[]): ResolvedApplyJob {
 		return { ok: false, code: "unexpected_response", message: "pong_not_apply" };
 	}
 
+	if (terminal.type === "error") {
+		return { ok: false, code: terminal.code, message: terminal.message };
+	}
+
 	if (terminal.type !== "applyJobReady") {
 		return { ok: false, code: "unexpected_response", message: terminal.type };
 	}
 
-	try {
-		const payload = mergeStreamsIntoApplyPayload(batch, terminal.payload);
-		return { ok: true, payload };
-	} catch (error: unknown) {
-		const msg = error instanceof Error ? error.message : "stream_merge_failed";
-		const code = msg.includes("cover_stream")
-			? "cover_stream_incomplete"
-			: "video_stream_incomplete";
-		return { ok: false, code, message: msg };
-	}
+	return { ok: true, batch };
 }
 
 export function resolveApplyJobFromNativeSession(session: NativeSessionResult): ResolvedApplyJob {

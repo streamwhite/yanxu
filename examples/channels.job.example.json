@@ -1,0 +1,19 @@
+{
+	"jobVersion": 2,
+	"platform": "channels",
+	"targets": ["channels"],
+	"publish": {
+		"mode": "semi",
+		"submit": "manual"
+	},
+	"channels": {
+		"title": "Example 视频号 title",
+		"description": "Example 视频号 description",
+		"shortTitle": "Example short title",
+		"sourceType": "original"
+	},
+	"pageFields": [],
+	"assets": {
+		"localVideoPath": "/absolute/path/to/video.mp4"
+	}
+}

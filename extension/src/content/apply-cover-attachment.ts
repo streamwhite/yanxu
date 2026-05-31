@@ -1,5 +1,5 @@
 import type { AppliedJobPayload } from "@auto-upload/domain";
-import { applyCoverViaModal } from "./apply-cover-via-modal.js";
+import { applyCoverWithRetry } from "./apply-cover-with-retry.js";
 import { decodeCoverAttachmentBytes } from "./decode-cover-bytes.js";
 
 const COVER_FILE_NAME_PNG = "cover.png" as const;
@@ -19,8 +19,8 @@ export async function applyCoverAttachment(payload: AppliedJobPayload): Promise<
 	}
 
 	const fileName = cover.mimeType.includes(MIME_PNG) ? COVER_FILE_NAME_PNG : COVER_FILE_NAME_JPG;
-	const file = new File([bytes], fileName, { type: cover.mimeType });
+	const file = new File([bytes as BlobPart], fileName, { type: cover.mimeType });
 
-	const applied = await applyCoverViaModal(document, file);
-	if (!applied) throw new Error("cover_modal_upload_failed");
+	const applied = await applyCoverWithRetry(file, payload.batch.targetPlatform);
+	if (!applied) throw new Error(`cover_modal_upload_failed:${payload.batch.targetPlatform}`);
 }

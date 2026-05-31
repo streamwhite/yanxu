@@ -1,4 +1,4 @@
-const CONTENT_SCRIPT_FILE = "dist/content-bilibili-fill.js" as const;
+const CONTENT_SCRIPT_FILE = "dist/content-platform-fill.js" as const;
 
 const INJECT_RETRY_DELAY_MS = 150 as const;
 

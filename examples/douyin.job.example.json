@@ -1,0 +1,17 @@
+{
+	"jobVersion": 2,
+	"platform": "douyin",
+	"targets": ["douyin"],
+	"publish": {
+		"mode": "semi",
+		"submit": "manual"
+	},
+	"douyin": {
+		"title": "Example Douyin title",
+		"description": "Example Douyin description"
+	},
+	"pageFields": [],
+	"assets": {
+		"localVideoPath": "/absolute/path/to/video.mp4"
+	}
+}

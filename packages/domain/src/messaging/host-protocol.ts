@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { ApplyPhase } from "../apply/apply-phase";
+import { PLATFORM_IDS } from "../constants/platform";
+import { BatchApplyContextSchema } from "../schema/batch-apply-context";
 
 const InlineBase64Chunks = z.object({
 	kind: z.literal("inlineBase64Chunks"),
@@ -57,6 +59,7 @@ export type AttachmentCoverPayload = z.infer<typeof AttachmentCoverPayloadSchema
 export const AppliedJobPayloadSchema = z.object({
 	applyPhase: z.enum([ApplyPhase.Full, ApplyPhase.VideoOnly, ApplyPhase.FieldsOnly]),
 	jobJson: z.string().min(1),
+	batch: BatchApplyContextSchema,
 	attachments: z.object({
 		video: AttachmentVideoPayloadSchema,
 		cover: AttachmentCoverPayloadSchema,
@@ -65,12 +68,36 @@ export const AppliedJobPayloadSchema = z.object({
 
 export type AppliedJobPayload = z.infer<typeof AppliedJobPayloadSchema>;
 
+const PlatformIdSchema = z.enum(PLATFORM_IDS);
+
+export const JobFileOutlineItemSchema = z.object({
+	itemIndex: z.number().int().nonnegative(),
+	targets: z.array(PlatformIdSchema).min(1),
+});
+
+export const JobFileOutlineSchema = z.object({
+	jobVersion: z.number().int().positive(),
+	items: z.array(JobFileOutlineItemSchema).min(1),
+});
+
+export type JobFileOutlinePayload = z.infer<typeof JobFileOutlineSchema>;
+
 export const HostInboundMessageSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("ping") }),
 	z.object({
-		type: z.literal("applyJobFromFile"),
+		type: z.literal("inspectJobFromFile"),
+		jobFilePath: z.string().min(1),
+	}),
+	z.object({
+		type: z.literal("checkBatchJobAssetsFromFile"),
+		jobFilePath: z.string().min(1),
+	}),
+	z.object({
+		type: z.literal("applyBatchItemFromFile"),
 		jobFilePath: z.string().min(1),
 		applyPhase: z.enum([ApplyPhase.Full, ApplyPhase.VideoOnly, ApplyPhase.FieldsOnly]),
+		itemIndex: z.number().int().nonnegative(),
+		platform: PlatformIdSchema,
 	}),
 ]);
 
@@ -106,6 +133,11 @@ export const CoverStreamChunkSchema = z.object({
 
 export const HostOutboundMessageSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("pong") }),
+	z.object({
+		type: z.literal("jobFileOutline"),
+		outline: JobFileOutlineSchema,
+	}),
+	z.object({ type: z.literal("batchAssetsReady") }),
 	z.object({
 		type: z.literal("error"),
 		code: z.string(),

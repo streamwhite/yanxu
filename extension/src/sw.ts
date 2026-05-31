@@ -1,55 +1,37 @@
 import { ApplyPhase } from "@auto-upload/domain";
-import { postNativeMessageSession } from "./sw/post-native-message-session.js";
-import { resolveApplyJobFromNativeSession } from "./sw/resolve-apply-job-from-native-batch.js";
-import { acquireServiceWorkerKeepAlive } from "./sw/service-worker-keep-alive.js";
-import { resolveBilibiliTab } from "./sw/resolve-bilibili-tab.js";
-import { sendApplyPayloadToTab } from "./sw/send-apply-to-tab.js";
+import { applyJobToAllTabs } from "./sw/apply-job-to-all-tabs.js";
+import { applyUploadThenFillAllTabs } from "./sw/apply-upload-then-fill-all-tabs.js";
+import { openAllPlatformUploadTabs, openPlatformUploadTabs } from "./sw/open-platform-upload-tabs.js";
+import { clearActiveBatchRequestId, setActiveBatchRequestId } from "./sw/active-batch-request.js";
+import { handleApplyProgressMessage } from "./sw/handle-apply-progress-message.js";
+import { openOrFocusPopupWindow } from "./sw/open-popup-window.js";
+import { DEFAULT_FIELDS_SETTLE_MS } from "./shared/fields-settle-config.js";
+import { markBatchVideosUploaded } from "./shared/batch-upload-state.js";
 import { storeRuntimeRequestResult } from "./shared/runtime-request-store.js";
+import { runWithServiceWorkerKeepAlive } from "./sw/run-with-service-worker-keep-alive.js";
 import {
-	type ApplyJobFromRuntimeResult,
-	RuntimeApplyJobFromFileMessageSchema,
-	RuntimeFillFieldsMessageSchema,
+	RuntimeFillAllTabsMessageSchema,
 	RuntimeMessageType,
-	RuntimeUploadVideoFirstMessageSchema,
+	RuntimeOpenAllPlatformTabsMessageSchema,
+	RuntimeOpenPlatformTabsMessageSchema,
+	RuntimeUploadAllTabsMessageSchema,
+	RuntimeUploadAndFillAllTabsMessageSchema,
 } from "./runtime/runtime-message.js";
 
 const RUNTIME_ACK_PENDING = { ok: true as const, pending: true as const };
 
-async function applyJobViaNativeHost(
-	jobFilePath: string,
-	applyPhase: ApplyPhase,
-	tabId?: number,
-): Promise<ApplyJobFromRuntimeResult> {
-	const releaseKeepAlive = acquireServiceWorkerKeepAlive();
-	try {
-		const session = await postNativeMessageSession({
-			type: "applyJobFromFile",
-			jobFilePath,
-			applyPhase,
-		});
-		const resolved = resolveApplyJobFromNativeSession(session);
-		if (!resolved.ok) return resolved;
-
-		const tab = await resolveBilibiliTab(tabId);
-		await sendApplyPayloadToTab(tab.tabId, resolved.payload);
-		return { ok: true };
-	} catch (error: unknown) {
-		const msg = error instanceof Error ? error.message : "unexpected_error";
-		return { ok: false, code: "apply_failed", message: msg };
-	} finally {
-		releaseKeepAlive();
-	}
-}
-
-function runJobRequestInBackground(
+function runAllTabsRequestInBackground(
 	requestId: string,
 	jobFilePath: string,
 	applyPhase: ApplyPhase,
-	tabId?: number,
 ): void {
-	void (async () => {
+	setActiveBatchRequestId(requestId);
+	void runWithServiceWorkerKeepAlive(async () => {
 		try {
-			const result = await applyJobViaNativeHost(jobFilePath, applyPhase, tabId);
+			const result = await applyJobToAllTabs(jobFilePath, applyPhase, requestId);
+			if (result.ok && applyPhase === ApplyPhase.VideoOnly) {
+				await markBatchVideosUploaded(jobFilePath);
+			}
 			await storeRuntimeRequestResult(requestId, result);
 		} catch (error: unknown) {
 			const msg = error instanceof Error ? error.message : "unexpected_error";
@@ -58,23 +40,30 @@ function runJobRequestInBackground(
 				code: "internal_error",
 				message: msg,
 			});
+		} finally {
+			clearActiveBatchRequestId(requestId);
 		}
-	})();
+	});
 }
 
-function startJobRequest(
+function startAllTabsRequest(
 	requestId: string,
 	jobFilePath: string,
 	applyPhase: ApplyPhase,
-	tabId: number | undefined,
 	sendResponse: (response: typeof RUNTIME_ACK_PENDING) => void,
 ): boolean {
 	sendResponse(RUNTIME_ACK_PENDING);
-	runJobRequestInBackground(requestId, jobFilePath, applyPhase, tabId);
+	runAllTabsRequestInBackground(requestId, jobFilePath, applyPhase);
 	return false;
 }
 
+chrome.action.onClicked.addListener(() => {
+	void openOrFocusPopupWindow();
+});
+
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+	if (handleApplyProgressMessage(message)) return false;
+
 	if (
 		message &&
 		typeof message === "object" &&
@@ -84,37 +73,91 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 		return false;
 	}
 
-	const uploadVideo = RuntimeUploadVideoFirstMessageSchema.safeParse(message);
-	if (uploadVideo.success) {
-		return startJobRequest(
-			uploadVideo.data.requestId,
-			uploadVideo.data.jobFilePath,
+	const uploadAll = RuntimeUploadAllTabsMessageSchema.safeParse(message);
+	if (uploadAll.success) {
+		return startAllTabsRequest(
+			uploadAll.data.requestId,
+			uploadAll.data.jobFilePath,
 			ApplyPhase.VideoOnly,
-			uploadVideo.data.tabId,
 			sendResponse,
 		);
 	}
 
-	const fillFields = RuntimeFillFieldsMessageSchema.safeParse(message);
-	if (fillFields.success) {
-		return startJobRequest(
-			fillFields.data.requestId,
-			fillFields.data.jobFilePath,
+	const fillAll = RuntimeFillAllTabsMessageSchema.safeParse(message);
+	if (fillAll.success) {
+		return startAllTabsRequest(
+			fillAll.data.requestId,
+			fillAll.data.jobFilePath,
 			ApplyPhase.FieldsOnly,
-			fillFields.data.tabId,
 			sendResponse,
 		);
 	}
 
-	const applyAll = RuntimeApplyJobFromFileMessageSchema.safeParse(message);
-	if (applyAll.success) {
-		return startJobRequest(
-			applyAll.data.requestId,
-			applyAll.data.jobFilePath,
-			ApplyPhase.Full,
-			applyAll.data.tabId,
-			sendResponse,
-		);
+	const uploadAndFill = RuntimeUploadAndFillAllTabsMessageSchema.safeParse(message);
+	if (uploadAndFill.success) {
+		sendResponse(RUNTIME_ACK_PENDING);
+		const { requestId, jobFilePath, fieldsSettleMs } = uploadAndFill.data;
+		setActiveBatchRequestId(requestId);
+		void runWithServiceWorkerKeepAlive(async () => {
+			try {
+				const result = await applyUploadThenFillAllTabs(
+					jobFilePath,
+					requestId,
+					fieldsSettleMs ?? DEFAULT_FIELDS_SETTLE_MS,
+				);
+				await storeRuntimeRequestResult(requestId, result);
+			} catch (error: unknown) {
+				const msg = error instanceof Error ? error.message : "unexpected_error";
+				await storeRuntimeRequestResult(requestId, {
+					ok: false,
+					code: "internal_error",
+					message: msg,
+				});
+			} finally {
+				clearActiveBatchRequestId(requestId);
+			}
+		})();
+		return false;
+	}
+
+	const openTabs = RuntimeOpenPlatformTabsMessageSchema.safeParse(message);
+	if (openTabs.success) {
+		sendResponse(RUNTIME_ACK_PENDING);
+		const { requestId, jobFilePath, platform } = openTabs.data;
+		void runWithServiceWorkerKeepAlive(async () => {
+			try {
+				const result = await openPlatformUploadTabs(jobFilePath, platform);
+				await storeRuntimeRequestResult(requestId, result);
+			} catch (error: unknown) {
+				const msg = error instanceof Error ? error.message : "unexpected_error";
+				await storeRuntimeRequestResult(requestId, {
+					ok: false,
+					code: "internal_error",
+					message: msg,
+				});
+			}
+		})();
+		return false;
+	}
+
+	const openAllTabs = RuntimeOpenAllPlatformTabsMessageSchema.safeParse(message);
+	if (openAllTabs.success) {
+		sendResponse(RUNTIME_ACK_PENDING);
+		const { requestId, jobFilePath } = openAllTabs.data;
+		void runWithServiceWorkerKeepAlive(async () => {
+			try {
+				const result = await openAllPlatformUploadTabs(jobFilePath);
+				await storeRuntimeRequestResult(requestId, result);
+			} catch (error: unknown) {
+				const msg = error instanceof Error ? error.message : "unexpected_error";
+				await storeRuntimeRequestResult(requestId, {
+					ok: false,
+					code: "internal_error",
+					message: msg,
+				});
+			}
+		})();
+		return false;
 	}
 
 	return undefined;

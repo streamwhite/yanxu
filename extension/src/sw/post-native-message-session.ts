@@ -5,7 +5,13 @@ import {
 	NATIVE_HOST_SESSION_TIMEOUT_MS,
 } from "./constants/native-session.js";
 
-const TERMINAL_OUTBOUND_TYPES = new Set(["applyJobReady", "error", "pong"]);
+const TERMINAL_OUTBOUND_TYPES = new Set([
+	"applyJobReady",
+	"jobFileOutline",
+	"batchAssetsReady",
+	"error",
+	"pong",
+]);
 
 export type NativeSessionResult =
 	| { ok: true; batch: HostOutboundMessage[] }

@@ -2,14 +2,14 @@ import {
 	BILIBILI_SOURCE_TYPE_LABEL_CLASS,
 	BILIBILI_SOURCE_TYPE_OPTION_CLASS,
 } from "./bilibili-selectors.js";
-import { pickFirstElement } from "./dom.js";
+import { pickFirstVisibleElementDeep } from "./dom.js";
 
 export function clickRadioOptionByLabel(
 	root: ParentNode,
 	groupSelectors: readonly string[],
 	label: string,
 ): boolean {
-	const group = pickFirstElement<HTMLElement>(root, groupSelectors);
+	const group = pickFirstVisibleElementDeep<HTMLElement>(root, groupSelectors);
 	if (!group) return false;
 
 	const containers = Array.from(group.querySelectorAll(`.${BILIBILI_SOURCE_TYPE_OPTION_CLASS}`));

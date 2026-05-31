@@ -4,16 +4,21 @@ import {
 	type HostInboundMessage,
 	type HostOutboundBatch,
 	type HostOutboundMessage,
+	type PlatformId,
 	ApplyPhase,
 	assertExtensionSupportedPublishPolicy,
 	DEFAULT_JOB_POLICY,
 	DEFAULT_TRANSFER_CHUNK_BYTES,
-	normalizeCanonicalJobTexts,
-	validateJob,
 } from "@auto-upload/domain";
 import { resolveCoverAttachment } from "../attachments/resolve-cover-attachment.js";
 import { resolveVideoAttachment } from "../attachments/resolve-video-attachment.js";
 import { buildOutboundApplyBatch } from "./build-outbound-apply-batch.js";
+import { readJobFileJson } from "./read-job-file-json.js";
+import {
+	inspectJobFileOutlineFromJson,
+	resolveCanonicalJobFromFileJson,
+} from "./resolve-canonical-job-from-file.js";
+import { validateBatchJobAssetsFromFileJson } from "./validate-batch-job-assets-from-file.js";
 
 const REASON_VIDEO_SKIPPED_FIELDS_PHASE = "fields_only_phase" as const;
 const REASON_COVER_SKIPPED_VIDEO_PHASE = "video_only_phase" as const;
@@ -41,37 +46,54 @@ export async function handleHostInboundMessage(
 ): Promise<HostOutboundBatch> {
 	try {
 		if (inbound.type === "ping") return [{ type: "pong" }];
-		return await applyJobFromFile(inbound.jobFilePath, inbound.applyPhase);
+		if (inbound.type === "inspectJobFromFile") {
+			return await inspectJobFromFile(inbound.jobFilePath);
+		}
+		if (inbound.type === "checkBatchJobAssetsFromFile") {
+			return await checkBatchJobAssetsFromFile(inbound.jobFilePath);
+		}
+		return await applyJobFromFile(
+			inbound.jobFilePath,
+			inbound.applyPhase,
+			inbound.itemIndex,
+			inbound.platform,
+		);
 	} catch (error) {
 		return [toErrorOutbound(error)];
 	}
 }
 
+async function checkBatchJobAssetsFromFile(jobFilePath: string): Promise<HostOutboundBatch> {
+	const rawJson = await readJobFileJson(jobFilePath);
+	const checked = await validateBatchJobAssetsFromFileJson(rawJson);
+	if (!checked.ok) {
+		return [{ type: "error", code: checked.code, message: checked.message }];
+	}
+	return [{ type: "batchAssetsReady" }];
+}
+
+async function inspectJobFromFile(jobFilePath: string): Promise<HostOutboundBatch> {
+	const rawJson = await readJobFileJson(jobFilePath);
+	const inspected = inspectJobFileOutlineFromJson(rawJson);
+	if (!inspected.ok) {
+		return [{ type: "error", code: inspected.code, message: inspected.message }];
+	}
+	return [{ type: "jobFileOutline", outline: inspected.outline }];
+}
+
 async function applyJobFromFile(
 	jobFilePath: string,
 	applyPhase: ApplyPhase,
+	itemIndex: number,
+	platform: PlatformId,
 ): Promise<HostOutboundBatch> {
-	if (!isAbsolutePosixOrWin(jobFilePath)) {
-		throw new Error("job_file_path_must_be_absolute");
+	const rawJson = await readJobFileJson(jobFilePath);
+	const resolved = resolveCanonicalJobFromFileJson(rawJson, itemIndex, platform);
+	if (!resolved.ok) {
+		return [{ type: "error", code: resolved.code, message: resolved.message }];
 	}
 
-	const resolvedJobFilePath = resolveCrossPlatform(jobFilePath);
-	await fsp.access(resolvedJobFilePath, fsConstants.R_OK);
-	const rawText = await fsp.readFile(resolvedJobFilePath, "utf8");
-	const rawJson = JSON.parse(rawText) as unknown;
-
-	const validated = validateJob(rawJson);
-	if (!validated.ok) {
-		return [
-			{
-				type: "error",
-				code: "invalid_job",
-				message: validated.errorMessage,
-			},
-		];
-	}
-
-	const job = normalizeCanonicalJobTexts(validated.job);
+	const job = resolved.job;
 	assertExtensionSupportedPublishPolicy(job);
 
 	const resolvedVideoPath = resolveIfPresent(job.assets.localVideoPath);
@@ -96,6 +118,8 @@ async function applyJobFromFile(
 		return buildOutboundApplyBatch({
 			applyPhase,
 			jobJson,
+			batchItemIndex: itemIndex,
+			targetPlatform: platform,
 			video: { kind: "skipped", reasonCode: REASON_VIDEO_SKIPPED_FIELDS_PHASE },
 			cover:
 				resolvedCover.mode === "payload"
@@ -126,6 +150,8 @@ async function applyJobFromFile(
 	return buildOutboundApplyBatch({
 		applyPhase,
 		jobJson,
+		batchItemIndex: itemIndex,
+		targetPlatform: platform,
 		video:
 			resolvedVideo.mode === "payload"
 				? resolvedVideo.payload

@@ -1,39 +1,52 @@
+import { Platform, type PlatformId } from "@auto-upload/domain";
+import { applyChannelsCoverViaModal } from "../platforms/channels/apply-channels-cover-via-modal.js";
+import { applyDouyinCoverViaModal } from "../platforms/douyin/apply-douyin-cover-via-modal.js";
 import { assignFileViaDragDrop } from "./assign-file-via-drag-drop.js";
+import { clickCoverTrigger } from "./click-cover-trigger.js";
 import { clickCoverUploadArea } from "./click-cover-upload-area.js";
-import { COVER_UPLOAD_CLICK_SETTLE_MS } from "./constants/cover-modal-timing.js";
-import { findCoverFileInputNearUploadArea } from "./find-cover-file-input.js";
-import { findCoverTrigger } from "./find-cover-trigger.js";
+import { findCoverTriggerForPlatform } from "./find-cover-trigger-for-platform.js";
 import { inputHasAssignedFile } from "./input-has-assigned-file.js";
 import { assignFileToInput } from "./dom.js";
+import { tryAssignCoverViaVisibleImageInputs } from "./try-assign-cover-via-visible-image-inputs.js";
 import { waitForCoverFileInputNearUploadArea } from "./wait-for-cover-file-input.js";
 import { waitForCoverModalUploadArea } from "./wait-for-cover-modal-upload-area.js";
-import { waitMs } from "./wait-ms.js";
 
 function tryAssignViaFileInput(input: HTMLInputElement, file: File): boolean {
 	assignFileToInput(input, file);
 	return inputHasAssignedFile(input, file);
 }
 
-export async function applyCoverViaModal(root: ParentNode, file: File): Promise<boolean> {
-	const trigger = findCoverTrigger(root);
+export async function applyCoverViaModal(
+	root: ParentNode,
+	file: File,
+	platform: PlatformId,
+): Promise<boolean> {
+	if (platform === Platform.Douyin) {
+		return applyDouyinCoverViaModal(root, file);
+	}
+
+	if (platform === Platform.Channels) {
+		return applyChannelsCoverViaModal(root, file);
+	}
+
+	const trigger = findCoverTriggerForPlatform(root, platform);
 	if (!trigger) return false;
 
-	trigger.click();
+	await clickCoverTrigger(trigger, platform);
 
-	const uploadArea = await waitForCoverModalUploadArea(root);
-	if (!uploadArea) return false;
+	const uploadArea = await waitForCoverModalUploadArea(document, undefined, platform);
 
-	clickCoverUploadArea(uploadArea);
-	await waitMs(COVER_UPLOAD_CLICK_SETTLE_MS);
+	if (uploadArea) {
+		clickCoverUploadArea(uploadArea);
 
-	const input = await waitForCoverFileInputNearUploadArea(uploadArea);
-	if (input && tryAssignViaFileInput(input, file)) return true;
+		const input = await waitForCoverFileInputNearUploadArea(uploadArea);
+		if (input && tryAssignViaFileInput(input, file)) return true;
 
-	assignFileViaDragDrop(uploadArea, file);
-	await waitMs(COVER_UPLOAD_CLICK_SETTLE_MS);
+		assignFileViaDragDrop(uploadArea, file);
 
-	const inputAfterDrop = findCoverFileInputNearUploadArea(uploadArea);
-	if (inputAfterDrop && tryAssignViaFileInput(inputAfterDrop, file)) return true;
+		const inputAfterDrop = await waitForCoverFileInputNearUploadArea(uploadArea);
+		if (inputAfterDrop && tryAssignViaFileInput(inputAfterDrop, file)) return true;
+	}
 
-	return false;
+	return tryAssignCoverViaVisibleImageInputs(document, file);
 }

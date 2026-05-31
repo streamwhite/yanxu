@@ -1,11 +1,13 @@
 import {
 	type ApplyPhase,
-	NATIVE_MESSAGE_MAX_BYTES,
 	type AttachmentCoverPayload,
 	type AttachmentVideoPayload,
 	type HostOutboundBatch,
 	type HostOutboundMessage,
+	type PlatformId,
+	NATIVE_MESSAGE_MAX_BYTES,
 } from "@auto-upload/domain";
+import type { BatchApplyContext } from "@auto-upload/domain";
 import { estimateJsonByteLength } from "../outbound/estimate-json-byte-length.js";
 
 const REASON_RESPONSE_TOO_LARGE = "native_message_response_too_large" as const;
@@ -14,6 +16,7 @@ const REASON_STREAM_ASSEMBLED_IN_EXTENSION = "stream_assembled_in_extension" as 
 export function buildApplyJobReady(
 	applyPhase: ApplyPhase,
 	jobJson: string,
+	batch: BatchApplyContext,
 	video: AttachmentVideoPayload,
 	cover: AttachmentCoverPayload,
 ): HostOutboundMessage {
@@ -22,6 +25,7 @@ export function buildApplyJobReady(
 		payload: {
 			applyPhase,
 			jobJson,
+			batch,
 			attachments: { video, cover },
 		},
 	};
@@ -40,11 +44,18 @@ function prependStreamBatches(
 export function buildOutboundApplyBatch(input: {
 	applyPhase: ApplyPhase;
 	jobJson: string;
+	batchItemIndex: number;
+	targetPlatform: PlatformId;
 	video: AttachmentVideoPayload;
 	cover: AttachmentCoverPayload;
 	videoStreamBatch?: HostOutboundBatch;
 	coverStreamBatch?: HostOutboundBatch;
 }): HostOutboundBatch {
+	const batch: BatchApplyContext = {
+		itemIndex: input.batchItemIndex,
+		targetPlatform: input.targetPlatform,
+	};
+
 	const videoForReady = input.videoStreamBatch?.length
 		? { kind: "skipped" as const, reasonCode: REASON_STREAM_ASSEMBLED_IN_EXTENSION }
 		: input.video;
@@ -53,7 +64,13 @@ export function buildOutboundApplyBatch(input: {
 		? { kind: "skipped" as const, reasonCode: REASON_STREAM_ASSEMBLED_IN_EXTENSION }
 		: input.cover;
 
-	const ready = buildApplyJobReady(input.applyPhase, input.jobJson, videoForReady, coverForReady);
+	const ready = buildApplyJobReady(
+		input.applyPhase,
+		input.jobJson,
+		batch,
+		videoForReady,
+		coverForReady,
+	);
 
 	const byteLength = estimateJsonByteLength(ready);
 	if (byteLength > NATIVE_MESSAGE_MAX_BYTES) {
@@ -66,8 +83,8 @@ export function buildOutboundApplyBatch(input: {
 		];
 	}
 
-	const batch: HostOutboundBatch = [];
-	prependStreamBatches(batch, input.videoStreamBatch, input.coverStreamBatch);
-	batch.push(ready);
-	return batch;
+	const outbound: HostOutboundBatch = [];
+	prependStreamBatches(outbound, input.videoStreamBatch, input.coverStreamBatch);
+	outbound.push(ready);
+	return outbound;
 }

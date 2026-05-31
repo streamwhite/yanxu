@@ -1,5 +1,9 @@
 import type { CanonicalJob } from "@auto-upload/domain";
 import {
+	BILIBILI_DEFAULT_CREATIVE_STATEMENT_AUTH,
+	BILIBILI_DEFAULT_CREATIVE_STATEMENT_OPTION,
+} from "@auto-upload/domain";
+import {
 	BILIBILI_DESCRIPTION_SELECTORS,
 	BILIBILI_SOURCE_TYPE_GROUP_SELECTORS,
 	BILIBILI_TAG_SELECTORS,
@@ -18,7 +22,16 @@ export function buildDefaultBilibiliPageFields(job: CanonicalJob): ApplyPageFiel
 	if (!job.bilibili) return [];
 
 	const fields: ApplyPageField[] = [];
-	const { title, description, tags, sourceType, partition } = job.bilibili;
+	const { title, description, tags, sourceType, partition, creativeStatement, creativeStatementAuth } =
+		job.bilibili;
+
+	fields.push({
+		kind: PageFieldKind.BilibiliCreativeStatement,
+		locator: { css: ".statement-content .bcc-select" },
+		value: creativeStatement ?? BILIBILI_DEFAULT_CREATIVE_STATEMENT_OPTION,
+		statementOption: creativeStatement ?? BILIBILI_DEFAULT_CREATIVE_STATEMENT_OPTION,
+		statementAuth: creativeStatementAuth ?? BILIBILI_DEFAULT_CREATIVE_STATEMENT_AUTH,
+	});
 
 	if (sourceType) {
 		fields.push({
@@ -26,6 +39,7 @@ export function buildDefaultBilibiliPageFields(job: CanonicalJob): ApplyPageFiel
 			locator: { css: primarySelector(BILIBILI_SOURCE_TYPE_GROUP_SELECTORS) },
 			radioGroupSelectors: BILIBILI_SOURCE_TYPE_GROUP_SELECTORS,
 			value: bilibiliSourceTypeToUiLabel(sourceType),
+			fieldLabel: `来源 → ${bilibiliSourceTypeToUiLabel(sourceType)}`,
 		});
 	}
 
@@ -34,6 +48,7 @@ export function buildDefaultBilibiliPageFields(job: CanonicalJob): ApplyPageFiel
 			kind: PageFieldKind.PartitionSelect,
 			locator: { css: ".select-controller" },
 			value: partition,
+			fieldLabel: `分区 → ${partition}`,
 		});
 	}
 
@@ -42,6 +57,7 @@ export function buildDefaultBilibiliPageFields(job: CanonicalJob): ApplyPageFiel
 			locator: { css: primarySelector(BILIBILI_TITLE_SELECTORS) },
 			selectorFallbacks: BILIBILI_TITLE_SELECTORS,
 			value: title,
+			fieldLabel: "标题",
 		});
 	}
 
@@ -50,6 +66,7 @@ export function buildDefaultBilibiliPageFields(job: CanonicalJob): ApplyPageFiel
 			locator: { css: primarySelector(BILIBILI_DESCRIPTION_SELECTORS) },
 			selectorFallbacks: BILIBILI_DESCRIPTION_SELECTORS,
 			value: description,
+			fieldLabel: "简介",
 		});
 	}
 
@@ -61,14 +78,9 @@ export function buildDefaultBilibiliPageFields(job: CanonicalJob): ApplyPageFiel
 			selectorFallbacks: BILIBILI_TAG_SELECTORS,
 			value: tagValues.join(", "),
 			tagValues,
+			fieldLabel: `标签 (${String(tagValues.length)})`,
 		});
 	}
 
 	return fields;
-}
-
-export function resolvePageFieldsForJob(job: CanonicalJob): ApplyPageField[] {
-	const custom: ApplyPageField[] = (job.pageFields ?? []).map((field) => ({ ...field }));
-	const defaults = buildDefaultBilibiliPageFields(job);
-	return [...defaults, ...custom];
 }

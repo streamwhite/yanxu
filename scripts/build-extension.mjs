@@ -1,4 +1,5 @@
 import esbuild from "esbuild";
+import { cp, mkdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -10,10 +11,13 @@ const ZOD_ENTRY = requireFromDomain.resolve("zod");
 
 const ENTRY_SW = path.join(ROOT_DIR, "extension/src/sw.ts");
 const ENTRY_POPUP = path.join(ROOT_DIR, "extension/src/popup/popup.ts");
-const ENTRY_CONTENT = path.join(ROOT_DIR, "extension/src/content/bilibili-fill.ts");
+const ENTRY_CONTENT = path.join(ROOT_DIR, "extension/src/content/platform-fill.ts");
 
 const OUT_DIR = path.join(ROOT_DIR, "extension/dist");
 const DOMAIN_INDEX = path.join(ROOT_DIR, "packages/domain/src/index.ts");
+const BOOTSTRAP_CSS_SRC = path.join(ROOT_DIR, "assets/bootstrap-5.3.8/css/bootstrap.min.css");
+const BOOTSTRAP_CSS_DEST_DIR = path.join(OUT_DIR, "vendor/bootstrap");
+const BOOTSTRAP_CSS_DEST = path.join(BOOTSTRAP_CSS_DEST_DIR, "bootstrap.min.css");
 
 const WATCH_FLAG = "--watch";
 const watchMode = process.argv.includes(WATCH_FLAG);
@@ -54,12 +58,17 @@ const rebuildLogPlugin = {
 	},
 };
 
+async function copyBootstrapForPopup() {
+	await mkdir(BOOTSTRAP_CSS_DEST_DIR, { recursive: true });
+	await cp(BOOTSTRAP_CSS_SRC, BOOTSTRAP_CSS_DEST);
+}
+
 function createSharedOptions() {
 	return {
 		entryPoints: {
 			sw: ENTRY_SW,
 			popup: ENTRY_POPUP,
-			"content-bilibili-fill": ENTRY_CONTENT,
+			"content-platform-fill": ENTRY_CONTENT,
 		},
 		outdir: OUT_DIR,
 		bundle: true,
@@ -69,6 +78,16 @@ function createSharedOptions() {
 		sourcemap: true,
 	};
 }
+
+let bootstrapCopied = false;
+
+async function ensureBootstrapForPopup() {
+	if (bootstrapCopied && watchMode) return;
+	await copyBootstrapForPopup();
+	bootstrapCopied = true;
+}
+
+await ensureBootstrapForPopup();
 
 if (watchMode) {
 	const ctx = await esbuild.context({

@@ -1,2 +1,7 @@
 packages:
   - "packages/*"
+
+# pnpm v11+: was package.json#pnpm.onlyBuiltDependencies (esbuild only)
+allowBuilds:
+  esbuild: true
+  unrs-resolver: false

@@ -2,13 +2,12 @@ import {
 	RUNTIME_REQUEST_STORAGE_KEY,
 	waitForRuntimeRequestResult,
 } from "../shared/runtime-request-store.js";
+import { resolveRuntimeRequestTimeoutMs } from "../shared/constants/runtime-request-timing.js";
 import { RuntimeMessageType, type ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
-
-const RUNTIME_MESSAGE_TIMEOUT_MS = 130_000 as const;
 
 const NO_RECEIVER_PATTERN = /Receiving end does not exist/i;
 
-function createRequestId(): string {
+export function createRuntimeRequestId(): string {
 	if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
 	return `req_${String(Date.now())}_${String(Math.random())}`;
 }
@@ -50,11 +49,13 @@ async function dispatchRuntimeJobMessage(payload: Record<string, unknown>): Prom
 
 export async function sendRuntimeMessageWithTimeout<T extends ApplyJobFromRuntimeResult>(
 	message: Record<string, unknown>,
-): Promise<T> {
-	const requestId = createRequestId();
+	requestId: string = createRuntimeRequestId(),
+): Promise<{ requestId: string; result: T }> {
 	const payload = { ...message, requestId };
 
 	await chrome.storage.local.remove(RUNTIME_REQUEST_STORAGE_KEY);
 	await dispatchRuntimeJobMessage(payload);
-	return (await waitForRuntimeRequestResult(requestId, RUNTIME_MESSAGE_TIMEOUT_MS)) as T;
+	const timeoutMs = resolveRuntimeRequestTimeoutMs(payload);
+	const result = (await waitForRuntimeRequestResult(requestId, timeoutMs)) as T;
+	return { requestId, result };
 }

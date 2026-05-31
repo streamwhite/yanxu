@@ -2,13 +2,28 @@ import {
 	AppliedJobPayloadSchema,
 	ApplyPhase,
 	assertExtensionSupportedPublishPolicy,
+	Platform,
+	getJobPlatform,
 	validateJob,
 } from "@auto-upload/domain";
 import type { AppliedJobPayload } from "@auto-upload/domain";
+import { assertBatchPayloadMatchesJob } from "./assert-batch-payload-matches-job.js";
+import { clickVideoUploadTriggerForPlatform } from "../platforms/click-video-upload-trigger-for-platform.js";
+import { platformFullPhaseVideoToFieldsSettleMs } from "../platforms/platform-full-phase-video-to-fields-settle-ms.js";
+import { platformVideoUploadSettleMs } from "../platforms/platform-video-upload-settle-ms.js";
+import { applyChannelsVideoFile } from "../platforms/channels/apply-channels-video-file.js";
+import { channelsHasPostUploadMetadataUi } from "../platforms/channels/channels-has-post-upload-metadata-ui.js";
+import { channelsVideoAlreadyUploaded } from "../platforms/channels/channels-video-already-uploaded.js";
+import { waitForChannelsPageInteractive } from "../platforms/channels/wait-for-channels-page-interactive.js";
+import { waitForChannelsPostUploadFormReady } from "../platforms/channels/wait-for-channels-post-upload-form-ready.js";
+import { resolveVideoFileInputForPlatform } from "./resolve-video-file-input-for-platform.js";
 import { decodeBase64ChunksToUint8 } from "./binary.js";
-import { BILIBILI_VIDEO_FILE_INPUT_SELECTORS, SEMI_AUTO_BANNER_ID } from "./bilibili-selectors.js";
+import { SEMI_AUTO_BANNER_ID } from "./bilibili-selectors.js";
 import { applyFieldsPhase } from "./apply-fields-phase.js";
-import { assignFileToInput, pickFirstElement } from "./dom.js";
+import { reportApplyProgress } from "./report-apply-progress.js";
+import { BatchProgressKind } from "../shared/batch-progress.js";
+import { assignFileToInput } from "./dom.js";
+import { waitMs } from "./wait-ms.js";
 
 const FALLBACK_VIDEO_FILE_NAME = "upload-video.mp4" as const;
 
@@ -24,7 +39,8 @@ function removeExistingBanner(): void {
 
 function renderManualVideoBanner(payload: AppliedJobPayload): void {
 	removeExistingBanner();
-	if (payload.attachments.video.kind !== "manualLargeFile") return;
+	const video = payload.attachments.video;
+	if (video.kind !== "manualLargeFile") return;
 
 	const banner = document.createElement("div");
 	banner.id = SEMI_AUTO_BANNER_ID;
@@ -46,11 +62,11 @@ function renderManualVideoBanner(payload: AppliedJobPayload): void {
 	title.style.marginBottom = "8px";
 
 	const hint = document.createElement("div");
-	const sizeText = formatBytes(payload.attachments.video.sizeBytes);
-	hint.textContent = `Chrome limits silent file picking for large files (${sizeText}). Use the picker, or copy your path via the button below.`;
+	const sizeText = formatBytes(video.sizeBytes);
+	hint.textContent = `Item ${String(payload.batch.itemIndex)} — Chrome limits silent file picking for large files (${sizeText}). Use the picker, or copy your path below.`;
 
 	const path = document.createElement("pre");
-	path.textContent = payload.attachments.video.absolutePath;
+	path.textContent = video.absolutePath;
 	path.style.whiteSpace = "pre-wrap";
 	path.style.marginTop = "10px";
 
@@ -60,19 +76,19 @@ function renderManualVideoBanner(payload: AppliedJobPayload): void {
 	copy.style.padding = "8px 10px";
 
 	copy.addEventListener("click", () => {
-		void navigator.clipboard.writeText(payload.attachments.video.absolutePath);
+		void navigator.clipboard.writeText(video.absolutePath);
 	});
 
 	banner.append(title, hint, path, copy);
 	document.documentElement.append(banner);
 }
 
-async function applyVideoAttachment(payload: AppliedJobPayload): Promise<void> {
+async function applyVideoAttachment(
+	payload: AppliedJobPayload,
+	platform: ReturnType<typeof getJobPlatform>,
+): Promise<void> {
 	const video = payload.attachments.video;
 	if (video.kind === "skipped") return;
-
-	const input = pickFirstElement<HTMLInputElement>(document, BILIBILI_VIDEO_FILE_INPUT_SELECTORS);
-	if (!input) throw new Error("video_file_input_not_found");
 
 	if (video.kind === "manualLargeFile") {
 		renderManualVideoBanner(payload);
@@ -81,7 +97,40 @@ async function applyVideoAttachment(payload: AppliedJobPayload): Promise<void> {
 
 	const bytes = decodeBase64ChunksToUint8(video.chunks);
 	const fileName = video.suggestedFileName ?? FALLBACK_VIDEO_FILE_NAME;
-	const file = new File([bytes], fileName, { type: video.mimeType });
+	const file = new File([bytes as BlobPart], fileName, { type: video.mimeType });
+
+	if (platform === Platform.Channels) {
+		if (channelsVideoAlreadyUploaded(document)) {
+			await waitForChannelsPostUploadFormReady(document);
+			return;
+		}
+
+		const applied = await applyChannelsVideoFile(file);
+		const alreadyAfter = channelsVideoAlreadyUploaded(document);
+
+		if (!applied && !alreadyAfter && !channelsHasPostUploadMetadataUi(document)) {
+			throw new Error(
+				`video_file_input_not_found:${platform}:item_${String(payload.batch.itemIndex)}`,
+			);
+		}
+		await waitForChannelsPostUploadFormReady(document);
+		return;
+	}
+
+	let input = await resolveVideoFileInputForPlatform(platform, null);
+
+	if (!input) {
+		const trigger = clickVideoUploadTriggerForPlatform(document, platform);
+		await waitMs(platformVideoUploadSettleMs(platform));
+		input = await resolveVideoFileInputForPlatform(platform, trigger.uploadArea);
+	}
+
+	if (!input) {
+		throw new Error(
+			`video_file_input_not_found:${platform}:item_${String(payload.batch.itemIndex)}`,
+		);
+	}
+
 	assignFileToInput(input, file);
 }
 
@@ -94,16 +143,34 @@ export async function applyJobPayload(payload: AppliedJobPayload): Promise<void>
 	const jobParse = validateJob(JSON.parse(validatedPayload.data.jobJson));
 	if (!jobParse.ok) throw new Error(`invalid_job: ${jobParse.errorMessage}`);
 	assertExtensionSupportedPublishPolicy(jobParse.job);
+	assertBatchPayloadMatchesJob(validatedPayload.data, jobParse.job);
 
 	const phase = validatedPayload.data.applyPhase;
+	const platform = getJobPlatform(jobParse.job);
+
+	if (platform === Platform.Channels) {
+		await waitForChannelsPageInteractive(document);
+	}
 
 	if (phase === ApplyPhase.VideoOnly || phase === ApplyPhase.Full) {
-		await applyVideoAttachment(validatedPayload.data);
+		await applyVideoAttachment(validatedPayload.data, platform);
+		const video = validatedPayload.data.attachments.video;
+		if (video.kind !== "skipped") {
+			reportApplyProgress({
+				platform,
+				itemIndex: validatedPayload.data.batch.itemIndex,
+				kind: BatchProgressKind.Video,
+				label: video.kind === "manualLargeFile" ? "video: attach manually" : "video file assigned",
+			});
+		}
 		if (phase === ApplyPhase.VideoOnly) {
-			const video = validatedPayload.data.attachments.video;
 			if (video.kind === "manualLargeFile") {
 				renderManualVideoBanner(validatedPayload.data);
 			}
+		}
+		if (phase === ApplyPhase.Full && video.kind !== "skipped" && video.kind !== "manualLargeFile") {
+			const settleMs = platformFullPhaseVideoToFieldsSettleMs(platform);
+			if (settleMs > 0) await waitMs(settleMs);
 		}
 	}
 

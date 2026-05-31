@@ -1,10 +1,11 @@
 import { ApplyPhase } from "@auto-upload/domain";
 import type { AppliedJobPayload, HostOutboundMessage } from "@auto-upload/domain";
-import { mergeVideoStreamIntoApplyPayload } from "../../extension/src/sw/merge-video-stream-into-payload";
+import { mergeVideoStreamIntoApplyPayload } from "../../extension/src/shared/merge-video-stream-into-payload";
 
 const BASE_PAYLOAD: AppliedJobPayload = {
 	applyPhase: ApplyPhase.VideoOnly,
 	jobJson: "{}",
+	batch: { itemIndex: 0, targetPlatform: "bilibili" },
 	attachments: {
 		video: { kind: "skipped", reasonCode: "stream_assembled_in_extension" },
 		cover: { kind: "skipped", reasonCode: "video_only_phase" },

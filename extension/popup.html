@@ -4,44 +4,76 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>auto-upload semi-auto</title>
-    <style>
-      body {
-        font: 13px system-ui, sans-serif;
-        width: 360px;
-        margin: 12px;
-      }
-
-      label {
-        display: block;
-        gap: 6px;
-      }
-
-      input {
-        width: 100%;
-        margin-top: 6px;
-        box-sizing: border-box;
-      }
-
-      button {
-        margin-top: 10px;
-        width: 100%;
-        padding: 8px 10px;
-      }
-
-      pre#autoUploadOutcome {
-        margin-top: 10px;
-        white-space: pre-wrap;
-      }
-    </style>
+    <link rel="stylesheet" href="./dist/vendor/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="./popup.css" />
   </head>
-  <body>
-    <label>
-      Absolute path to <code>job.json</code>
-      <input id="jobFilePathInput" autocomplete="off" spellcheck="false" />
-    </label>
-    <button id="uploadVideoButton" type="button">1. Upload video first</button>
-    <button id="fillFieldsButton" type="button">2. Fill fields (title, tags, custom)</button>
-    <pre id="autoUploadOutcome"></pre>
+  <body class="bg-body-tertiary">
+    <main class="popup-shell container-fluid py-3">
+      <header class="mb-3">
+        <h1 class="h6 mb-1 fw-semibold">auto-upload</h1>
+        <p class="text-muted small mb-0">Batch job (v3) — open tabs, upload, fill. Publish manually.</p>
+      </header>
+
+      <div class="mb-3">
+        <label class="form-label small fw-semibold" for="jobFilePathInput">Batch job file path</label>
+        <input
+          id="jobFilePathInput"
+          class="form-control form-control-sm font-monospace"
+          type="text"
+          placeholder="/absolute/path/to/batch.job.json"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <section class="mb-3">
+        <div class="d-grid">
+          <button id="openAllTabsButton" type="button" class="btn btn-outline-secondary btn-sm">
+            Open all upload tabs
+          </button>
+        </div>
+        <p class="form-text small text-muted mb-0 mt-2">
+          Opens bilibili, douyin, and 视频号 tabs — one per job item per platform.
+        </p>
+      </section>
+
+      <section>
+        <div class="mb-2">
+          <label class="form-label small fw-semibold mb-1" for="fieldsSettleMsInput">
+            Wait after upload before fill (ms)
+          </label>
+          <input
+            id="fieldsSettleMsInput"
+            class="form-control form-control-sm"
+            type="number"
+            min="0"
+            max="120000"
+            step="500"
+          />
+        </div>
+        <div class="d-grid">
+          <button id="uploadAndFillAllTabsButton" type="button" class="btn btn-primary btn-sm">
+            Upload and fill (all tabs)
+          </button>
+        </div>
+        <p class="form-text small text-muted mb-0 mt-2">
+          Uploads videos on all tabs, waits for pages to settle, then fills fields and cover.
+        </p>
+      </section>
+
+      <pre
+        id="batchProgressLog"
+        class="batch-progress-log small text-muted mb-0 mt-3 d-none"
+        aria-live="polite"
+      ></pre>
+
+      <div
+        id="autoUploadOutcome"
+        class="alert alert-secondary small mb-0 mt-3 d-none"
+        role="status"
+        aria-live="polite"
+      ></div>
+    </main>
     <script type="module" src="./dist/popup.js"></script>
   </body>
 </html>

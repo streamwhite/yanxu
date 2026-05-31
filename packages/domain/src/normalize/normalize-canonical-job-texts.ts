@@ -1,5 +1,6 @@
 import type { CanonicalJob } from "../schema/canonical-job";
 import type { PageField } from "../schema/field-locator";
+import { normalizeBasicTextFields } from "./normalize-basic-text-fields.js";
 import { sanitizeText } from "../text/sanitize-text";
 
 function normalizePageFields(pageFields: PageField[] | undefined): PageField[] | undefined {
@@ -31,27 +32,27 @@ function normalizeV1(
 function normalizeV2(
 	job: Extract<CanonicalJob, { jobVersion: 2 }>,
 ): Extract<CanonicalJob, { jobVersion: 2 }> {
-	if (!job.bilibili) {
-		return {
-			...job,
-			pageFields: normalizePageFields(job.pageFields),
-		};
-	}
+	const bilibili = job.bilibili
+		? {
+				...job.bilibili,
+				...(job.bilibili.title === undefined ? {} : { title: sanitizeText(job.bilibili.title) }),
+				...(job.bilibili.description === undefined
+					? {}
+					: { description: sanitizeText(job.bilibili.description) }),
+				...(job.bilibili.tags === undefined
+					? {}
+					: { tags: job.bilibili.tags.map((tag) => sanitizeText(tag)) }),
+				...(job.bilibili.partition === undefined
+					? {}
+					: { partition: sanitizeText(job.bilibili.partition) }),
+			}
+		: undefined;
 
-	const tags = job.bilibili.tags?.map((tag: string) => sanitizeText(tag));
 	return {
 		...job,
-		bilibili: {
-			...job.bilibili,
-			...(job.bilibili.title === undefined ? {} : { title: sanitizeText(job.bilibili.title) }),
-			...(job.bilibili.description === undefined
-				? {}
-				: { description: sanitizeText(job.bilibili.description) }),
-			...(tags === undefined ? {} : { tags }),
-			...(job.bilibili.partition === undefined
-				? {}
-				: { partition: sanitizeText(job.bilibili.partition) }),
-		},
+		...(bilibili === undefined ? {} : { bilibili }),
+		...(job.douyin === undefined ? {} : { douyin: normalizeBasicTextFields(job.douyin) }),
+		...(job.channels === undefined ? {} : { channels: normalizeBasicTextFields(job.channels) }),
 		pageFields: normalizePageFields(job.pageFields),
 	};
 }

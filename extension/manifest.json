@@ -1,13 +1,18 @@
 {
   "manifest_version": 3,
   "name": "auto-upload (semi-auto)",
-  "description": "Fill Bilibili creator upload UI from local job JSON via native messaging. Manual publish only.",
+  "description": "Fill creator upload UIs (Bilibili, Douyin, 视频号) from local job JSON via native messaging. Manual publish only.",
   "version": "0.1.0",
-  "permissions": ["nativeMessaging", "scripting", "storage", "clipboardWrite"],
-  "host_permissions": ["https://*.bilibili.com/*", "https://*.bilibili.cn/*"],
+  "permissions": ["nativeMessaging", "scripting", "storage", "clipboardWrite", "tabs"],
+  "host_permissions": [
+    "https://*.bilibili.com/*",
+    "https://*.bilibili.cn/*",
+    "https://creator.douyin.com/*",
+    "https://*.douyin.com/*",
+    "https://channels.weixin.qq.com/*"
+  ],
   "action": {
-    "default_title": "auto-upload semi-auto",
-    "default_popup": "popup.html"
+    "default_title": "auto-upload semi-auto"
   },
   "background": {
     "service_worker": "dist/sw.js",
@@ -16,7 +21,17 @@
   "content_scripts": [
     {
       "matches": ["https://*.bilibili.com/*", "https://*.bilibili.cn/*"],
-      "js": ["dist/content-bilibili-fill.js"],
+      "js": ["dist/content-platform-fill.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://creator.douyin.com/*", "https://*.douyin.com/*"],
+      "js": ["dist/content-platform-fill.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://channels.weixin.qq.com/*"],
+      "js": ["dist/content-platform-fill.js"],
       "run_at": "document_idle"
     }
   ]

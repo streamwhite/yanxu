@@ -1,0 +1,16 @@
+.popup-shell {
+	width: 380px;
+	max-width: 100%;
+}
+
+.font-monospace {
+	font-size: 0.8125rem;
+}
+
+.batch-progress-log {
+	max-height: 140px;
+	overflow-y: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+	margin-bottom: 0;
+}

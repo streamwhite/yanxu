@@ -2,7 +2,7 @@
 
 ## Flow
 
-**Fill fields** order: sourceType → partition → title → description → tags → **cover last** (300 ms settle + blur before modal).
+**Fill fields** order: sourceType → partition → title → description → tags (paced Enter) → dismiss overlays (Escape) → **cover last** with up to 3 open/upload retries (one button click).
 
 ```mermaid
 sequenceDiagram
