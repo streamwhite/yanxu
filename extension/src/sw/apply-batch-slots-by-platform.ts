@@ -1,4 +1,5 @@
 import { ApplyPhase, Platform, type ApplyPhase as ApplyPhaseType } from "@auto-upload/domain";
+import { activateChannelsTabForApply } from "./activate-tab-for-apply.js";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import { appendBatchProgress } from "../shared/batch-progress-store.js";
 import { BatchProgressKind } from "../shared/batch-progress.js";
@@ -144,6 +145,10 @@ async function applyPlatformSlots(
 	platformSlots: BatchApplySlot[],
 ): Promise<ApplyJobFromRuntimeResult> {
 	const platform = platformSlots[0]?.platform ?? "";
+	const firstSlot = platformSlots[0];
+	if (platform === Platform.Channels && firstSlot) {
+		await activateChannelsTabForApply(firstSlot.tabId);
+	}
 	const outcomes = platformAppliesSlotsSequentially(platform)
 		? await applySlotsInOrder(jobFilePath, applyPhase, requestId, platformSlots)
 		: await applySlotsConcurrently(jobFilePath, applyPhase, requestId, platformSlots);
@@ -154,18 +159,9 @@ async function applyPlatformSlots(
 	return resolvePlatformSlotResults(outcomes);
 }
 
-export async function applyBatchSlotsConcurrentByPlatform(
-	jobFilePath: string,
-	applyPhase: ApplyPhaseType,
-	requestId: string,
-	slots: BatchApplySlot[],
-): Promise<ApplyJobFromRuntimeResult> {
-	const grouped = groupSlotsByPlatform(slots);
-	const platformRuns = [...grouped.values()].map((platformSlots) =>
-		applyPlatformSlots(jobFilePath, applyPhase, requestId, platformSlots),
-	);
-
-	const results = await Promise.all(platformRuns);
+function mergePlatformApplyResults(
+	results: readonly ApplyJobFromRuntimeResult[],
+): ApplyJobFromRuntimeResult {
 	const failures = results.filter((result) => !result.ok);
 	if (failures.length === 0) return { ok: true };
 
@@ -178,4 +174,28 @@ export async function applyBatchSlotsConcurrentByPlatform(
 		code: BATCH_PARTIAL_FAILED_CODE,
 		message: failures.map((result) => result.message).join("; "),
 	};
+}
+
+export async function applyBatchSlotsConcurrentByPlatform(
+	jobFilePath: string,
+	applyPhase: ApplyPhaseType,
+	requestId: string,
+	slots: BatchApplySlot[],
+): Promise<ApplyJobFromRuntimeResult> {
+	const grouped = groupSlotsByPlatform(slots);
+	const channelsSlots = grouped.get(Platform.Channels) ?? [];
+	if (channelsSlots.length > 0) grouped.delete(Platform.Channels);
+
+	const otherPlatformRuns = [...grouped.values()].map((platformSlots) =>
+		applyPlatformSlots(jobFilePath, applyPhase, requestId, platformSlots),
+	);
+	const otherResults =
+		otherPlatformRuns.length > 0 ? await Promise.all(otherPlatformRuns) : [];
+
+	const channelsResult =
+		channelsSlots.length > 0
+			? await applyPlatformSlots(jobFilePath, applyPhase, requestId, channelsSlots)
+			: { ok: true as const };
+
+	return mergePlatformApplyResults([...otherResults, channelsResult]);
 }

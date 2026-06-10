@@ -22,6 +22,14 @@ function wrapCoverPreviewLooksUserUploaded(wrap: HTMLElement): boolean {
 	return false;
 }
 
+export function channelsCoverDialogLooksApplied(dialog: ParentNode): boolean {
+	for (const candidate of Array.from(dialog.querySelectorAll("img"))) {
+		if (!(candidate instanceof HTMLImageElement)) continue;
+		if (channelsCoverImgLooksUserUploaded(candidate)) return true;
+	}
+	return false;
+}
+
 export function channelsCoverWrapLooksUserUploaded(
 	root: ParentNode,
 	wrapSelector: string,

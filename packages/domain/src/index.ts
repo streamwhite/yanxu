@@ -13,6 +13,7 @@ export * from "./constants/platform-host-permissions";
 export * from "./constants/platform-upload-page-urls";
 export * from "./constants/platform-upload-url-hints";
 export * from "./assets/resolve-asset-path-from-parent-folder";
+export * from "./assets/list-batch-cover-path-candidates";
 export * from "./constants/batch-assets";
 export * from "./constants/batch-asset-kind";
 export * from "./job/batch-item-requires-cover-asset";

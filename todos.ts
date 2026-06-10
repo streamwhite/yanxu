@@ -187,6 +187,7 @@ channels item 1: channels item 1 (tab 1585893423): video_file_input_not_found:ch
       `make uploading thumbnail as last step, so we can avoid timing issues since we need to fill other fields.and scine i saw it show and quick closed for uploading thumbnail modal`,
       `for wechat, remove related code of uploading horizontal cover field, since only one allowed to upload same time, i will manually upload horizontal cover. `,
     ],
+    `微信可能需要点击每个标签.`,
   ],
 
   questions: [`how native message works? better ways to do ?`],
@@ -224,7 +225,37 @@ Batch job (v3) — open tabs, upload, fill. Publish manually.
 	BILIBILI_SOURCE_TYPE_LABEL_REPOST, it is replaced by '请选择符合您视频内容的创作声明', so remove related code.
 `,
     ],
-    [],
+    [
+      `for wechat, you need to keep page active when uploading video and filling fields`,
+      `it does not upload a single video for wechat, after manual uploaded, filling fields works`,
+    ],
+    [
+      `i get this in extension page:'File chooser dialog can only be shown with a user activation.
+'`,
+      `and it only upload to wechat when i click one wechat tab(before i click it stop at bili(filled successfuly) tab).`,
+      `Error in event handler: TypeError: runWithServiceWorkerKeepAlive(...) is not a function at chrome-extension://icgamjidfldplplcdkacjgmikpebhmaj/dist/sw.js:5952:7
+Error in event handler: TypeError: runWithServiceWorkerKeepAlive(...) is not a function at chrome-extension://icgamjidfldplplcdkacjgmikpebhmaj/dist/sw.js:5914:7 get these, i did not click wechat tab, it is stop at bili tab,.
+`,
+      `no error more, but video still not uploaded to all wechat tabs, fix it.`,
+      `just keep wechat tab active when uploading video and filling fields, fix it.`,
+      `Uncaught (in promise) Error: Tabs cannot be edited right now (user may be dragging a tab). dist/sw.js:4733 (anonymous function)
+
+      now the video is uploaded and fields are filled, but not with cover, it shows when i click upload cover: '文件上传中，请等待完成后再编辑'.
+`,
+      `no more error, but cover still not upload-able, still show '文件上传中，请等待完成后再编辑'. i guess it could be you upload video again since i found that: after the video is uploaded, it can upload cover for a short while, but then it is not upload-able and stay that status.`,
+      `now it is uploadable for wechat cover, but it is not uploaded. i stay on first wechat tab long and long`,
+      `create a new branch to do these: `,
+      `for douyin and wechat, upload vertical cover first(need close modal after upload vertical cover) then upload horizontal cover and stay on that modal(i will review it). douyin vertical upload element(horizontal upload element already exists):<div class="coverControl-CjlzqC" style="margin-right: 8px; width: 90px;"><div class="cover-Jg3T4p" style="height: 120px;"><div class="background-OpVteV filter-k_CjvJ" style="background-image: none;"></div><div class="filter-k_CjvJ"><svg class="semi-icons semi-icons-image semi-icons-extra-large" aria-hidden="true" style="color: rgb(255, 255, 255);"><use xlink:href="#semi-icons-image"></use></svg><div class="title-wA45Xd">选择封面</div></div></div><div class="controlContainer-psV7_j"><div class="cover-tip-YkBvmu">竖封面3:4</div></div></div>;wechat horizontal upload element(vertical upload element already exists):<div data-v-21870d77="" class="horizon-cover-wrap img-popover-wrap"><div data-v-21870d77="" class="horizon-img-wrap"><!----><img data-v-21870d77="" src="https://finder.video.qq.com/251/20304/stodownload?bizid=1023&amp;dotrans=0&amp;encfilekey=rjD5jyTuFrIpZ2ibE8T7YmwgiahniaXswqzqqJq1YTsXA5QicCbEUicW8WJHtzh4q4EeEIRLkibxv8K3SxdTUw66LeQcwCovVU1sTRAHWQPuibuTLCZeEG3CzLgfg&amp;hy=SH&amp;idx=1&amp;m=&amp;scene=2&amp;token=AxricY7RBHdUuQkbb4fZw9yh03fAqaqwtMqDxXxhNxibUjl9HQqp4vlVJrpDgOXyWzA1oo5AYhvwGo3hUbhu8VKs34AVuwuxdwAXq26xlTXHDicwhZrEqMiaKQ&amp;uzid=1" class="horizon-img-size"><div data-v-21870d77="" class="edit-btn">编辑</div></div><div data-v-21870d77="" class="tips-wrap"><div data-v-21870d77="" class="cover-tips">分享卡片</div><div data-v-21870d77="" class="cover-tips">4:3</div></div></div>`,
+      `now wechat vertical cover is not uploaded, horizontal cover is uploaded, fix it.`,
+      `goal:for douyin and wechat, you need to upload vertical cover first, then upload horizontal cover and stay on that modal(i will review it).for douyin, you  use this element '<button tabindex="0" class="semi-button semi-button-primary semi-button-light primary-RstHX_" type="button" aria-describedby="0saknbi" data-popupid="0saknbi" style=""><span class="semi-button-content">设置横封面</span></button>' to switch to horizontal cover upload area after upload vertical cover(no need to close modal, after switch stay on that modal); for wechat, you need to click the ele '<div data-v-6de9e5d2="" class="weui-desktop-btn_wrp"><button type="button" class="weui-desktop-btn weui-desktop-btn_primary weui-desktop-btn_mini">确认</button></div>' btn on modal to close modal  after uploading vertical cover, then start to upload horizontal cover. `,
+      `for douyin, you need to stay on that modal with horizontal cover(no need to close modal and upload horizontal cover since it reuse the same cover as vertical cover)`,
+      `for wechat, you need to close verical cover uploading modal then upload horizontal cover, then this ele '<div data-v-21870d77="" class="weui-desktop-btn_wrp btn-use"><button type="button" class="weui-desktop-btn weui-desktop-btn_primary weui-desktop-btn_mini">使用素材</button></div>'shows up, click it to reuse the same cover as vertical cover, stay on that modal(do not close it)`,
+      `proceed`,
+      `douyin works; wechat still stay on vertical cover uploading modal, proceed. remember to click '<div data-v-6de9e5d2="" class="weui-desktop-btn_wrp"><button type="button" class="weui-desktop-btn weui-desktop-btn_primary weui-desktop-btn_mini">确认</button></div>' btn on modal to close modal  after uploading vertical cover, then start to upload horizontal cover. `,
+      `for wechat, when you clicked uploading horizontal cover, you need to click '<div data-v-21870d77="" class="weui-desktop-btn_wrp btn-use"><button type="button" class="weui-desktop-btn weui-desktop-btn_primary weui-desktop-btn_mini">使用素材</button></div>' btn on another smaller modal to reuse vertical cover. right now it stay on the smaller modal.`,
+      `allow jpg as cover extension`,
+      `add a option to upload(and filling fields and open wechat tabs) to wechat only(when checked) since some times wechat block multiple uploading within short time. i need to re-upload(filling fields) again later.i will update Batch job file to those need re-upload(filling fields). `,
+    ],
   ],
   knowledge: [
     `插件开发只能使用输出问题来调试,没法进行断点,不然看不到是哪里出了问题,问下.`,

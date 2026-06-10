@@ -67,6 +67,40 @@ describe("applyUploadThenFillAllTabs", () => {
 		expect(markSpy).toHaveBeenCalled();
 	});
 
+	it("runs channels video after bilibili and douyin video, then all fills", async () => {
+		jest.spyOn(prepareModule, "prepareBatchApplyContext").mockResolvedValue({
+			slots: [
+				{ platform: Platform.Bilibili, tabId: 1, itemIndex: 0 },
+				{ platform: Platform.Channels, tabId: 2, itemIndex: 0 },
+				{ platform: Platform.Douyin, tabId: 3, itemIndex: 0 },
+			],
+		});
+		jest.spyOn(progressModule, "clearBatchProgress").mockResolvedValue();
+		jest.spyOn(uploadStateModule, "markBatchVideosUploaded").mockResolvedValue();
+
+		const callOrder: string[] = [];
+		jest
+			.spyOn(batchSlotsModule, "applyBatchSlotsConcurrentByPlatform")
+			.mockImplementation(async (_path, phase, _req, slots) => {
+				const platform = slots[0]?.platform ?? "unknown";
+				callOrder.push(`${platform}:${phase}`);
+				return { ok: true };
+			});
+
+		const result = await applyUploadThenFillAllTabs("/tmp/job.json", "req-order", 0);
+
+		expect(result.ok).toBe(true);
+		const channelsVideoIndex = callOrder.indexOf(`${Platform.Channels}:${ApplyPhase.VideoOnly}`);
+		const bilibiliVideoIndex = callOrder.indexOf(`${Platform.Bilibili}:${ApplyPhase.VideoOnly}`);
+		const douyinVideoIndex = callOrder.indexOf(`${Platform.Douyin}:${ApplyPhase.VideoOnly}`);
+		const douyinFieldsIndex = callOrder.indexOf(`${Platform.Douyin}:${ApplyPhase.FieldsOnly}`);
+		const bilibiliFieldsIndex = callOrder.indexOf(`${Platform.Bilibili}:${ApplyPhase.FieldsOnly}`);
+		expect(channelsVideoIndex).toBeGreaterThan(bilibiliVideoIndex);
+		expect(channelsVideoIndex).toBeGreaterThan(douyinVideoIndex);
+		expect(channelsVideoIndex).toBeLessThan(bilibiliFieldsIndex);
+		expect(channelsVideoIndex).toBeLessThan(douyinFieldsIndex);
+	});
+
 	it("continues channels to FieldsOnly when VideoOnly fully fails", async () => {
 		jest.spyOn(prepareModule, "prepareBatchApplyContext").mockResolvedValue({
 			slots: [{ platform: Platform.Channels, tabId: 2, itemIndex: 0 }],

@@ -11,6 +11,7 @@ import {
 } from "./constants/douyin-cover-timing.js";
 import { douyinCoverUploadLooksApplied } from "./douyin-cover-upload-looks-applied.js";
 import { findDouyinCoverTrigger } from "./find-douyin-cover-trigger.js";
+import { findDouyinHorizontalCoverSwitchButton } from "./find-douyin-horizontal-cover-switch-button.js";
 import { DOUYIN_COVER_MODAL_SEMI_UPLOAD_SELECTOR } from "./douyin-cover-selectors.js";
 import { resolveDouyinCoverDragArea } from "./resolve-douyin-cover-drag-area.js";
 import { waitForDouyinCoverFileInput } from "./wait-for-douyin-cover-file-input.js";
@@ -19,6 +20,7 @@ import { waitForDouyinCoverUploadClickTarget } from "./wait-for-douyin-cover-upl
 import { waitForDouyinCoverUploadApplied } from "./wait-for-douyin-cover-upload-applied.js";
 
 const DOUYIN_COVER_RETRY_APPLIED_WAIT_MS = 2_000 as const;
+const DOUYIN_AFTER_HORIZONTAL_SWITCH_SETTLE_MS = 500 as const;
 
 function tryAssignViaFileInput(input: HTMLInputElement, file: File): boolean {
 	assignFileToInput(input, file);
@@ -89,8 +91,9 @@ async function assignDouyinCoverInModal(
 	return douyinCoverUploadLooksApplied(modal);
 }
 
+/** Vertical cover in modal, switch to horizontal via 设置横封面 (same cover, modal stays open). */
 export async function applyDouyinCoverViaModal(root: ParentNode, file: File): Promise<boolean> {
-	const trigger = findDouyinCoverTrigger(root);
+	const trigger = findDouyinCoverTrigger(root, "vertical");
 	if (!trigger) return false;
 
 	clickDouyinCoverTrigger(trigger);
@@ -102,5 +105,14 @@ export async function applyDouyinCoverViaModal(root: ParentNode, file: File): Pr
 
 	if (!modal || !uploadRoot || !clickTarget) return false;
 
-	return assignDouyinCoverInModal(modal, file, uploadRoot, clickTarget);
+	const verticalOk = await assignDouyinCoverInModal(modal, file, uploadRoot, clickTarget);
+	if (!verticalOk) return false;
+
+	const switchBtn = findDouyinHorizontalCoverSwitchButton(modal);
+	if (!switchBtn) return false;
+
+	dispatchClick(switchBtn);
+	await waitMs(DOUYIN_AFTER_HORIZONTAL_SWITCH_SETTLE_MS);
+
+	return true;
 }

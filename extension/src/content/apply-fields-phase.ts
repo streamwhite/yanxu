@@ -1,5 +1,6 @@
 import { getJobPlatform, Platform, type AppliedJobPayload, type CanonicalJob } from "@auto-upload/domain";
 import { CHANNELS_BEFORE_COVER_SETTLE_MS } from "../platforms/channels/constants/channels-cover-timing.js";
+import { waitForChannelsVideoUploadComplete } from "../platforms/channels/wait-for-channels-video-upload-complete.js";
 import { blurActiveFieldBeforeCover } from "./blur-active-field-before-cover.js";
 import { waitMs } from "./wait-ms.js";
 import { platformSupportsCoverUpload } from "../platforms/platform-supports-cover-upload.js";
@@ -63,13 +64,14 @@ export async function applyFieldsPhase(
 	await applyAllPageFields(job, progress);
 
 	const platform = getJobPlatform(job);
-	if (platform === Platform.Channels && jobHasCoverToApply(payload)) {
+	const hasCover = jobHasCoverToApply(payload);
+	const supportsCover = platformSupportsCoverUpload(platform);
+
+	if (platform === Platform.Channels && hasCover && supportsCover) {
+		await waitForChannelsVideoUploadComplete(document);
 		blurActiveFieldBeforeCover();
 		await waitMs(CHANNELS_BEFORE_COVER_SETTLE_MS);
 	}
-
-	const hasCover = jobHasCoverToApply(payload);
-	const supportsCover = platformSupportsCoverUpload(platform);
 
 	if (!hasCover) return;
 	if (!supportsCover) return;

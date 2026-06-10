@@ -1,12 +1,14 @@
 import { constants as fsConstants, promises as fsp } from "node:fs";
 import { isAbsolute as isAbsolutePosixOrWin, resolve as resolveCrossPlatform } from "node:path";
 import {
+	BatchAssetKind,
 	formatMissingBatchAssetsMessage,
 	listRequiredBatchAssets,
 	normalizeBatchJobTexts,
 	type MissingBatchAsset,
 	validateJobFile,
 } from "@auto-upload/domain";
+import { resolveExistingCoverPath } from "../assets/resolve-existing-cover-path.js";
 
 const ERROR_BATCH_ASSETS_MISSING = "batch_assets_missing" as const;
 const ERROR_INVALID_JOB = "invalid_job" as const;
@@ -37,6 +39,12 @@ async function collectMissingAssets(
 	const missing: MissingBatchAsset[] = [];
 
 	for (const asset of required) {
+		if (asset.kind === BatchAssetKind.Cover) {
+			const resolved = await resolveExistingCoverPath(asset.absolutePath);
+			if (!resolved) missing.push(asset);
+			continue;
+		}
+
 		const readable = await isReadableFile(asset.absolutePath);
 		if (!readable) missing.push(asset);
 	}

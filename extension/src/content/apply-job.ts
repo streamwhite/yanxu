@@ -12,7 +12,6 @@ import { clickVideoUploadTriggerForPlatform } from "../platforms/click-video-upl
 import { platformFullPhaseVideoToFieldsSettleMs } from "../platforms/platform-full-phase-video-to-fields-settle-ms.js";
 import { platformVideoUploadSettleMs } from "../platforms/platform-video-upload-settle-ms.js";
 import { applyChannelsVideoFile } from "../platforms/channels/apply-channels-video-file.js";
-import { channelsHasPostUploadMetadataUi } from "../platforms/channels/channels-has-post-upload-metadata-ui.js";
 import { channelsVideoAlreadyUploaded } from "../platforms/channels/channels-video-already-uploaded.js";
 import { waitForChannelsPageInteractive } from "../platforms/channels/wait-for-channels-page-interactive.js";
 import { waitForChannelsPostUploadFormReady } from "../platforms/channels/wait-for-channels-post-upload-form-ready.js";
@@ -105,10 +104,9 @@ async function applyVideoAttachment(
 			return;
 		}
 
-		const applied = await applyChannelsVideoFile(file);
-		const alreadyAfter = channelsVideoAlreadyUploaded(document);
+		const readyForCover = await applyChannelsVideoFile(file);
 
-		if (!applied && !alreadyAfter && !channelsHasPostUploadMetadataUi(document)) {
+		if (!readyForCover) {
 			throw new Error(
 				`video_file_input_not_found:${platform}:item_${String(payload.batch.itemIndex)}`,
 			);

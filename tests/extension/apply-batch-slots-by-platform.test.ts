@@ -1,12 +1,14 @@
-import { ApplyPhase } from "@auto-upload/domain";
+import { ApplyPhase, Platform } from "@auto-upload/domain";
 import { applyBatchSlotsConcurrentByPlatform } from "../../extension/src/sw/apply-batch-slots-by-platform";
 import * as progressModule from "../../extension/src/shared/batch-progress-store";
 import * as applyItemModule from "../../extension/src/sw/apply-batch-item-via-native-host";
 import * as staggerModule from "../../extension/src/sw/wait-random-stagger-ms";
+import * as activateModule from "../../extension/src/sw/activate-tab-for-apply";
 
 describe("applyBatchSlotsConcurrentByPlatform", () => {
 	beforeEach(() => {
 		jest.restoreAllMocks();
+		jest.spyOn(activateModule, "activateChannelsTabForApply").mockResolvedValue();
 	});
 
 	it("applies all slots on one platform concurrently after stagger", async () => {
@@ -85,6 +87,31 @@ describe("applyBatchSlotsConcurrentByPlatform", () => {
 		const secondCallOrder = applySpy.mock.invocationCallOrder[1] ?? 0;
 		expect(firstCallOrder).toBeLessThan(secondCallOrder);
 		expect(staggerSpy).toHaveBeenCalledTimes(2);
+	});
+
+	it("applies channels after other platforms so the tab stays focused", async () => {
+		const order: string[] = [];
+		jest.spyOn(applyItemModule, "applyBatchItemViaNativeHost").mockImplementation(async (input) => {
+			order.push(input.platform);
+			return { ok: true };
+		});
+		jest.spyOn(staggerModule, "waitRandomStaggerMs").mockResolvedValue();
+		jest.spyOn(progressModule, "appendBatchProgress").mockResolvedValue();
+
+		const slots = [
+			{ platform: Platform.Bilibili, tabId: 1, itemIndex: 0 },
+			{ platform: Platform.Channels, tabId: 2, itemIndex: 0 },
+		];
+
+		const result = await applyBatchSlotsConcurrentByPlatform(
+			"/tmp/job.json",
+			ApplyPhase.VideoOnly,
+			"req-mix",
+			slots,
+		);
+
+		expect(result.ok).toBe(true);
+		expect(order).toEqual([Platform.Bilibili, Platform.Channels]);
 	});
 
 	it("runs every slot even when one tab fails", async () => {

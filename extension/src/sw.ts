@@ -116,7 +116,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 			} finally {
 				clearActiveBatchRequestId(requestId);
 			}
-		})();
+		});
 		return false;
 	}
 
@@ -136,7 +136,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 					message: msg,
 				});
 			}
-		})();
+		});
 		return false;
 	}
 
@@ -156,7 +156,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 					message: msg,
 				});
 			}
-		})();
+		});
 		return false;
 	}
 

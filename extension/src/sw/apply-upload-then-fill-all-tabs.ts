@@ -23,73 +23,41 @@ function mergePartialResults(
 	};
 }
 
-async function applyDouyinUploadThenFill(
-	jobFilePath: string,
-	requestId: string,
-	slots: BatchApplySlot[],
-	fieldsSettleMs: number,
-): Promise<ApplyJobFromRuntimeResult> {
-	if (slots.length === 0) return { ok: true };
-
-	const uploadResult = await applyBatchSlotsConcurrentByPlatform(
-		jobFilePath,
-		ApplyPhase.VideoOnly,
-		requestId,
-		slots,
-	);
-	if (!uploadResult.ok && uploadResult.code !== BATCH_PARTIAL_FAILED_CODE) {
-		return uploadResult;
+function mergePlatformResults(
+	results: readonly ApplyJobFromRuntimeResult[],
+): ApplyJobFromRuntimeResult {
+	const failures = results.filter((result) => !result.ok);
+	if (failures.length === 0) return { ok: true };
+	if (failures.length === results.length) {
+		return failures[0] ?? { ok: false, code: "tab_apply_failed", message: "unknown" };
 	}
-
-	await markBatchVideosUploaded(jobFilePath);
-	if (fieldsSettleMs > 0) await waitMs(fieldsSettleMs);
-
-	const fillResult = await applyBatchSlotsConcurrentByPlatform(
-		jobFilePath,
-		ApplyPhase.FieldsOnly,
-		requestId,
-		slots,
-	);
-	if (uploadResult.ok) return fillResult;
-	if (fillResult.ok) return uploadResult;
-	return mergePartialResults(uploadResult, fillResult);
+	return {
+		ok: false,
+		code: BATCH_PARTIAL_FAILED_CODE,
+		message: failures.map((result) => result.message).join("; "),
+	};
 }
 
-async function applyPlatformUploadThenFill(
+async function applySlotsPhase(
 	jobFilePath: string,
+	applyPhase: typeof ApplyPhase.VideoOnly | typeof ApplyPhase.FieldsOnly,
 	requestId: string,
 	slots: BatchApplySlot[],
-	fieldsSettleMs: number,
 ): Promise<ApplyJobFromRuntimeResult> {
 	if (slots.length === 0) return { ok: true };
+	return applyBatchSlotsConcurrentByPlatform(jobFilePath, applyPhase, requestId, slots);
+}
 
-	const platform = slots[0]?.platform ?? "unknown";
-
-	const uploadResult = await applyBatchSlotsConcurrentByPlatform(
-		jobFilePath,
-		ApplyPhase.VideoOnly,
-		requestId,
-		slots,
-	);
-	if (!uploadResult.ok && uploadResult.code !== BATCH_PARTIAL_FAILED_CODE) {
-		if (platform !== Platform.Channels) {
-			return uploadResult;
-		}
-	}
-
-	await markBatchVideosUploaded(jobFilePath);
-	if (fieldsSettleMs > 0) await waitMs(fieldsSettleMs);
-
-	const fillResult = await applyBatchSlotsConcurrentByPlatform(
-		jobFilePath,
-		ApplyPhase.FieldsOnly,
-		requestId,
-		slots,
-	);
-	if (uploadResult.ok && fillResult.ok) return { ok: true };
-	if (uploadResult.ok) return fillResult;
-	if (fillResult.ok) return { ok: true };
-	return mergePartialResults(uploadResult, fillResult);
+function combinePlatformUploadAndFill(
+	upload: ApplyJobFromRuntimeResult,
+	fill: ApplyJobFromRuntimeResult,
+	allowFillAfterUploadFailure: boolean,
+): ApplyJobFromRuntimeResult {
+	if (upload.ok && fill.ok) return { ok: true };
+	if (upload.ok) return fill;
+	if (fill.ok && allowFillAfterUploadFailure) return { ok: true };
+	if (fill.ok) return upload;
+	return mergePartialResults(upload, fill);
 }
 
 export async function applyUploadThenFillAllTabs(
@@ -109,11 +77,29 @@ export async function applyUploadThenFillAllTabs(
 		const bilibiliSlots = prepared.slots.filter((slot) => slot.platform === Platform.Bilibili);
 		const channelsSlots = prepared.slots.filter((slot) => slot.platform === Platform.Channels);
 
-		const [bilibiliResult, channelsResult, douyinResult] = await Promise.all([
-			applyPlatformUploadThenFill(jobFilePath, requestId, bilibiliSlots, settleMs),
-			applyPlatformUploadThenFill(jobFilePath, requestId, channelsSlots, settleMs),
-			applyDouyinUploadThenFill(jobFilePath, requestId, douyinSlots, settleMs),
+		const [bilibiliUpload, douyinUpload] = await Promise.all([
+			applySlotsPhase(jobFilePath, ApplyPhase.VideoOnly, requestId, bilibiliSlots),
+			applySlotsPhase(jobFilePath, ApplyPhase.VideoOnly, requestId, douyinSlots),
 		]);
+		const channelsUpload = await applySlotsPhase(
+			jobFilePath,
+			ApplyPhase.VideoOnly,
+			requestId,
+			channelsSlots,
+		);
+
+		await markBatchVideosUploaded(jobFilePath);
+		if (settleMs > 0) await waitMs(settleMs);
+
+		const [bilibiliFill, douyinFill, channelsFill] = await Promise.all([
+			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, bilibiliSlots),
+			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, douyinSlots),
+			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, channelsSlots),
+		]);
+
+		const bilibiliResult = combinePlatformUploadAndFill(bilibiliUpload, bilibiliFill, false);
+		const douyinResult = combinePlatformUploadAndFill(douyinUpload, douyinFill, false);
+		const channelsResult = combinePlatformUploadAndFill(channelsUpload, channelsFill, true);
 
 		if (bilibiliResult.ok && channelsResult.ok) return douyinResult;
 		if (bilibiliResult.ok && douyinResult.ok) return channelsResult;

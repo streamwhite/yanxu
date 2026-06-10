@@ -1,4 +1,5 @@
-import type { BatchAssetKind } from "../constants/batch-asset-kind.js";
+import { listBatchCoverPathCandidates } from "../assets/list-batch-cover-path-candidates.js";
+import { BatchAssetKind } from "../constants/batch-asset-kind.js";
 
 export type MissingBatchAsset = {
 	itemIndex: number;
@@ -11,9 +12,19 @@ const BATCH_ASSET_KIND_LABELS: Record<BatchAssetKind, string> = {
 	cover: "cover file",
 };
 
+function formatMissingCoverPath(absolutePath: string): string {
+	const candidates = listBatchCoverPathCandidates(absolutePath);
+	if (candidates.length <= 1) return absolutePath;
+	return `${absolutePath} (also accepts ${candidates.slice(1).join(", ")})`;
+}
+
 function formatMissingEntry(entry: MissingBatchAsset): string {
 	const label = BATCH_ASSET_KIND_LABELS[entry.kind];
-	return `item ${String(entry.itemIndex)}: missing ${label} ${entry.absolutePath}`;
+	const path =
+		entry.kind === BatchAssetKind.Cover
+			? formatMissingCoverPath(entry.absolutePath)
+			: entry.absolutePath;
+	return `item ${String(entry.itemIndex)}: missing ${label} ${path}`;
 }
 
 export function formatMissingBatchAssetsMessage(missing: MissingBatchAsset[]): string {

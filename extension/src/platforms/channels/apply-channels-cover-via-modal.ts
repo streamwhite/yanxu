@@ -4,13 +4,22 @@ import { inputHasAssignedFile } from "../../content/input-has-assigned-file.js";
 import { waitMs } from "../../content/wait-ms.js";
 import { assignFileToInput } from "../../content/dom.js";
 import { blurActiveFieldBeforeCover } from "../../content/blur-active-field-before-cover.js";
-import { CHANNELS_VERTICAL_COVER_WRAP_SELECTOR } from "./channels-cover-selectors.js";
-import { channelsCoverWrapLooksUserUploaded } from "./channels-cover-upload-looks-applied.js";
+import {
+	CHANNELS_HORIZON_COVER_WRAP_SELECTOR,
+	CHANNELS_VERTICAL_COVER_WRAP_SELECTOR,
+} from "./channels-cover-selectors.js";
+import {
+	channelsCoverDialogLooksApplied,
+	channelsCoverWrapLooksUserUploaded,
+} from "./channels-cover-upload-looks-applied.js";
+import { confirmChannelsVerticalCoverDialog } from "./confirm-channels-vertical-cover-dialog.js";
 import { findChannelsCoverTriggerInWrap } from "./find-channels-cover-trigger.js";
 import { waitForChannelsCoverFileInput } from "./wait-for-channels-cover-file-input.js";
-import { waitForChannelsCoverUploadApplied } from "./wait-for-channels-cover-upload-applied.js";
+import { waitForChannelsCoverUploadReady } from "./wait-for-channels-cover-upload-ready.js";
 import { waitForChannelsCoverUploadClickTarget } from "./wait-for-channels-cover-upload-click-target.js";
 import { waitForChannelsCoverUploadDialog } from "./wait-for-channels-cover-upload-dialog.js";
+import { waitForChannelsCoverUploadDialogAbsent } from "./wait-for-channels-cover-upload-dialog-absent.js";
+import { clickChannelsUseMaterialButton } from "./click-channels-use-material-button.js";
 import {
 	CHANNELS_COVER_ASSIGN_RETRIES,
 	CHANNELS_COVER_ASSIGN_RETRY_MS,
@@ -21,10 +30,7 @@ import {
 } from "./constants/channels-cover-timing.js";
 
 const CHANNELS_COVER_RETRY_APPLIED_WAIT_MS = 2_000 as const;
-
-async function settleAfterCoverAssign(): Promise<void> {
-	await waitMs(CHANNELS_AFTER_COVER_ASSIGN_SETTLE_MS);
-}
+const CHANNELS_AFTER_VERTICAL_COVER_CLOSE_SETTLE_MS = 500 as const;
 
 function tryAssignViaFileInput(input: HTMLInputElement, file: File): boolean {
 	assignFileToInput(input, file);
@@ -52,15 +58,24 @@ async function assignChannelsCoverInDialog(
 	const input =
 		(await waitForChannelsCoverFileInput(dialog)) ??
 		(await waitForChannelsCoverFileInput(document));
-	const inputAssigned = Boolean(input && tryAssignViaFileInput(input, file));
+	if (!input) return false;
 
-	if (!inputAssigned && uploadTarget) {
+	tryAssignViaFileInput(input, file);
+
+	if (!inputHasAssignedFile(input, file) && uploadTarget) {
 		assignFileViaDragDrop(uploadTarget, file);
-		if (input) tryAssignViaFileInput(input, file);
+		tryAssignViaFileInput(input, file);
 	}
 
-	if (input && inputHasAssignedFile(input, file)) {
-		await settleAfterCoverAssign();
+	if (
+		await waitForChannelsCoverUploadReady(
+			document,
+			dialog,
+			wrapSelector,
+			CHANNELS_COVER_UPLOAD_APPLIED_WAIT_MS,
+		)
+	) {
+		await waitMs(CHANNELS_AFTER_COVER_ASSIGN_SETTLE_MS);
 		return true;
 	}
 
@@ -72,27 +87,23 @@ async function assignChannelsCoverInDialog(
 			await waitMs(CHANNELS_COVER_POST_CLICK_SETTLE_MS);
 		}
 
-		const retryInput =
-			(await waitForChannelsCoverFileInput(dialog)) ??
-			(await waitForChannelsCoverFileInput(document));
-		if (retryInput) tryAssignViaFileInput(retryInput, file);
+		tryAssignViaFileInput(input, file);
 		if (uploadTarget) assignFileViaDragDrop(uploadTarget, file);
-
-		if (input && inputHasAssignedFile(input, file)) {
-			await settleAfterCoverAssign();
-			return true;
-		}
 
 		const waitMsForAttempt =
 			attempt === CHANNELS_COVER_ASSIGN_RETRIES - 1
 				? CHANNELS_COVER_UPLOAD_APPLIED_WAIT_MS
 				: CHANNELS_COVER_RETRY_APPLIED_WAIT_MS;
-		if (await waitForChannelsCoverUploadApplied(document, waitMsForAttempt)) {
-			if (channelsCoverWrapLooksUserUploaded(document, wrapSelector)) return true;
+		if (await waitForChannelsCoverUploadReady(document, dialog, wrapSelector, waitMsForAttempt)) {
+			await waitMs(CHANNELS_AFTER_COVER_ASSIGN_SETTLE_MS);
+			return true;
 		}
 	}
 
-	return channelsCoverWrapLooksUserUploaded(document, wrapSelector);
+	return (
+		channelsCoverWrapLooksUserUploaded(document, wrapSelector) ||
+		channelsCoverDialogLooksApplied(dialog)
+	);
 }
 
 async function applyChannelsCoverForWrap(
@@ -112,13 +123,45 @@ async function applyChannelsCoverForWrap(
 	return assignChannelsCoverInDialog(dialog, file, uploadTarget, wrapSelector);
 }
 
-/** Vertical cover only; horizontal cover is uploaded manually on 视频号. */
+async function confirmAndCloseVerticalCoverDialog(root: ParentNode): Promise<boolean> {
+	const confirmed = await confirmChannelsVerticalCoverDialog(root);
+	if (!confirmed) return false;
+
+	await waitMs(CHANNELS_COVER_POST_CLICK_SETTLE_MS);
+	return waitForChannelsCoverUploadDialogAbsent(root);
+}
+
+async function applyChannelsHorizontalCoverViaUseMaterial(root: ParentNode): Promise<boolean> {
+	const trigger = findChannelsCoverTriggerInWrap(root, CHANNELS_HORIZON_COVER_WRAP_SELECTOR);
+	if (!trigger) return false;
+
+	clickChannelsCoverTrigger(trigger);
+	await waitMs(CHANNELS_COVER_POST_CLICK_SETTLE_MS);
+
+	const clicked = await clickChannelsUseMaterialButton(document);
+	if (!clicked) return false;
+
+	await waitMs(CHANNELS_AFTER_COVER_ASSIGN_SETTLE_MS);
+	return true;
+}
+
+/** Vertical upload + 确认, then horizontal via 使用素材 (modal stays open for review). */
 export async function applyChannelsCoverViaModal(root: ParentNode, file: File): Promise<boolean> {
-	const wrapSelector = CHANNELS_VERTICAL_COVER_WRAP_SELECTOR;
-	if (!findChannelsCoverTriggerInWrap(root, wrapSelector)) return false;
+	if (!findChannelsCoverTriggerInWrap(root, CHANNELS_VERTICAL_COVER_WRAP_SELECTOR)) return false;
 
 	blurActiveFieldBeforeCover();
 	await waitMs(CHANNELS_BEFORE_COVER_SETTLE_MS);
 
-	return applyChannelsCoverForWrap(root, wrapSelector, file);
+	const verticalOk = await applyChannelsCoverForWrap(
+		root,
+		CHANNELS_VERTICAL_COVER_WRAP_SELECTOR,
+		file,
+	);
+	if (!verticalOk) return false;
+
+	if (!(await confirmAndCloseVerticalCoverDialog(root))) return false;
+
+	await waitMs(CHANNELS_AFTER_VERTICAL_COVER_CLOSE_SETTLE_MS);
+
+	return applyChannelsHorizontalCoverViaUseMaterial(root);
 }

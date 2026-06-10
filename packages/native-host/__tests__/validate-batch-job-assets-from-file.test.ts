@@ -29,6 +29,24 @@ describe("validateBatchJobAssetsFromFileJson", () => {
 		expect(result).toEqual({ ok: true });
 	});
 
+	it("accepts jpg cover files", async () => {
+		await writeFile(join(tempDir, "clip-a.mp4"), "video");
+		await writeFile(join(tempDir, "clip-a.jpg"), "cover");
+		await writeFile(join(tempDir, "clip-b.mp4"), "video");
+
+		const result = await validateBatchJobAssetsFromFileJson({
+			jobVersion: 3,
+			assetsParentFolder: tempDir,
+			publish: { mode: PublishMode.Semi, submit: SubmitPolicy.Manual },
+			items: [
+				{ targets: ["bilibili"], name: "clip-a" },
+				{ targets: ["douyin"], name: "clip-b", includeCover: false },
+			],
+		});
+
+		expect(result).toEqual({ ok: true });
+	});
+
 	it("reports every missing video and cover file before upload", async () => {
 		await writeFile(join(tempDir, "clip-a.mp4"), "video");
 

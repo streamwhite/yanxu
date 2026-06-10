@@ -10,6 +10,7 @@ import {
 	DEFAULT_JOB_POLICY,
 	DEFAULT_TRANSFER_CHUNK_BYTES,
 } from "@auto-upload/domain";
+import { resolveExistingCoverPath } from "../assets/resolve-existing-cover-path.js";
 import { resolveCoverAttachment } from "../attachments/resolve-cover-attachment.js";
 import { resolveVideoAttachment } from "../attachments/resolve-video-attachment.js";
 import { buildOutboundApplyBatch } from "./build-outbound-apply-batch.js";
@@ -100,7 +101,10 @@ async function applyJobFromFile(
 	if (!resolvedVideoPath) throw new Error("video_path_missing");
 	await fsp.access(resolvedVideoPath, fsConstants.R_OK);
 
-	const resolvedCoverPath = resolveIfPresent(job.assets.localCoverPath);
+	const coverPathHint = resolveIfPresent(job.assets.localCoverPath);
+	const resolvedCoverPath = coverPathHint
+		? await resolveExistingCoverPath(coverPathHint)
+		: undefined;
 	const maxDirectAttachBytes =
 		job.policy?.maxDirectAttachBytes ?? DEFAULT_JOB_POLICY.maxDirectAttachBytes;
 	const maxCoverInlineBytes =

@@ -1,5 +1,7 @@
 import { BatchJobSchema, type BatchJob } from "../schema/batch-job";
 import { CanonicalJobSchema, type CanonicalJob } from "../schema/canonical-job";
+import { formatZodValidationError } from "./format-zod-validation-error.js";
+import { looksLikeBatchJobFile } from "./looks-like-batch-job-file.js";
 
 export type JobFileValidationResult =
 	| { ok: true; kind: "canonical"; job: CanonicalJob }
@@ -17,8 +19,9 @@ export function validateJobFile(input: unknown): JobFileValidationResult {
 		return { ok: true, kind: "canonical", job: canonicalParsed.data };
 	}
 
+	const error = looksLikeBatchJobFile(input) ? batchParsed.error : canonicalParsed.error;
 	return {
 		ok: false,
-		errorMessage: canonicalParsed.error.message,
+		errorMessage: formatZodValidationError(error),
 	};
 }
