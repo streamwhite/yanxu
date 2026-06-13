@@ -4,4 +4,5 @@ export const ContentMessageType = {
 	ApplyJobPart: "content.applyJobPart",
 	ApplyJobCommit: "content.applyJobCommit",
 	ApplyProgress: "content.applyProgress",
+	SubmitPlatform: "content.submitPlatform",
 } as const;

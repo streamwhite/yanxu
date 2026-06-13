@@ -16,6 +16,13 @@ import {
 	DEFAULT_FIELDS_SETTLE_MS,
 	STORAGE_KEY_FIELDS_SETTLE_MS,
 } from "../shared/fields-settle-config.js";
+import {
+	bindPlatformSubmitRow,
+	collectPlatformSubmitUi,
+	platformSubmitBusyLabel,
+	platformSubmitSuccessLabel,
+	type PlatformSubmitUi,
+} from "./platform-submit-controls.js";
 
 const STORAGE_KEY_SEMI_JOB_FILE_PATH = "semiAutoJobFilePath" as const;
 
@@ -116,10 +123,39 @@ async function runRuntimeBatchAction(
 	}
 }
 
-function bindOpenAllTabsButton(
-	button: HTMLButtonElement,
-	readJobPath: () => string | null,
-): void {
+async function runRuntimeSubmitAction(row: PlatformSubmitUi): Promise<void> {
+	const { platform, submitButton } = row;
+	setOutcome(platformSubmitBusyLabel(platform), PopupOutcomeVariant.Info);
+	submitButton.disabled = true;
+
+	const requestId = createRuntimeRequestId();
+
+	try {
+		await wakeServiceWorker();
+
+		const { result } = await sendRuntimeMessageWithTimeout<ApplyJobFromRuntimeResult>(
+			{
+				type: RuntimeMessageType.SubmitPlatformTabs,
+				platform,
+			},
+			requestId,
+		);
+
+		if (result.ok === true) {
+			setOutcome(platformSubmitSuccessLabel(platform), PopupOutcomeVariant.Success);
+			return;
+		}
+
+		setOutcome(`Failed (${result.code}): ${result.message}`, PopupOutcomeVariant.Danger);
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.message : "unexpected_error";
+		setOutcome(`Failed: ${detail}`, PopupOutcomeVariant.Danger);
+	} finally {
+		submitButton.disabled = !row.reviewedCheckbox.checked;
+	}
+}
+
+function bindOpenAllTabsButton(button: HTMLButtonElement, readJobPath: () => string | null): void {
 	button.addEventListener("click", () => {
 		const jobFilePath = readJobPath();
 		if (!jobFilePath) return;
@@ -193,6 +229,15 @@ async function bootstrap(): Promise<void> {
 			progressLog,
 		);
 	});
+
+	const platformSubmitUi = collectPlatformSubmitUi();
+	if (platformSubmitUi) {
+		for (const row of platformSubmitUi) {
+			bindPlatformSubmitRow(row, () => {
+				void runRuntimeSubmitAction(row);
+			});
+		}
+	}
 }
 
 void bootstrap();

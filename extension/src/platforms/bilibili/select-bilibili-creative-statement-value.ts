@@ -47,10 +47,7 @@ function selectionMatches(
 	);
 }
 
-async function clickMainOption(
-	select: HTMLElement,
-	statementOption: string,
-): Promise<boolean> {
+async function clickMainOption(select: HTMLElement, statementOption: string): Promise<boolean> {
 	const option = findBilibiliCreativeStatementMainOption(select, statementOption);
 	if (!option) return false;
 

@@ -9,6 +9,7 @@ export const RuntimeMessageType = {
 	UploadAndFillAllTabs: "runtime.uploadAndFillAllTabs",
 	OpenPlatformTabs: "runtime.openPlatformTabs",
 	OpenAllPlatformTabs: "runtime.openAllPlatformTabs",
+	SubmitPlatformTabs: "runtime.submitPlatformTabs",
 } as const;
 
 const RuntimeBatchJobRequestBase = z.object({
@@ -38,6 +39,12 @@ export const RuntimeOpenPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.e
 
 export const RuntimeOpenAllPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
 	type: z.literal(RuntimeMessageType.OpenAllPlatformTabs),
+});
+
+export const RuntimeSubmitPlatformTabsMessageSchema = z.object({
+	requestId: z.string().min(1),
+	type: z.literal(RuntimeMessageType.SubmitPlatformTabs),
+	platform: PlatformIdSchema,
 });
 
 export type ApplyJobFromRuntimeResult = { ok: true } | { ok: false; code: string; message: string };

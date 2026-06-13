@@ -41,10 +41,7 @@ export function channelsCoverWrapLooksUserUploaded(
 }
 
 /** @deprecated Prefer channelsCoverWrapLooksUserUploaded; auto video frames must not count as uploaded. */
-export function channelsCoverWrapLooksApplied(
-	root: ParentNode,
-	wrapSelector: string,
-): boolean {
+export function channelsCoverWrapLooksApplied(root: ParentNode, wrapSelector: string): boolean {
 	return channelsCoverWrapLooksUserUploaded(root, wrapSelector);
 }
 

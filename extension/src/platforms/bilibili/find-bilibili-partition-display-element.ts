@@ -21,7 +21,10 @@ export function findBilibiliPartitionDisplayElement(container: HTMLElement): HTM
 	if (direct) return direct;
 
 	if (container.classList.contains(BILIBILI_PARTITION_SELECTOR_CONTAINER_CLASS)) {
-		for (const controller of queryAllDeep(container, `.${BILIBILI_PARTITION_SELECT_CONTROLLER_CLASS}`)) {
+		for (const controller of queryAllDeep(
+			container,
+			`.${BILIBILI_PARTITION_SELECT_CONTROLLER_CLASS}`,
+		)) {
 			const display = findDisplayInContainer(controller);
 			if (display) return display;
 		}

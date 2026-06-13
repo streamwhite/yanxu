@@ -1,7 +1,10 @@
 import { ApplyPhase } from "@auto-upload/domain";
 import { applyJobToAllTabs } from "./sw/apply-job-to-all-tabs.js";
 import { applyUploadThenFillAllTabs } from "./sw/apply-upload-then-fill-all-tabs.js";
-import { openAllPlatformUploadTabs, openPlatformUploadTabs } from "./sw/open-platform-upload-tabs.js";
+import {
+	openAllPlatformUploadTabs,
+	openPlatformUploadTabs,
+} from "./sw/open-platform-upload-tabs.js";
 import { clearActiveBatchRequestId, setActiveBatchRequestId } from "./sw/active-batch-request.js";
 import { handleApplyProgressMessage } from "./sw/handle-apply-progress-message.js";
 import { openOrFocusPopupWindow } from "./sw/open-popup-window.js";
@@ -9,11 +12,13 @@ import { DEFAULT_FIELDS_SETTLE_MS } from "./shared/fields-settle-config.js";
 import { markBatchVideosUploaded } from "./shared/batch-upload-state.js";
 import { storeRuntimeRequestResult } from "./shared/runtime-request-store.js";
 import { runWithServiceWorkerKeepAlive } from "./sw/run-with-service-worker-keep-alive.js";
+import { submitPlatformTabs } from "./sw/submit-platform-tabs.js";
 import {
 	RuntimeFillAllTabsMessageSchema,
 	RuntimeMessageType,
 	RuntimeOpenAllPlatformTabsMessageSchema,
 	RuntimeOpenPlatformTabsMessageSchema,
+	RuntimeSubmitPlatformTabsMessageSchema,
 	RuntimeUploadAllTabsMessageSchema,
 	RuntimeUploadAndFillAllTabsMessageSchema,
 } from "./runtime/runtime-message.js";
@@ -147,6 +152,26 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 		void runWithServiceWorkerKeepAlive(async () => {
 			try {
 				const result = await openAllPlatformUploadTabs(jobFilePath);
+				await storeRuntimeRequestResult(requestId, result);
+			} catch (error: unknown) {
+				const msg = error instanceof Error ? error.message : "unexpected_error";
+				await storeRuntimeRequestResult(requestId, {
+					ok: false,
+					code: "internal_error",
+					message: msg,
+				});
+			}
+		});
+		return false;
+	}
+
+	const submitPlatform = RuntimeSubmitPlatformTabsMessageSchema.safeParse(message);
+	if (submitPlatform.success) {
+		sendResponse(RUNTIME_ACK_PENDING);
+		const { requestId, platform } = submitPlatform.data;
+		void runWithServiceWorkerKeepAlive(async () => {
+			try {
+				const result = await submitPlatformTabs(platform);
 				await storeRuntimeRequestResult(requestId, result);
 			} catch (error: unknown) {
 				const msg = error instanceof Error ? error.message : "unexpected_error";

@@ -8,7 +8,8 @@ export function findDouyinHorizontalCoverSwitchButton(root: ParentNode): HTMLEle
 	for (const button of queryAllDeep(root, "button")) {
 		if (!(button instanceof HTMLButtonElement)) continue;
 		if (!isElementVisible(button)) continue;
-		if (!normalizeUiText(button.textContent).includes(DOUYIN_HORIZONTAL_COVER_SWITCH_TEXT)) continue;
+		if (!normalizeUiText(button.textContent).includes(DOUYIN_HORIZONTAL_COVER_SWITCH_TEXT))
+			continue;
 		return button;
 	}
 	return null;

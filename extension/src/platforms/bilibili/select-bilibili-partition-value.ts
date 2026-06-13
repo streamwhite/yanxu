@@ -22,11 +22,7 @@ function clickPartitionOption(element: HTMLElement): void {
 	dispatchClick(resolveBilibiliPartitionClickTarget(element));
 }
 
-function selectionMatches(
-	root: ParentNode,
-	controller: HTMLElement,
-	targetValue: string,
-): boolean {
+function selectionMatches(root: ParentNode, controller: HTMLElement, targetValue: string): boolean {
 	const current = readBilibiliPartitionSelection(controller);
 	if (!current || !partitionLabelsMatch(current, targetValue)) return false;
 	return !isBilibiliPartitionDropdownOpen(root, controller);

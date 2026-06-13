@@ -11,7 +11,7 @@
     <main class="popup-shell container-fluid py-3">
       <header class="mb-3">
         <h1 class="h6 mb-1 fw-semibold">auto-upload</h1>
-        <p class="text-muted small mb-0">Batch job (v3) — open tabs, upload, fill. Publish manually.</p>
+        <p class="text-muted small mb-0">Batch job (v3) — open tabs, upload, fill, submit when reviewed.</p>
       </header>
 
       <div class="mb-3">
@@ -59,6 +59,43 @@
         <p class="form-text small text-muted mb-0 mt-2">
           Uploads videos on all tabs, waits for pages to settle, then fills fields and cover.
         </p>
+      </section>
+
+      <section class="mb-0">
+        <h2 class="h6 small fw-semibold mb-1">Publish (after review)</h2>
+        <p class="form-text small text-muted mb-2">
+          Check a platform when you have reviewed its tabs, then submit all tabs for that platform.
+        </p>
+
+        <div class="platform-submit-row d-flex align-items-center gap-2 mb-2">
+          <div class="form-check flex-grow-1 mb-0">
+            <input id="reviewedBilibiliCheckbox" class="form-check-input" type="checkbox" />
+            <label class="form-check-label small" for="reviewedBilibiliCheckbox">Reviewed bilibili</label>
+          </div>
+          <button id="submitBilibiliButton" type="button" class="btn btn-outline-primary btn-sm" disabled>
+            Submit bilibili
+          </button>
+        </div>
+
+        <div class="platform-submit-row d-flex align-items-center gap-2 mb-2">
+          <div class="form-check flex-grow-1 mb-0">
+            <input id="reviewedDouyinCheckbox" class="form-check-input" type="checkbox" />
+            <label class="form-check-label small" for="reviewedDouyinCheckbox">Reviewed douyin</label>
+          </div>
+          <button id="submitDouyinButton" type="button" class="btn btn-outline-primary btn-sm" disabled>
+            Submit douyin
+          </button>
+        </div>
+
+        <div class="platform-submit-row d-flex align-items-center gap-2 mb-0">
+          <div class="form-check flex-grow-1 mb-0">
+            <input id="reviewedChannelsCheckbox" class="form-check-input" type="checkbox" />
+            <label class="form-check-label small" for="reviewedChannelsCheckbox">Reviewed 视频号</label>
+          </div>
+          <button id="submitChannelsButton" type="button" class="btn btn-outline-primary btn-sm" disabled>
+            Submit 视频号
+          </button>
+        </div>
       </section>
 
       <pre

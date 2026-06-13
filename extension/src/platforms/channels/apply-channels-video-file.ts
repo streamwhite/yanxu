@@ -77,8 +77,7 @@ export async function applyChannelsVideoFile(file: File): Promise<boolean> {
 		return true;
 	}
 
-	let assignStarted =
-		channelsVideoAttached(root, file) || channelsVideoUploadInProgress(root);
+	let assignStarted = channelsVideoAttached(root, file) || channelsVideoUploadInProgress(root);
 	if (!assignStarted) {
 		assignStarted = await assignChannelsVideoOnce(root, file);
 	}
