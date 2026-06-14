@@ -27,6 +27,19 @@ describe("findPlatformSubmitControl", () => {
 		expect(control?.textContent).toContain("发布");
 	});
 
+	it("ignores douyin scheduled publish and picks exact 发布 button", () => {
+		document.body.innerHTML = `
+			<button class="schedule-btn">定时发布</button>
+			<span id="popover-tip-container">
+				<button class="button-dhlUZE primary-cECiOJ fixed-J9O8Yw">发布</button>
+			</span>
+		`;
+
+		const control = findPlatformSubmitControl(document, Platform.Douyin);
+		expect(control?.textContent?.trim()).toBe("发布");
+		expect(control?.closest("#popover-tip-container")).not.toBeNull();
+	});
+
 	it("finds channels publish button", () => {
 		document.body.innerHTML = `
 			<span class="weui-desktop-popover__target">

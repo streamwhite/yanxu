@@ -11,9 +11,9 @@ After upload and fill, user reviews each platform manually but clicking publish 
   - **Submit** button (clicks publish on all tabs for that platform)
 - Content script finds and clicks platform submit controls:
   - **bilibili:** `.submit-add` / 立即投稿
-  - **douyin:** button 发布
+  - **douyin:** `#popover-tip-container button` / 发布 (exact label; ignores 定时发布)
   - **视频号:** `button.weui-desktop-btn_primary` 发表
-- Service worker `runtime.submitPlatformTabs` runs tabs sequentially with stagger; 视频号 tabs are activated first.
+- Service worker `runtime.submitPlatformTabs` runs tabs sequentially with stagger; each tab is activated before submit (bilibili/douyin need foreground for visible publish controls; 视频号 already required activation).
 
 ## Workflow
 
@@ -22,6 +22,7 @@ flowchart TD
   Review[User reviews platform tabs] --> Check[Check Reviewed checkbox]
   Check --> Submit[Click Submit platform]
   Submit --> Tabs[For each platform upload tab]
-  Tabs --> Click[Content script clicks publish control]
+  Tabs --> Activate[Activate tab and wait for settle]
+  Activate --> Click[Content script clicks publish control]
   Click --> Dialog[User confirms any platform dialogs manually]
 ```

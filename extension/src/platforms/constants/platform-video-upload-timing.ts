@@ -36,6 +36,8 @@ export const CHANNELS_DOCUMENT_VISIBLE_WAIT_MS = 15_000 as const;
 
 export const BILIBILI_ACTIVATE_TAB_SETTLE_MS = 600 as const;
 
+export const DOUYIN_ACTIVATE_TAB_SETTLE_MS = 600 as const;
+
 export const CHANNELS_TAB_OPEN_SETTLE_MS = 1_500 as const;
 
 export const CHANNELS_TAB_OPEN_RELOAD_SETTLE_MS = 2_500 as const;

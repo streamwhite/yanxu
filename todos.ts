@@ -255,6 +255,9 @@ Error in event handler: TypeError: runWithServiceWorkerKeepAlive(...) is not a f
       `for wechat, when you clicked uploading horizontal cover, you need to click '<div data-v-21870d77="" class="weui-desktop-btn_wrp btn-use"><button type="button" class="weui-desktop-btn weui-desktop-btn_primary weui-desktop-btn_mini">使用素材</button></div>' btn on another smaller modal to reuse vertical cover. right now it stay on the smaller modal.`,
       `allow jpg as cover extension`,
       `add a option to upload(and filling fields and open wechat tabs) to wechat only(when checked) since some times wechat block multiple uploading within short time. i need to re-upload(filling fields) again later.i will update Batch job file to those need re-upload(filling fields). `,
+      `i have tested for auto submit for bili, it only submitted current active tab, the other tab(i have only 2 for test) is not submitted. fix it. other plats could have same issue, check and fix it.`,
+      `now auto submit for bili and wechat works, but not for douyin, check and fix it. douyin btn to submit is '<span id="popover-tip-container" class=""><button class="button-dhlUZE primary-cECiOJ fixed-J9O8Yw" style="width: 120px; height: 32px;">发布</button></span>'`,
+      ``,
     ],
   ],
   knowledge: [

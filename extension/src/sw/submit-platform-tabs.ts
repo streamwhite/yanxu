@@ -1,6 +1,6 @@
 import { Platform, type PlatformId } from "@auto-upload/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
-import { activateChannelsTabForApply } from "./activate-tab-for-apply.js";
+import { activateTabForSubmit } from "./activate-tab-for-submit.js";
 import { PLATFORM_TAB_LABELS } from "./constants/platform-tab-labels.js";
 import { listPlatformUploadTabsForPlatform } from "./list-platform-upload-tabs-for-platform.js";
 import { groupTabsByPlatform, queryPlatformUploadTabs } from "./query-platform-upload-tabs.js";
@@ -16,10 +16,7 @@ function formatTabSubmitFailure(tabId: number, error: unknown): string {
 }
 
 async function submitOneTab(tabId: number, platform: PlatformId): Promise<void> {
-	if (platform === Platform.Channels) {
-		await activateChannelsTabForApply(tabId);
-	}
-
+	await activateTabForSubmit(tabId, platform);
 	await sendSubmitToTab(tabId, platform);
 }
 
