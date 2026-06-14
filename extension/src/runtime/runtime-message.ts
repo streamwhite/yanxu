@@ -27,6 +27,7 @@ export const RuntimeFillAllTabsMessageSchema = RuntimeBatchJobRequestBase.extend
 export const RuntimeUploadAndFillAllTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
 	type: z.literal(RuntimeMessageType.UploadAndFillAllTabs),
 	fieldsSettleMs: z.number().int().min(MIN_FIELDS_SETTLE_MS).max(MAX_FIELDS_SETTLE_MS).optional(),
+	channelsOnly: z.boolean().optional(),
 });
 
 const PlatformIdSchema = z.enum(PLATFORM_IDS);
@@ -38,6 +39,7 @@ export const RuntimeOpenPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.e
 
 export const RuntimeOpenAllPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
 	type: z.literal(RuntimeMessageType.OpenAllPlatformTabs),
+	channelsOnly: z.boolean().optional(),
 });
 
 export type ApplyJobFromRuntimeResult = { ok: true } | { ok: false; code: string; message: string };

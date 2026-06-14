@@ -30,10 +30,11 @@ export function formatBatchInsufficientTabsMessage(shortages: PlatformTabShortag
 export function validateBatchTabRequirements(
 	outline: JobOutlineForTabCount,
 	tabsByPlatform: Map<PlatformId, PlatformUploadTab[]>,
+	platformIds: readonly PlatformId[] = PLATFORM_IDS,
 ): BatchTabValidationResult {
 	const shortages: PlatformTabShortage[] = [];
 
-	for (const platform of PLATFORM_IDS) {
+	for (const platform of platformIds) {
 		const required = countRequiredBatchItemsForPlatform(outline, platform);
 		if (required === 0) continue;
 

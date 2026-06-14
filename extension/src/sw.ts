@@ -1,7 +1,10 @@
 import { ApplyPhase } from "@auto-upload/domain";
 import { applyJobToAllTabs } from "./sw/apply-job-to-all-tabs.js";
 import { applyUploadThenFillAllTabs } from "./sw/apply-upload-then-fill-all-tabs.js";
-import { openAllPlatformUploadTabs, openPlatformUploadTabs } from "./sw/open-platform-upload-tabs.js";
+import {
+	openAllPlatformUploadTabs,
+	openPlatformUploadTabs,
+} from "./sw/open-platform-upload-tabs.js";
 import { clearActiveBatchRequestId, setActiveBatchRequestId } from "./sw/active-batch-request.js";
 import { handleApplyProgressMessage } from "./sw/handle-apply-progress-message.js";
 import { openOrFocusPopupWindow } from "./sw/open-popup-window.js";
@@ -96,7 +99,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	const uploadAndFill = RuntimeUploadAndFillAllTabsMessageSchema.safeParse(message);
 	if (uploadAndFill.success) {
 		sendResponse(RUNTIME_ACK_PENDING);
-		const { requestId, jobFilePath, fieldsSettleMs } = uploadAndFill.data;
+		const { requestId, jobFilePath, fieldsSettleMs, channelsOnly } = uploadAndFill.data;
 		setActiveBatchRequestId(requestId);
 		void runWithServiceWorkerKeepAlive(async () => {
 			try {
@@ -104,6 +107,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 					jobFilePath,
 					requestId,
 					fieldsSettleMs ?? DEFAULT_FIELDS_SETTLE_MS,
+					channelsOnly === true,
 				);
 				await storeRuntimeRequestResult(requestId, result);
 			} catch (error: unknown) {
@@ -143,10 +147,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	const openAllTabs = RuntimeOpenAllPlatformTabsMessageSchema.safeParse(message);
 	if (openAllTabs.success) {
 		sendResponse(RUNTIME_ACK_PENDING);
-		const { requestId, jobFilePath } = openAllTabs.data;
+		const { requestId, jobFilePath, channelsOnly } = openAllTabs.data;
 		void runWithServiceWorkerKeepAlive(async () => {
 			try {
-				const result = await openAllPlatformUploadTabs(jobFilePath);
+				const result = await openAllPlatformUploadTabs(jobFilePath, channelsOnly === true);
 				await storeRuntimeRequestResult(requestId, result);
 			} catch (error: unknown) {
 				const msg = error instanceof Error ? error.message : "unexpected_error";

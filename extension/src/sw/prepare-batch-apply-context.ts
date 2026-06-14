@@ -1,4 +1,5 @@
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
+import { resolveBatchPlatformIds } from "../shared/batch-platform-scope.js";
 import { assertBatchJobOutline } from "./assert-batch-job-outline.js";
 import { buildBatchApplySlots, type BatchApplySlot } from "./build-batch-apply-slots.js";
 import { checkBatchJobAssets } from "./check-batch-job-assets.js";
@@ -15,8 +16,13 @@ export type PreparedBatchApplyContext = {
 	slots: BatchApplySlot[];
 };
 
+export type PrepareBatchApplyContextOptions = {
+	channelsOnly?: boolean;
+};
+
 export async function prepareBatchApplyContext(
 	jobFilePath: string,
+	options: PrepareBatchApplyContextOptions = {},
 ): Promise<ApplyJobFromRuntimeResult | PreparedBatchApplyContext> {
 	const inspected = await inspectJobFileOutline(jobFilePath);
 	if (!inspected.ok) {
@@ -30,8 +36,9 @@ export async function prepareBatchApplyContext(
 
 	const tabs = await queryPlatformUploadTabs();
 	const tabsByPlatform = groupTabsByPlatform(tabs);
+	const platformIds = resolveBatchPlatformIds(options.channelsOnly === true);
 
-	const tabCheck = validateBatchTabRequirements(inspected.outline, tabsByPlatform);
+	const tabCheck = validateBatchTabRequirements(inspected.outline, tabsByPlatform, platformIds);
 	if (!tabCheck.ok) {
 		return {
 			ok: false,
@@ -47,7 +54,7 @@ export async function prepareBatchApplyContext(
 
 	let slots: BatchApplySlot[];
 	try {
-		slots = buildBatchApplySlots(inspected.outline, tabsByPlatform);
+		slots = buildBatchApplySlots(inspected.outline, tabsByPlatform, platformIds);
 	} catch (error: unknown) {
 		const message = error instanceof Error ? error.message : "tab_slot_missing";
 		return { ok: false, code: "tab_slot_missing", message };
