@@ -101,7 +101,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	const uploadAndFill = RuntimeUploadAndFillAllTabsMessageSchema.safeParse(message);
 	if (uploadAndFill.success) {
 		sendResponse(RUNTIME_ACK_PENDING);
-		const { requestId, jobFilePath, fieldsSettleMs } = uploadAndFill.data;
+		const { requestId, jobFilePath, fieldsSettleMs, channelsOnly } = uploadAndFill.data;
 		setActiveBatchRequestId(requestId);
 		void runWithServiceWorkerKeepAlive(async () => {
 			try {
@@ -109,6 +109,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 					jobFilePath,
 					requestId,
 					fieldsSettleMs ?? DEFAULT_FIELDS_SETTLE_MS,
+					channelsOnly === true,
 				);
 				await storeRuntimeRequestResult(requestId, result);
 			} catch (error: unknown) {
@@ -148,10 +149,10 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	const openAllTabs = RuntimeOpenAllPlatformTabsMessageSchema.safeParse(message);
 	if (openAllTabs.success) {
 		sendResponse(RUNTIME_ACK_PENDING);
-		const { requestId, jobFilePath } = openAllTabs.data;
+		const { requestId, jobFilePath, channelsOnly } = openAllTabs.data;
 		void runWithServiceWorkerKeepAlive(async () => {
 			try {
-				const result = await openAllPlatformUploadTabs(jobFilePath);
+				const result = await openAllPlatformUploadTabs(jobFilePath, channelsOnly === true);
 				await storeRuntimeRequestResult(requestId, result);
 			} catch (error: unknown) {
 				const msg = error instanceof Error ? error.message : "unexpected_error";

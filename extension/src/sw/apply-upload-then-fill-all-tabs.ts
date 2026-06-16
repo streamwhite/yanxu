@@ -23,21 +23,6 @@ function mergePartialResults(
 	};
 }
 
-function mergePlatformResults(
-	results: readonly ApplyJobFromRuntimeResult[],
-): ApplyJobFromRuntimeResult {
-	const failures = results.filter((result) => !result.ok);
-	if (failures.length === 0) return { ok: true };
-	if (failures.length === results.length) {
-		return failures[0] ?? { ok: false, code: "tab_apply_failed", message: "unknown" };
-	}
-	return {
-		ok: false,
-		code: BATCH_PARTIAL_FAILED_CODE,
-		message: failures.map((result) => result.message).join("; "),
-	};
-}
-
 async function applySlotsPhase(
 	jobFilePath: string,
 	applyPhase: typeof ApplyPhase.VideoOnly | typeof ApplyPhase.FieldsOnly,
@@ -64,11 +49,12 @@ export async function applyUploadThenFillAllTabs(
 	jobFilePath: string,
 	requestId: string,
 	fieldsSettleMs: number,
+	channelsOnly = false,
 ): Promise<ApplyJobFromRuntimeResult> {
 	return runWithServiceWorkerKeepAlive(async () => {
 		const settleMs = clampFieldsSettleMs(fieldsSettleMs);
 
-		const prepared = await prepareBatchApplyContext(jobFilePath);
+		const prepared = await prepareBatchApplyContext(jobFilePath, { channelsOnly });
 		if (!("slots" in prepared)) return prepared;
 
 		await clearBatchProgress(requestId);
@@ -104,9 +90,6 @@ export async function applyUploadThenFillAllTabs(
 		if (bilibiliResult.ok && channelsResult.ok) return douyinResult;
 		if (bilibiliResult.ok && douyinResult.ok) return channelsResult;
 		if (channelsResult.ok && douyinResult.ok) return bilibiliResult;
-		return mergePartialResults(
-			mergePartialResults(bilibiliResult, channelsResult),
-			douyinResult,
-		);
+		return mergePartialResults(mergePartialResults(bilibiliResult, channelsResult), douyinResult);
 	});
 }

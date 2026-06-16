@@ -1,10 +1,11 @@
-import {
-	PLATFORM_IDS,
-	type PlatformId,
-} from "@auto-upload/domain";
+import type { PlatformId } from "@auto-upload/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
+import { resolveBatchPlatformIds } from "../shared/batch-platform-scope.js";
 import { PLATFORM_TAB_LABELS } from "./constants/platform-tab-labels.js";
-import { countRequiredBatchItemsForPlatform, type JobOutlineForTabCount } from "./count-required-batch-items-for-platform.js";
+import {
+	countRequiredBatchItemsForPlatform,
+	type JobOutlineForTabCount,
+} from "./count-required-batch-items-for-platform.js";
 import { assertBatchJobOutline } from "./assert-batch-job-outline.js";
 import { createUploadTabsForPlatform } from "./create-upload-tabs-for-platform.js";
 import { inspectJobFileOutline } from "./inspect-job-file-outline.js";
@@ -43,6 +44,7 @@ export async function openPlatformUploadTabs(
 
 export async function openAllPlatformUploadTabs(
 	jobFilePath: string,
+	channelsOnly = false,
 ): Promise<ApplyJobFromRuntimeResult> {
 	const inspected = await inspectJobFileOutline(jobFilePath);
 	if (!inspected.ok) {
@@ -55,8 +57,9 @@ export async function openAllPlatformUploadTabs(
 	}
 
 	let openedAny = false;
+	const platformIds = resolveBatchPlatformIds(channelsOnly);
 
-	for (const platform of PLATFORM_IDS) {
+	for (const platform of platformIds) {
 		const tabCount = countTabsToOpenForOutline(inspected.outline, platform);
 		if (tabCount === 0) continue;
 
@@ -65,10 +68,11 @@ export async function openAllPlatformUploadTabs(
 	}
 
 	if (!openedAny) {
+		const scopeLabel = channelsOnly ? "channels (视频号)" : "bilibili, douyin, or channels";
 		return {
 			ok: false,
 			code: "no_platform_targets",
-			message: "No job items target bilibili, douyin, or channels",
+			message: `No job items target ${scopeLabel}`,
 		};
 	}
 

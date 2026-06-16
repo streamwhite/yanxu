@@ -257,7 +257,7 @@ Error in event handler: TypeError: runWithServiceWorkerKeepAlive(...) is not a f
       `add a option to upload(and filling fields and open wechat tabs) to wechat only(when checked) since some times wechat block multiple uploading within short time. i need to re-upload(filling fields) again later.i will update Batch job file to those need re-upload(filling fields). `,
       `i have tested for auto submit for bili, it only submitted current active tab, the other tab(i have only 2 for test) is not submitted. fix it. other plats could have same issue, check and fix it.`,
       `now auto submit for bili and wechat works, but not for douyin, check and fix it. douyin btn to submit is '<span id="popover-tip-container" class=""><button class="button-dhlUZE primary-cECiOJ fixed-J9O8Yw" style="width: 120px; height: 32px;">发布</button></span>'`,
-      ``,
+      `i did not see the option(checkbox for wechat only) in extension page, fix it.`,
     ],
   ],
   knowledge: [

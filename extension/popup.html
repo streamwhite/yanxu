@@ -27,12 +27,25 @@
       </div>
 
       <section class="mb-3">
+        <div class="form-check mb-2">
+          <input
+            id="channelsOnlyCheckbox"
+            class="form-check-input"
+            type="checkbox"
+          />
+          <label class="form-check-label small" for="channelsOnlyCheckbox">
+            视频号 only (re-upload)
+          </label>
+        </div>
+        <p id="channelsOnlyHelp" class="form-text small text-muted mb-2 d-none">
+          Opens 视频号 tabs only. Upload and fill runs on 视频号 tabs only — use a job file with items that need re-upload.
+        </p>
         <div class="d-grid">
           <button id="openAllTabsButton" type="button" class="btn btn-outline-secondary btn-sm">
             Open all upload tabs
           </button>
         </div>
-        <p class="form-text small text-muted mb-0 mt-2">
+        <p id="openTabsHelp" class="form-text small text-muted mb-0 mt-2">
           Opens bilibili, douyin, and 视频号 tabs — one per job item per platform.
         </p>
       </section>
@@ -56,7 +69,7 @@
             Upload and fill (all tabs)
           </button>
         </div>
-        <p class="form-text small text-muted mb-0 mt-2">
+        <p id="uploadFillHelp" class="form-text small text-muted mb-0 mt-2">
           Uploads videos on all tabs, waits for pages to settle, then fills fields and cover.
         </p>
       </section>

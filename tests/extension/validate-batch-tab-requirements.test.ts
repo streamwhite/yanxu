@@ -1,4 +1,5 @@
 import { Platform } from "@auto-upload/domain";
+import { resolveBatchPlatformIds } from "../../extension/src/shared/batch-platform-scope";
 import { validateBatchTabRequirements } from "../../extension/src/sw/validate-batch-tab-requirements";
 import type { PlatformUploadTab } from "../../extension/src/sw/query-platform-upload-tabs";
 
@@ -119,5 +120,51 @@ describe("validateBatchTabRequirements", () => {
 		]);
 
 		expect(validateBatchTabRequirements(outline, tabsByPlatform)).toEqual({ ok: true });
+	});
+
+	it("ignores bilibili and douyin shortages when scoped to channels only", () => {
+		const tabsByPlatform = new Map([
+			[Platform.Bilibili, []],
+			[Platform.Douyin, []],
+			[
+				Platform.Channels,
+				[tab(Platform.Channels, 4, "https://channels.weixin.qq.com/platform/post/create")],
+			],
+		]);
+
+		const result = validateBatchTabRequirements(
+			outline,
+			tabsByPlatform,
+			resolveBatchPlatformIds(true),
+		);
+
+		expect(result).toEqual({ ok: true });
+	});
+
+	it("reports channels shortage when scoped to channels only", () => {
+		const tabsByPlatform = new Map([
+			[
+				Platform.Bilibili,
+				[tab(Platform.Bilibili, 1, "https://member.bilibili.com/platform/upload/video/frame")],
+			],
+			[
+				Platform.Douyin,
+				[
+					tab(Platform.Douyin, 2, "https://creator.douyin.com/creator-micro/content/upload"),
+					tab(Platform.Douyin, 3, "https://creator.douyin.com/creator-micro/content/upload"),
+				],
+			],
+			[Platform.Channels, []],
+		]);
+
+		const result = validateBatchTabRequirements(
+			outline,
+			tabsByPlatform,
+			resolveBatchPlatformIds(true),
+		);
+
+		expect(result.ok).toBe(false);
+		if (result.ok) return;
+		expect(result.shortages).toEqual([{ platform: Platform.Channels, required: 1, found: 0 }]);
 	});
 });

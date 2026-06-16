@@ -16,10 +16,11 @@ export type BatchApplySlot = {
 export function buildBatchApplySlots(
 	outline: JobOutlineForTabCount,
 	tabsByPlatform: Map<PlatformId, PlatformUploadTab[]>,
+	platformIds: readonly PlatformId[] = PLATFORM_IDS,
 ): BatchApplySlot[] {
 	const slots: BatchApplySlot[] = [];
 
-	for (const platform of PLATFORM_IDS) {
+	for (const platform of platformIds) {
 		const requiredCount = countRequiredBatchItemsForPlatform(outline, platform);
 		if (requiredCount === 0) continue;
 

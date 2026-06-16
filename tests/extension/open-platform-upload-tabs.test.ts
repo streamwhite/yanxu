@@ -1,6 +1,7 @@
 import { Platform } from "@auto-upload/domain";
 import { openPlatformUploadTabs } from "../../extension/src/sw/open-platform-upload-tabs";
 import * as inspectModule from "../../extension/src/sw/inspect-job-file-outline";
+import * as waitMsModule from "../../extension/src/content/wait-ms";
 
 describe("openPlatformUploadTabs", () => {
 	const createMock = jest.fn();
@@ -62,6 +63,7 @@ describe("openAllPlatformUploadTabs", () => {
 		reloadMock.mockReset();
 		createMock.mockResolvedValue({ id: 1 });
 		reloadMock.mockResolvedValue(undefined);
+		jest.spyOn(waitMsModule, "waitMs").mockResolvedValue(undefined);
 		(globalThis as { chrome?: unknown }).chrome = {
 			tabs: { create: createMock, reload: reloadMock },
 		};
@@ -90,6 +92,31 @@ describe("openAllPlatformUploadTabs", () => {
 
 		expect(result.ok).toBe(true);
 		expect(createMock).toHaveBeenCalledTimes(3);
+		expect(reloadMock).toHaveBeenCalledTimes(1);
+	});
+
+	it("opens only channels tabs when channelsOnly is true", async () => {
+		jest.spyOn(inspectModule, "inspectJobFileOutline").mockResolvedValue({
+			ok: true,
+			outline: {
+				jobVersion: 3,
+				items: [
+					{ itemIndex: 0, targets: ["bilibili", "douyin", "channels"] },
+					{ itemIndex: 1, targets: ["bilibili", "douyin"] },
+				],
+			},
+		});
+
+		const { openAllPlatformUploadTabs } = await import(
+			"../../extension/src/sw/open-platform-upload-tabs"
+		);
+		const result = await openAllPlatformUploadTabs("/tmp/batch.job.json", true);
+
+		expect(result.ok).toBe(true);
+		expect(createMock).toHaveBeenCalledTimes(1);
+		expect(
+			createMock.mock.calls.every(([args]) => args.url.includes("channels.weixin.qq.com")),
+		).toBe(true);
 		expect(reloadMock).toHaveBeenCalledTimes(1);
 	});
 });
