@@ -14,3 +14,8 @@
 	word-break: break-word;
 	margin-bottom: 0;
 }
+
+.channels-item-selection-list {
+	max-height: 160px;
+	overflow-y: auto;
+}

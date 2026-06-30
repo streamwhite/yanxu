@@ -50,11 +50,15 @@ export async function applyUploadThenFillAllTabs(
 	requestId: string,
 	fieldsSettleMs: number,
 	channelsOnly = false,
+	selectedChannelsItemIndices?: number[],
 ): Promise<ApplyJobFromRuntimeResult> {
 	return runWithServiceWorkerKeepAlive(async () => {
 		const settleMs = clampFieldsSettleMs(fieldsSettleMs);
 
-		const prepared = await prepareBatchApplyContext(jobFilePath, { channelsOnly });
+		const prepared = await prepareBatchApplyContext(jobFilePath, {
+			channelsOnly,
+			selectedChannelsItemIndices: channelsOnly ? selectedChannelsItemIndices : undefined,
+		});
 		if (!("slots" in prepared)) return prepared;
 
 		await clearBatchProgress(requestId);

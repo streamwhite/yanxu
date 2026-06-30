@@ -73,6 +73,7 @@ const PlatformIdSchema = z.enum(PLATFORM_IDS);
 export const JobFileOutlineItemSchema = z.object({
 	itemIndex: z.number().int().nonnegative(),
 	targets: z.array(PlatformIdSchema).min(1),
+	name: z.string().min(1).optional(),
 });
 
 export const JobFileOutlineSchema = z.object({

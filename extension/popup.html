@@ -1,129 +1,108 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>auto-upload semi-auto</title>
-    <link rel="stylesheet" href="./dist/vendor/bootstrap/bootstrap.min.css" />
-    <link rel="stylesheet" href="./popup.css" />
-  </head>
-  <body class="bg-body-tertiary">
-    <main class="popup-shell container-fluid py-3">
-      <header class="mb-3">
-        <h1 class="h6 mb-1 fw-semibold">auto-upload</h1>
-        <p class="text-muted small mb-0">Batch job (v3) — open tabs, upload, fill, submit when reviewed.</p>
-      </header>
 
-      <div class="mb-3">
-        <label class="form-label small fw-semibold" for="jobFilePathInput">Batch job file path</label>
-        <input
-          id="jobFilePathInput"
-          class="form-control form-control-sm font-monospace"
-          type="text"
-          placeholder="/absolute/path/to/batch.job.json"
-          autocomplete="off"
-          spellcheck="false"
-        />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>auto-upload semi-auto</title>
+  <link rel="stylesheet" href="./dist/vendor/bootstrap/bootstrap.min.css" />
+  <link rel="stylesheet" href="./popup.css" />
+</head>
+
+<body class="bg-body-tertiary">
+  <main class="popup-shell container-fluid py-3">
+    <header class="mb-3">
+      <h1 class="h6 mb-1 fw-semibold">auto-upload</h1>
+      <p class="text-muted small mb-0">Batch job (v3) — open tabs, upload, fill, submit when reviewed.</p>
+    </header>
+
+    <div class="mb-3">
+      <label class="form-label small fw-semibold" for="jobFilePathInput">Batch job file path</label>
+      <input id="jobFilePathInput" class="form-control form-control-sm font-monospace" type="text"
+        placeholder="/absolute/path/to/batch.job.json" autocomplete="off" spellcheck="false" />
+    </div>
+
+    <section class="mb-3">
+      <div class="form-check mb-2">
+        <input id="channelsOnlyCheckbox" class="form-check-input" type="checkbox" />
+        <label class="form-check-label small" for="channelsOnlyCheckbox">
+          视频号 only (re-upload)
+        </label>
       </div>
-
-      <section class="mb-3">
-        <div class="form-check mb-2">
-          <input
-            id="channelsOnlyCheckbox"
-            class="form-check-input"
-            type="checkbox"
-          />
-          <label class="form-check-label small" for="channelsOnlyCheckbox">
-            视频号 only (re-upload)
-          </label>
-        </div>
-        <p id="channelsOnlyHelp" class="form-text small text-muted mb-2 d-none">
-          Opens 视频号 tabs only. Upload and fill runs on 视频号 tabs only — use a job file with items that need re-upload.
+      <p id="channelsOnlyHelp" class="form-text small text-muted mb-2 d-none">
+        Opens 视频号 tabs only. Upload and fill runs on 视频号 tabs only — use a job file with items that need re-upload.
+      </p>
+      <div id="channelsItemSelectionSection" class="d-none mb-2">
+        <label class="form-label small fw-semibold mb-1">视频号 items to upload</label>
+        <div id="channelsItemSelectionList" class="channels-item-selection-list border rounded p-2 bg-white"></div>
+        <p class="form-text small text-muted mb-0 mt-1">
+          Uncheck items already uploaded. Upload and fill runs only on checked items.
         </p>
-        <div class="d-grid">
-          <button id="openAllTabsButton" type="button" class="btn btn-outline-secondary btn-sm">
-            Open all upload tabs
-          </button>
+      </div>
+      <div class="d-grid">
+        <button id="openAllTabsButton" type="button" class="btn btn-outline-secondary btn-sm">
+          Open all upload tabs
+        </button>
+      </div>
+      <p id="openTabsHelp" class="form-text small text-muted mb-0 mt-2">
+        Opens bilibili, douyin, and 视频号 tabs — one per job item per platform.
+      </p>
+    </section>
+
+    <section>
+      <div class="mb-2">
+        <label class="form-label small fw-semibold mb-1" for="fieldsSettleMsInput">
+          Wait after upload before fill (ms)
+        </label>
+        <input id="fieldsSettleMsInput" class="form-control form-control-sm" type="number" min="0" max="120000"
+          step="500" />
+      </div>
+      <div class="d-grid">
+        <button id="uploadAndFillAllTabsButton" type="button" class="btn btn-primary btn-sm">
+          Upload and fill (all tabs)
+        </button>
+      </div>
+      <p id="uploadFillHelp" class="form-text small text-muted mb-0 mt-2">
+        Uploads videos on all tabs, waits for pages to settle, then fills fields and cover.
+      </p>
+    </section>
+
+    <section class="mb-0">
+      <h2 class="h6 small fw-semibold mb-1">Publish (after review)</h2>
+      <p class="form-text small text-muted mb-2">
+        After reviewing tabs in the browser, submit all tabs on bilibili, douyin, and 视频号.
+      </p>
+
+      <div class="d-grid mb-2">
+        <button id="submitAllPlatformsButton" type="button" class="btn btn-outline-primary btn-sm">
+          Submit all platforms
+        </button>
+      </div>
+      <div class="row g-2 mb-0">
+        <div class="col-6">
+          <label class="form-label small mb-0" for="channelsSubmitBatchSizeInput">视频号 batch size</label>
+          <input id="channelsSubmitBatchSizeInput" class="form-control form-control-sm" type="number" min="1"
+            max="20" step="1" />
         </div>
-        <p id="openTabsHelp" class="form-text small text-muted mb-0 mt-2">
-          Opens bilibili, douyin, and 视频号 tabs — one per job item per platform.
-        </p>
-      </section>
-
-      <section>
-        <div class="mb-2">
-          <label class="form-label small fw-semibold mb-1" for="fieldsSettleMsInput">
-            Wait after upload before fill (ms)
-          </label>
-          <input
-            id="fieldsSettleMsInput"
-            class="form-control form-control-sm"
-            type="number"
-            min="0"
-            max="120000"
-            step="500"
-          />
+        <div class="col-6">
+          <label class="form-label small mb-0" for="channelsSubmitBatchIntervalMinInput">Batch interval (min)</label>
+          <input id="channelsSubmitBatchIntervalMinInput" class="form-control form-control-sm" type="number" min="1"
+            max="60" step="1" />
         </div>
-        <div class="d-grid">
-          <button id="uploadAndFillAllTabsButton" type="button" class="btn btn-primary btn-sm">
-            Upload and fill (all tabs)
-          </button>
+        <div class="col-12">
+          <p class="form-text small text-muted mb-0">
+            视频号 submit runs in batches with a pause between batches to reduce rate limits.
+          </p>
         </div>
-        <p id="uploadFillHelp" class="form-text small text-muted mb-0 mt-2">
-          Uploads videos on all tabs, waits for pages to settle, then fills fields and cover.
-        </p>
-      </section>
+      </div>
+    </section>
 
-      <section class="mb-0">
-        <h2 class="h6 small fw-semibold mb-1">Publish (after review)</h2>
-        <p class="form-text small text-muted mb-2">
-          Check a platform when you have reviewed its tabs, then submit all tabs for that platform.
-        </p>
+    <pre id="batchProgressLog" class="batch-progress-log small text-muted mb-0 mt-3 d-none" aria-live="polite"></pre>
 
-        <div class="platform-submit-row d-flex align-items-center gap-2 mb-2">
-          <div class="form-check flex-grow-1 mb-0">
-            <input id="reviewedBilibiliCheckbox" class="form-check-input" type="checkbox" />
-            <label class="form-check-label small" for="reviewedBilibiliCheckbox">Reviewed bilibili</label>
-          </div>
-          <button id="submitBilibiliButton" type="button" class="btn btn-outline-primary btn-sm" disabled>
-            Submit bilibili
-          </button>
-        </div>
+    <div id="autoUploadOutcome" class="alert alert-secondary small mb-0 mt-3 d-none" role="status" aria-live="polite">
+    </div>
+  </main>
+  <script type="module" src="./dist/popup.js"></script>
+</body>
 
-        <div class="platform-submit-row d-flex align-items-center gap-2 mb-2">
-          <div class="form-check flex-grow-1 mb-0">
-            <input id="reviewedDouyinCheckbox" class="form-check-input" type="checkbox" />
-            <label class="form-check-label small" for="reviewedDouyinCheckbox">Reviewed douyin</label>
-          </div>
-          <button id="submitDouyinButton" type="button" class="btn btn-outline-primary btn-sm" disabled>
-            Submit douyin
-          </button>
-        </div>
-
-        <div class="platform-submit-row d-flex align-items-center gap-2 mb-0">
-          <div class="form-check flex-grow-1 mb-0">
-            <input id="reviewedChannelsCheckbox" class="form-check-input" type="checkbox" />
-            <label class="form-check-label small" for="reviewedChannelsCheckbox">Reviewed 视频号</label>
-          </div>
-          <button id="submitChannelsButton" type="button" class="btn btn-outline-primary btn-sm" disabled>
-            Submit 视频号
-          </button>
-        </div>
-      </section>
-
-      <pre
-        id="batchProgressLog"
-        class="batch-progress-log small text-muted mb-0 mt-3 d-none"
-        aria-live="polite"
-      ></pre>
-
-      <div
-        id="autoUploadOutcome"
-        class="alert alert-secondary small mb-0 mt-3 d-none"
-        role="status"
-        aria-live="polite"
-      ></div>
-    </main>
-    <script type="module" src="./dist/popup.js"></script>
-  </body>
 </html>

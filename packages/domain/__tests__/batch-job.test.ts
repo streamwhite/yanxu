@@ -113,6 +113,8 @@ describe("batch job v3", () => {
 		const outline = buildJobFileOutline(result.job);
 		expect(outline.jobVersion).toBe(3);
 		expect(outline.items).toHaveLength(2);
+		expect(outline.items[0]?.name).toBe("clip-a");
+		expect(outline.items[1]?.name).toBe("clip-b");
 	});
 
 	it("rejects names with path separators", () => {

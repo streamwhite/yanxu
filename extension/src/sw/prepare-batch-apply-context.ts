@@ -1,5 +1,8 @@
+import { Platform } from "@auto-upload/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
+import { filterBatchApplySlotsByItemIndices } from "../shared/filter-batch-apply-slots-by-item-indices.js";
 import { resolveBatchPlatformIds } from "../shared/batch-platform-scope.js";
+import { validateChannelsItemSelection } from "../shared/validate-channels-item-selection.js";
 import { assertBatchJobOutline } from "./assert-batch-job-outline.js";
 import { buildBatchApplySlots, type BatchApplySlot } from "./build-batch-apply-slots.js";
 import { checkBatchJobAssets } from "./check-batch-job-assets.js";
@@ -18,6 +21,7 @@ export type PreparedBatchApplyContext = {
 
 export type PrepareBatchApplyContextOptions = {
 	channelsOnly?: boolean;
+	selectedChannelsItemIndices?: number[];
 };
 
 export async function prepareBatchApplyContext(
@@ -33,6 +37,12 @@ export async function prepareBatchApplyContext(
 	if (!batchOnly.ok) {
 		return { ok: false, code: batchOnly.code, message: batchOnly.message };
 	}
+
+	const selectionError = validateChannelsItemSelection(
+		inspected.outline,
+		options.selectedChannelsItemIndices,
+	);
+	if (selectionError) return selectionError;
 
 	const tabs = await queryPlatformUploadTabs();
 	const tabsByPlatform = groupTabsByPlatform(tabs);
@@ -62,6 +72,21 @@ export async function prepareBatchApplyContext(
 
 	if (slots.length === 0) {
 		return { ok: false, code: "no_targets", message: "job has no platform targets" };
+	}
+
+	if (options.selectedChannelsItemIndices !== undefined) {
+		slots = filterBatchApplySlotsByItemIndices(
+			slots,
+			Platform.Channels,
+			options.selectedChannelsItemIndices,
+		);
+		if (slots.length === 0) {
+			return {
+				ok: false,
+				code: "no_targets",
+				message: "no selected 视频号 items match open tabs",
+			};
+		}
 	}
 
 	return { slots };

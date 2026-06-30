@@ -14,6 +14,7 @@ After upload and fill, user reviews each platform manually but clicking publish 
   - **douyin:** `#popover-tip-container button` / 发布 (exact label; ignores 定时发布)
   - **视频号:** `button.weui-desktop-btn_primary` 发表
 - Service worker `runtime.submitPlatformTabs` runs tabs sequentially with stagger; each tab is activated before submit (bilibili/douyin need foreground for visible publish controls; 视频号 already required activation).
+- **视频号** uses batched submit (default batch size 5, 5 min between batches) — see `2026-06-14-channels-batched-submit.md`.
 
 ## Workflow
 

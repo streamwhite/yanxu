@@ -5,6 +5,7 @@ import type { CanonicalJob } from "../schema/canonical-job";
 export type JobFileOutlineItem = {
 	itemIndex: number;
 	targets: PlatformId[];
+	name?: string;
 };
 
 export type JobFileOutline = {
@@ -25,6 +26,7 @@ export function buildJobFileOutlineFromBatch(batch: BatchJob): JobFileOutline {
 		items: batch.items.map((item, itemIndex) => ({
 			itemIndex,
 			targets: [...item.targets],
+			name: item.name,
 		})),
 	};
 }

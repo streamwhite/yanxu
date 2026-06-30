@@ -258,6 +258,10 @@ Error in event handler: TypeError: runWithServiceWorkerKeepAlive(...) is not a f
       `i have tested for auto submit for bili, it only submitted current active tab, the other tab(i have only 2 for test) is not submitted. fix it. other plats could have same issue, check and fix it.`,
       `now auto submit for bili and wechat works, but not for douyin, check and fix it. douyin btn to submit is '<span id="popover-tip-container" class=""><button class="button-dhlUZE primary-cECiOJ fixed-J9O8Yw" style="width: 120px; height: 32px;">发布</button></span>'`,
       `i did not see the option(checkbox for wechat only) in extension page, fix it.`,
+      `for wechat and for submit, use batch to submit, make batch size(default 5), interval between batches(default 5mins since it has rate limit for a short time)`,
+      `when upload and filling field for wechat only, show the job items to let me multiple slect the ones to upload since some  are already uploaded and filled.`,
+      `now put submit checkbox and submit button into one for all 3 plats, but still keep features for wechat to not submit all once(avoid rate limit for wechat)  `,
+      `one btn for 3 plats to submit`,
     ],
   ],
   knowledge: [

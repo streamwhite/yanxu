@@ -1,3 +1,4 @@
+import { PLATFORM_IDS, Platform } from "@auto-upload/domain";
 import {
   RuntimeMessageType,
   type ApplyJobFromRuntimeResult,
@@ -8,6 +9,16 @@ import {
   type StoredBatchProgress,
 } from "../shared/batch-progress.js";
 import {
+  clampChannelsSubmitBatchIntervalMin,
+  clampChannelsSubmitBatchSize,
+  DEFAULT_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
+  DEFAULT_CHANNELS_SUBMIT_BATCH_SIZE,
+  resolveChannelsSubmitBatchConfig,
+  STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
+  STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE,
+  type ChannelsSubmitBatchConfig,
+} from "../shared/channels-submit-batch-config.js";
+import {
   clampFieldsSettleMs,
   DEFAULT_FIELDS_SETTLE_MS,
   STORAGE_KEY_FIELDS_SETTLE_MS,
@@ -17,12 +28,17 @@ import {
   renderBatchProgressLog,
 } from "./batch-progress-log.js";
 import {
-  bindPlatformSubmitRow,
-  collectPlatformSubmitUi,
-  platformSubmitBusyLabel,
-  platformSubmitSuccessLabel,
-  type PlatformSubmitUi,
+  allPlatformsSubmitBusyLabel,
+  allPlatformsSubmitSuccessLabel,
+  bindSubmitAllPlatformsButton,
+  collectSubmitAllPlatformsButton,
 } from "./platform-submit-controls.js";
+import {
+  hasChannelsItemSelection,
+  loadChannelsItemSelectionEntries,
+  readSelectedChannelsItemIndices,
+  renderChannelsItemSelectionList,
+} from "./channels-item-selection.js";
 import {
   buildOutcomeAlertClass,
   inferOutcomeVariant,
@@ -80,6 +96,53 @@ async function persistFieldsSettleMs(ms: number): Promise<void> {
 
 function readFieldsSettleMsInput(input: HTMLInputElement): number {
   return clampFieldsSettleMs(Number(input.value));
+}
+
+async function loadChannelsSubmitBatchSizeIntoInput(
+  input: HTMLInputElement,
+): Promise<void> {
+  const stored = await chrome.storage.local.get(STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE);
+  const value = stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE];
+  const batchSize =
+    typeof value === "number"
+      ? clampChannelsSubmitBatchSize(value)
+      : DEFAULT_CHANNELS_SUBMIT_BATCH_SIZE;
+  input.value = String(batchSize);
+}
+
+async function loadChannelsSubmitBatchIntervalMinIntoInput(
+  input: HTMLInputElement,
+): Promise<void> {
+  const stored = await chrome.storage.local.get(
+    STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
+  );
+  const value = stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN];
+  const intervalMin =
+    typeof value === "number"
+      ? clampChannelsSubmitBatchIntervalMin(value)
+      : DEFAULT_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN;
+  input.value = String(intervalMin);
+}
+
+async function persistChannelsSubmitBatchSettings(
+  batchSize: number,
+  intervalMin: number,
+): Promise<void> {
+  await chrome.storage.local.set({
+    [STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE]: clampChannelsSubmitBatchSize(batchSize),
+    [STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN]:
+      clampChannelsSubmitBatchIntervalMin(intervalMin),
+  });
+}
+
+function readChannelsSubmitBatchConfig(
+  batchSizeInput: HTMLInputElement,
+  intervalMinInput: HTMLInputElement,
+): ChannelsSubmitBatchConfig {
+  return resolveChannelsSubmitBatchConfig({
+    batchSize: clampChannelsSubmitBatchSize(Number(batchSizeInput.value)),
+    batchIntervalMin: clampChannelsSubmitBatchIntervalMin(Number(intervalMinInput.value)),
+  });
 }
 
 async function wakeServiceWorker(): Promise<void> {
@@ -144,42 +207,57 @@ async function runRuntimeBatchAction(
   }
 }
 
-async function runRuntimeSubmitAction(row: PlatformSubmitUi): Promise<void> {
-  const { platform, submitButton } = row;
-  setOutcome(platformSubmitBusyLabel(platform), PopupOutcomeVariant.Info);
+async function runRuntimeSubmitAllPlatformsAction(
+  submitButton: HTMLButtonElement,
+  channelsBatch: ChannelsSubmitBatchConfig,
+): Promise<void> {
+  setOutcome(allPlatformsSubmitBusyLabel(channelsBatch), PopupOutcomeVariant.Info);
   submitButton.disabled = true;
 
-  const requestId = createRuntimeRequestId();
+  const failures: string[] = [];
 
   try {
-    await wakeServiceWorker();
+    for (const platform of PLATFORM_IDS) {
+      const requestId = createRuntimeRequestId();
 
-    const { result } =
-      await sendRuntimeMessageWithTimeout<ApplyJobFromRuntimeResult>(
-        {
+      try {
+        await wakeServiceWorker();
+
+        const message: Record<string, unknown> = {
           type: RuntimeMessageType.SubmitPlatformTabs,
           platform,
-        },
-        requestId,
-      );
+        };
+        if (platform === Platform.Channels) {
+          message.channelsSubmitBatchSize = channelsBatch.batchSize;
+          message.channelsSubmitBatchIntervalMs = channelsBatch.batchIntervalMs;
+        }
 
-    if (result.ok === true) {
+        const { result } =
+          await sendRuntimeMessageWithTimeout<ApplyJobFromRuntimeResult>(
+            message,
+            requestId,
+          );
+
+        if (result.ok !== true) {
+          failures.push(`${platform} (${result.code}): ${result.message}`);
+        }
+      } catch (error: unknown) {
+        const detail = error instanceof Error ? error.message : "unexpected_error";
+        failures.push(`${platform}: ${detail}`);
+      }
+    }
+
+    if (failures.length === 0) {
       setOutcome(
-        platformSubmitSuccessLabel(platform),
+        allPlatformsSubmitSuccessLabel(channelsBatch),
         PopupOutcomeVariant.Success,
       );
       return;
     }
 
-    setOutcome(
-      `Failed (${result.code}): ${result.message}`,
-      PopupOutcomeVariant.Danger,
-    );
-  } catch (error: unknown) {
-    const detail = error instanceof Error ? error.message : "unexpected_error";
-    setOutcome(`Failed: ${detail}`, PopupOutcomeVariant.Danger);
+    setOutcome(`Failed: ${failures.join("; ")}`, PopupOutcomeVariant.Danger);
   } finally {
-    submitButton.disabled = !row.reviewedCheckbox.checked;
+    submitButton.disabled = false;
   }
 }
 
@@ -204,10 +282,12 @@ function syncChannelsOnlyUi(
   openTabsHelp: HTMLElement,
   uploadFillHelp: HTMLElement,
   channelsOnlyHelp: HTMLElement,
+  channelsItemSelectionSection: HTMLElement,
   openAllTabsButton: HTMLButtonElement,
   uploadAndFillAllTabsButton: HTMLButtonElement,
 ): void {
   channelsOnlyHelp.classList.toggle("d-none", !channelsOnly);
+  channelsItemSelectionSection.classList.toggle("d-none", !channelsOnly);
   openTabsHelp.textContent = channelsOnly
     ? "Opens 视频号 tabs only — one per job item targeting channels."
     : "Opens bilibili, douyin, and 视频号 tabs — one per job item per platform.";
@@ -220,6 +300,28 @@ function syncChannelsOnlyUi(
   uploadAndFillAllTabsButton.textContent = channelsOnly
     ? "Upload and fill (视频号 only)"
     : "Upload and fill (all tabs)";
+}
+
+async function refreshChannelsItemSelectionList(
+  jobFilePath: string,
+  channelsOnly: boolean,
+  listContainer: HTMLElement,
+): Promise<void> {
+  if (!channelsOnly || !jobFilePath) {
+    listContainer.replaceChildren();
+    return;
+  }
+
+  try {
+    const entries = await loadChannelsItemSelectionEntries(jobFilePath);
+    if (!entries) {
+      renderChannelsItemSelectionList(listContainer, []);
+      return;
+    }
+    renderChannelsItemSelectionList(listContainer, entries);
+  } catch {
+    renderChannelsItemSelectionList(listContainer, []);
+  }
 }
 
 function bindOpenAllTabsButton(
@@ -263,6 +365,10 @@ async function bootstrap(): Promise<void> {
   const openTabsHelp = byId("openTabsHelp");
   const uploadFillHelp = byId("uploadFillHelp");
   const channelsOnlyHelp = byId("channelsOnlyHelp");
+  const channelsItemSelectionSection = byId("channelsItemSelectionSection");
+  const channelsItemSelectionList = byId("channelsItemSelectionList");
+  const channelsSubmitBatchSizeInput = byId("channelsSubmitBatchSizeInput");
+  const channelsSubmitBatchIntervalMinInput = byId("channelsSubmitBatchIntervalMinInput");
 
   if (!(jobFilePathInput instanceof HTMLInputElement)) return;
   if (!(fieldsSettleMsInput instanceof HTMLInputElement)) return;
@@ -273,10 +379,16 @@ async function bootstrap(): Promise<void> {
   if (!(openTabsHelp instanceof HTMLElement)) return;
   if (!(uploadFillHelp instanceof HTMLElement)) return;
   if (!(channelsOnlyHelp instanceof HTMLElement)) return;
+  if (!(channelsItemSelectionSection instanceof HTMLElement)) return;
+  if (!(channelsItemSelectionList instanceof HTMLElement)) return;
+  if (!(channelsSubmitBatchSizeInput instanceof HTMLInputElement)) return;
+  if (!(channelsSubmitBatchIntervalMinInput instanceof HTMLInputElement)) return;
 
   await loadStoredPathIntoInput(jobFilePathInput);
   await loadFieldsSettleMsIntoInput(fieldsSettleMsInput);
   await loadChannelsOnlyIntoCheckbox(channelsOnlyCheckbox);
+  await loadChannelsSubmitBatchSizeIntoInput(channelsSubmitBatchSizeInput);
+  await loadChannelsSubmitBatchIntervalMinIntoInput(channelsSubmitBatchIntervalMinInput);
 
   const readChannelsOnly = (): boolean =>
     readChannelsOnlyCheckbox(channelsOnlyCheckbox);
@@ -287,12 +399,23 @@ async function bootstrap(): Promise<void> {
       openTabsHelp,
       uploadFillHelp,
       channelsOnlyHelp,
+      channelsItemSelectionSection,
       openAllTabsButton,
       uploadAndFillAllTabsButton,
     );
   };
 
+  const reloadChannelsItemSelection = (): void => {
+    const jobFilePath = jobFilePathInput.value.trim();
+    void refreshChannelsItemSelectionList(
+      jobFilePath,
+      readChannelsOnly(),
+      channelsItemSelectionList,
+    );
+  };
+
   refreshChannelsOnlyUi();
+  reloadChannelsItemSelection();
 
   const readJobPath = (): string | null => {
     const jobFilePath = jobFilePathInput.value.trim();
@@ -308,15 +431,33 @@ async function bootstrap(): Promise<void> {
 
   jobFilePathInput.addEventListener("input", () => {
     void persistJobFilePath(jobFilePathInput.value.trim());
+    reloadChannelsItemSelection();
   });
 
   fieldsSettleMsInput.addEventListener("change", () => {
     void persistFieldsSettleMs(readFieldsSettleMsInput(fieldsSettleMsInput));
   });
 
+  const persistChannelsSubmitBatchInputs = (): void => {
+    void persistChannelsSubmitBatchSettings(
+      Number(channelsSubmitBatchSizeInput.value),
+      Number(channelsSubmitBatchIntervalMinInput.value),
+    );
+  };
+
+  channelsSubmitBatchSizeInput.addEventListener("change", persistChannelsSubmitBatchInputs);
+  channelsSubmitBatchIntervalMinInput.addEventListener("change", persistChannelsSubmitBatchInputs);
+
+  const readChannelsSubmitBatch = (): ChannelsSubmitBatchConfig =>
+    readChannelsSubmitBatchConfig(
+      channelsSubmitBatchSizeInput,
+      channelsSubmitBatchIntervalMinInput,
+    );
+
   channelsOnlyCheckbox.addEventListener("change", () => {
     void persistChannelsOnly(readChannelsOnly());
     refreshChannelsOnlyUi();
+    reloadChannelsItemSelection();
   });
 
   bindOpenAllTabsButton(openAllTabsButton, readJobPath, readChannelsOnly);
@@ -330,6 +471,25 @@ async function bootstrap(): Promise<void> {
     void persistFieldsSettleMs(fieldsSettleMs);
     void persistChannelsOnly(channelsOnly);
 
+    let selectedChannelsItemIndices: number[] | undefined;
+    if (channelsOnly) {
+      if (!hasChannelsItemSelection(channelsItemSelectionList)) {
+        setOutcome(
+          "Load 视频号 job items first — enter a valid batch job path.",
+          PopupOutcomeVariant.Secondary,
+        );
+        return;
+      }
+      selectedChannelsItemIndices = readSelectedChannelsItemIndices(channelsItemSelectionList);
+      if (selectedChannelsItemIndices.length === 0) {
+        setOutcome(
+          "Select at least one 视频号 job item to upload.",
+          PopupOutcomeVariant.Secondary,
+        );
+        return;
+      }
+    }
+
     void runRuntimeBatchAction(
       uploadAndFillAllTabsButton,
       jobFilePath,
@@ -338,6 +498,7 @@ async function bootstrap(): Promise<void> {
         jobFilePath,
         fieldsSettleMs,
         channelsOnly,
+        selectedChannelsItemIndices,
       },
       channelsOnly
         ? `Uploading 视频号 videos, waiting ${String(fieldsSettleMs)} ms, then filling fields…`
@@ -349,13 +510,13 @@ async function bootstrap(): Promise<void> {
     );
   });
 
-  const platformSubmitUi = collectPlatformSubmitUi();
-  if (platformSubmitUi) {
-    for (const row of platformSubmitUi) {
-      bindPlatformSubmitRow(row, () => {
-        void runRuntimeSubmitAction(row);
-      });
-    }
+  const submitAllPlatformsButton = collectSubmitAllPlatformsButton();
+  if (submitAllPlatformsButton) {
+    bindSubmitAllPlatformsButton(submitAllPlatformsButton, () => {
+      const channelsBatch = readChannelsSubmitBatch();
+      persistChannelsSubmitBatchInputs();
+      void runRuntimeSubmitAllPlatformsAction(submitAllPlatformsButton, channelsBatch);
+    });
   }
 }
 

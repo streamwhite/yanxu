@@ -1,4 +1,5 @@
-import { ApplyPhase } from "@auto-upload/domain";
+import { ApplyPhase, Platform } from "@auto-upload/domain";
+import { resolveChannelsSubmitBatchConfig } from "./shared/channels-submit-batch-config.js";
 import { applyJobToAllTabs } from "./sw/apply-job-to-all-tabs.js";
 import { applyUploadThenFillAllTabs } from "./sw/apply-upload-then-fill-all-tabs.js";
 import {
@@ -13,8 +14,10 @@ import { markBatchVideosUploaded } from "./shared/batch-upload-state.js";
 import { storeRuntimeRequestResult } from "./shared/runtime-request-store.js";
 import { runWithServiceWorkerKeepAlive } from "./sw/run-with-service-worker-keep-alive.js";
 import { submitPlatformTabs } from "./sw/submit-platform-tabs.js";
+import { inspectJobFileOutline } from "./sw/inspect-job-file-outline.js";
 import {
 	RuntimeFillAllTabsMessageSchema,
+	RuntimeInspectJobFileMessageSchema,
 	RuntimeMessageType,
 	RuntimeOpenAllPlatformTabsMessageSchema,
 	RuntimeOpenPlatformTabsMessageSchema,
@@ -78,6 +81,12 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 		return false;
 	}
 
+	const inspectJob = RuntimeInspectJobFileMessageSchema.safeParse(message);
+	if (inspectJob.success) {
+		void inspectJobFileOutline(inspectJob.data.jobFilePath).then(sendResponse);
+		return true;
+	}
+
 	const uploadAll = RuntimeUploadAllTabsMessageSchema.safeParse(message);
 	if (uploadAll.success) {
 		return startAllTabsRequest(
@@ -101,7 +110,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	const uploadAndFill = RuntimeUploadAndFillAllTabsMessageSchema.safeParse(message);
 	if (uploadAndFill.success) {
 		sendResponse(RUNTIME_ACK_PENDING);
-		const { requestId, jobFilePath, fieldsSettleMs, channelsOnly } = uploadAndFill.data;
+		const { requestId, jobFilePath, fieldsSettleMs, channelsOnly, selectedChannelsItemIndices } =
+			uploadAndFill.data;
 		setActiveBatchRequestId(requestId);
 		void runWithServiceWorkerKeepAlive(async () => {
 			try {
@@ -110,6 +120,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 					requestId,
 					fieldsSettleMs ?? DEFAULT_FIELDS_SETTLE_MS,
 					channelsOnly === true,
+					selectedChannelsItemIndices,
 				);
 				await storeRuntimeRequestResult(requestId, result);
 			} catch (error: unknown) {
@@ -169,10 +180,18 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 	const submitPlatform = RuntimeSubmitPlatformTabsMessageSchema.safeParse(message);
 	if (submitPlatform.success) {
 		sendResponse(RUNTIME_ACK_PENDING);
-		const { requestId, platform } = submitPlatform.data;
+		const { requestId, platform, channelsSubmitBatchSize, channelsSubmitBatchIntervalMs } =
+			submitPlatform.data;
 		void runWithServiceWorkerKeepAlive(async () => {
 			try {
-				const result = await submitPlatformTabs(platform);
+				const channelsBatch =
+					platform === Platform.Channels
+						? resolveChannelsSubmitBatchConfig({
+								batchSize: channelsSubmitBatchSize,
+								batchIntervalMs: channelsSubmitBatchIntervalMs,
+							})
+						: undefined;
+				const result = await submitPlatformTabs(platform, { channelsBatch });
 				await storeRuntimeRequestResult(requestId, result);
 			} catch (error: unknown) {
 				const msg = error instanceof Error ? error.message : "unexpected_error";
