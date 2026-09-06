@@ -95,7 +95,7 @@ describe("openAllPlatformUploadTabs", () => {
 		expect(reloadMock).toHaveBeenCalledTimes(1);
 	});
 
-	it("opens only channels tabs when channelsOnly is true", async () => {
+	it("opens only bilibili tabs when bilibili scope is selected", async () => {
 		jest.spyOn(inspectModule, "inspectJobFileOutline").mockResolvedValue({
 			ok: true,
 			outline: {
@@ -110,7 +110,33 @@ describe("openAllPlatformUploadTabs", () => {
 		const { openAllPlatformUploadTabs } = await import(
 			"../../extension/src/sw/open-platform-upload-tabs"
 		);
-		const result = await openAllPlatformUploadTabs("/tmp/batch.job.json", true);
+		const { Platform } = await import("@auto-upload/domain");
+		const result = await openAllPlatformUploadTabs("/tmp/batch.job.json", Platform.Bilibili);
+
+		expect(result.ok).toBe(true);
+		expect(createMock).toHaveBeenCalledTimes(2);
+		expect(
+			createMock.mock.calls.every(([args]) => args.url.includes("member.bilibili.com")),
+		).toBe(true);
+	});
+
+	it("opens only channels tabs when channels scope is selected", async () => {
+		jest.spyOn(inspectModule, "inspectJobFileOutline").mockResolvedValue({
+			ok: true,
+			outline: {
+				jobVersion: 3,
+				items: [
+					{ itemIndex: 0, targets: ["bilibili", "douyin", "channels"] },
+					{ itemIndex: 1, targets: ["bilibili", "douyin"] },
+				],
+			},
+		});
+
+		const { openAllPlatformUploadTabs } = await import(
+			"../../extension/src/sw/open-platform-upload-tabs"
+		);
+		const { Platform } = await import("@auto-upload/domain");
+		const result = await openAllPlatformUploadTabs("/tmp/batch.job.json", Platform.Channels);
 
 		expect(result.ok).toBe(true);
 		expect(createMock).toHaveBeenCalledTimes(1);

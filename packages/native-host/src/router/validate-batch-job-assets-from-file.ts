@@ -39,7 +39,7 @@ async function collectMissingAssets(
 	const missing: MissingBatchAsset[] = [];
 
 	for (const asset of required) {
-		if (asset.kind === BatchAssetKind.Cover) {
+		if (asset.kind === BatchAssetKind.Cover || asset.kind === BatchAssetKind.HorizontalCover) {
 			const resolved = await resolveExistingCoverPath(asset.absolutePath);
 			if (!resolved) missing.push(asset);
 			continue;
@@ -52,7 +52,10 @@ async function collectMissingAssets(
 	return missing;
 }
 
-export async function validateBatchJobAssetsFromFileJson(rawJson: unknown) {
+export async function validateBatchJobAssetsFromFileJson(
+	rawJson: unknown,
+	options: { includeHorizontalCover?: boolean } = {},
+) {
 	const validated = validateJobFile(rawJson);
 	if (!validated.ok) {
 		return { ok: false as const, code: ERROR_INVALID_JOB, message: validated.errorMessage };
@@ -67,7 +70,10 @@ export async function validateBatchJobAssetsFromFileJson(rawJson: unknown) {
 	}
 
 	const batch = normalizeBatchJobTexts(validated.job);
-	const missing = await collectMissingAssets(listRequiredBatchAssets(batch));
+	const required = listRequiredBatchAssets(batch, {
+		includeHorizontalCover: options.includeHorizontalCover,
+	});
+	const missing = await collectMissingAssets(required);
 	if (missing.length === 0) return { ok: true as const };
 
 	return {

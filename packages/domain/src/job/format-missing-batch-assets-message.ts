@@ -10,6 +10,7 @@ export type MissingBatchAsset = {
 const BATCH_ASSET_KIND_LABELS: Record<BatchAssetKind, string> = {
 	video: "video file",
 	cover: "cover file",
+	horizontalCover: "horizontal (4:3) cover file",
 };
 
 function formatMissingCoverPath(absolutePath: string): string {
@@ -21,11 +22,12 @@ function formatMissingCoverPath(absolutePath: string): string {
 function formatMissingEntry(entry: MissingBatchAsset): string {
 	const label = BATCH_ASSET_KIND_LABELS[entry.kind];
 	const path =
-		entry.kind === BatchAssetKind.Cover
+		entry.kind === BatchAssetKind.Cover || entry.kind === BatchAssetKind.HorizontalCover
 			? formatMissingCoverPath(entry.absolutePath)
 			: entry.absolutePath;
 	return `item ${String(entry.itemIndex)}: missing ${label} ${path}`;
 }
+
 
 export function formatMissingBatchAssetsMessage(missing: MissingBatchAsset[]): string {
 	return missing.map(formatMissingEntry).join("; ");

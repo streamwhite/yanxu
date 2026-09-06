@@ -1,5 +1,6 @@
 import type { AppliedJobPayload, HostOutboundMessage } from "@auto-upload/domain";
 import { mergeCoverStreamIntoApplyPayload } from "./merge-cover-stream-into-payload.js";
+import { mergeHorizontalCoverStreamIntoApplyPayload } from "./merge-horizontal-cover-stream-into-payload.js";
 import { mergeVideoStreamIntoApplyPayload } from "./merge-video-stream-into-payload.js";
 
 export function mergeStreamsIntoApplyPayload(
@@ -8,5 +9,7 @@ export function mergeStreamsIntoApplyPayload(
 ): AppliedJobPayload {
 	let merged = mergeVideoStreamIntoApplyPayload(batch, payload);
 	merged = mergeCoverStreamIntoApplyPayload(batch, merged);
+	merged = mergeHorizontalCoverStreamIntoApplyPayload(batch, merged);
 	return merged;
 }
+

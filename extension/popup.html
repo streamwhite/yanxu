@@ -23,18 +23,17 @@
     </div>
 
     <section class="mb-3">
-      <div class="form-check mb-2">
-        <input id="channelsOnlyCheckbox" class="form-check-input" type="checkbox" />
-        <label class="form-check-label small" for="channelsOnlyCheckbox">
-          视频号 only (re-upload)
-        </label>
-      </div>
-      <p id="channelsOnlyHelp" class="form-text small text-muted mb-2 d-none">
-        Opens 视频号 tabs only. Upload and fill runs on 视频号 tabs only — use a job file with items that need re-upload.
-      </p>
-      <div id="channelsItemSelectionSection" class="d-none mb-2">
-        <label class="form-label small fw-semibold mb-1">视频号 items to upload</label>
-        <div id="channelsItemSelectionList" class="channels-item-selection-list border rounded p-2 bg-white"></div>
+      <label class="form-label small fw-semibold" for="batchPlatformScopeSelect">Platform scope</label>
+      <select id="batchPlatformScopeSelect" class="form-select form-select-sm mb-2">
+        <option value="all">All platforms</option>
+        <option value="bilibili">bilibili only (re-upload)</option>
+        <option value="douyin">douyin only (re-upload)</option>
+        <option value="channels">视频号 only (re-upload)</option>
+      </select>
+      <p id="batchPlatformScopeHelp" class="form-text small text-muted mb-2 d-none"></p>
+      <div id="platformItemSelectionSection" class="d-none mb-2">
+        <label id="platformItemSelectionLabel" class="form-label small fw-semibold mb-1">Items to upload</label>
+        <div id="platformItemSelectionList" class="platform-item-selection-list border rounded p-2 bg-white"></div>
         <p class="form-text small text-muted mb-0 mt-1">
           Uncheck items already uploaded. Upload and fill runs only on checked items.
         </p>
@@ -56,6 +55,12 @@
         </label>
         <input id="fieldsSettleMsInput" class="form-control form-control-sm" type="number" min="0" max="120000"
           step="500" />
+      </div>
+      <div class="form-check mb-2">
+        <input id="submitHorizontalCoverCheckbox" class="form-check-input" type="checkbox" />
+        <label class="form-check-label small" for="submitHorizontalCoverCheckbox">
+          提交横向图片
+        </label>
       </div>
       <div class="d-grid">
         <button id="uploadAndFillAllTabsButton" type="button" class="btn btn-primary btn-sm">

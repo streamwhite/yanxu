@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ApplyPhase, JobFileOutlineSchema, PLATFORM_IDS } from "@auto-upload/domain";
+import { BATCH_PLATFORM_SCOPE_ALL } from "../shared/batch-platform-scope.js";
 import { MAX_FIELDS_SETTLE_MS, MIN_FIELDS_SETTLE_MS } from "../shared/fields-settle-config.js";
 import {
 	MAX_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
@@ -42,14 +43,21 @@ export const RuntimeFillAllTabsMessageSchema = RuntimeBatchJobRequestBase.extend
 	type: z.literal(RuntimeMessageType.FillAllTabs),
 });
 
+const PlatformIdSchema = z.enum(PLATFORM_IDS);
+
+const BatchPlatformScopeSchema = z.union([
+	z.literal(BATCH_PLATFORM_SCOPE_ALL),
+	PlatformIdSchema,
+]);
+
 export const RuntimeUploadAndFillAllTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
 	type: z.literal(RuntimeMessageType.UploadAndFillAllTabs),
 	fieldsSettleMs: z.number().int().min(MIN_FIELDS_SETTLE_MS).max(MAX_FIELDS_SETTLE_MS).optional(),
-	channelsOnly: z.boolean().optional(),
-	selectedChannelsItemIndices: z.array(z.number().int().nonnegative()).optional(),
+	batchPlatformScope: BatchPlatformScopeSchema.optional(),
+	selectedPlatformItemIndices: z.array(z.number().int().nonnegative()).optional(),
+	submitHorizontalCover: z.boolean().optional(),
 });
 
-const PlatformIdSchema = z.enum(PLATFORM_IDS);
 
 export const RuntimeOpenPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
 	type: z.literal(RuntimeMessageType.OpenPlatformTabs),
@@ -58,7 +66,7 @@ export const RuntimeOpenPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.e
 
 export const RuntimeOpenAllPlatformTabsMessageSchema = RuntimeBatchJobRequestBase.extend({
 	type: z.literal(RuntimeMessageType.OpenAllPlatformTabs),
-	channelsOnly: z.boolean().optional(),
+	batchPlatformScope: BatchPlatformScopeSchema.optional(),
 });
 
 export const RuntimeSubmitPlatformTabsMessageSchema = z.object({
@@ -79,7 +87,9 @@ export const RuntimeSubmitPlatformTabsMessageSchema = z.object({
 		.optional(),
 });
 
-export type ApplyJobFromRuntimeResult = { ok: true } | { ok: false; code: string; message: string };
+export type ApplyJobFromRuntimeResult =
+	| { ok: true; message?: string }
+	| { ok: false; code: string; message: string };
 
 export const RUNTIME_APPLY_PHASE_BY_MESSAGE_TYPE = {
 	[RuntimeMessageType.UploadAllTabs]: ApplyPhase.VideoOnly,

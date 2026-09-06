@@ -13,6 +13,7 @@ import {
 	channelsCoverWrapLooksUserUploaded,
 } from "./channels-cover-upload-looks-applied.js";
 import { confirmChannelsVerticalCoverDialog } from "./confirm-channels-vertical-cover-dialog.js";
+import { findChannelsVerticalCoverConfirmButton } from "./find-channels-vertical-cover-confirm-button.js";
 import { findChannelsCoverTriggerInWrap } from "./find-channels-cover-trigger.js";
 import { waitForChannelsCoverFileInput } from "./wait-for-channels-cover-file-input.js";
 import { waitForChannelsCoverUploadReady } from "./wait-for-channels-cover-upload-ready.js";
@@ -145,8 +146,29 @@ async function applyChannelsHorizontalCoverViaUseMaterial(root: ParentNode): Pro
 	return true;
 }
 
-/** Vertical upload + 确认, then horizontal via 使用素材 (modal stays open for review). */
-export async function applyChannelsCoverViaModal(root: ParentNode, file: File): Promise<boolean> {
+async function commitVerticalCoverDialog(
+	root: ParentNode,
+	hasHorizontalFile: boolean,
+): Promise<boolean> {
+	// Horizontal flow: the horizon 编辑 reopens its own popover, so a confirm-less
+	// dialog after a successful vertical upload can be left for replacement.
+	if (
+		hasHorizontalFile &&
+		channelsCoverWrapLooksUserUploaded(root, CHANNELS_VERTICAL_COVER_WRAP_SELECTOR) &&
+		!findChannelsVerticalCoverConfirmButton(document)
+	) {
+		return true;
+	}
+
+	return confirmAndCloseVerticalCoverDialog(root);
+}
+
+/** Vertical upload + 确认, then horizontal: -4x3 file direct to .horizon-cover-wrap, else 使用素材. */
+export async function applyChannelsCoverViaModal(
+	root: ParentNode,
+	file: File,
+	horizontalFile?: File,
+): Promise<boolean> {
 	if (!findChannelsCoverTriggerInWrap(root, CHANNELS_VERTICAL_COVER_WRAP_SELECTOR)) return false;
 
 	blurActiveFieldBeforeCover();
@@ -159,9 +181,18 @@ export async function applyChannelsCoverViaModal(root: ParentNode, file: File): 
 	);
 	if (!verticalOk) return false;
 
-	if (!(await confirmAndCloseVerticalCoverDialog(root))) return false;
+	if (!(await commitVerticalCoverDialog(root, horizontalFile !== undefined))) return false;
 
 	await waitMs(CHANNELS_AFTER_VERTICAL_COVER_CLOSE_SETTLE_MS);
 
+	if (horizontalFile) {
+		return applyChannelsCoverForWrap(
+			root,
+			CHANNELS_HORIZON_COVER_WRAP_SELECTOR,
+			horizontalFile,
+		);
+	}
+
 	return applyChannelsHorizontalCoverViaUseMaterial(root);
 }
+

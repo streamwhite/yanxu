@@ -135,7 +135,7 @@ describe("validateBatchTabRequirements", () => {
 		const result = validateBatchTabRequirements(
 			outline,
 			tabsByPlatform,
-			resolveBatchPlatformIds(true),
+			resolveBatchPlatformIds(Platform.Channels),
 		);
 
 		expect(result).toEqual({ ok: true });
@@ -160,7 +160,7 @@ describe("validateBatchTabRequirements", () => {
 		const result = validateBatchTabRequirements(
 			outline,
 			tabsByPlatform,
-			resolveBatchPlatformIds(true),
+			resolveBatchPlatformIds(Platform.Channels),
 		);
 
 		expect(result.ok).toBe(false);

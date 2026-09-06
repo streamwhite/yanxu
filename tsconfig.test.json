@@ -7,6 +7,7 @@
 		"noEmit": true,
 		"baseUrl": ".",
 		"paths": {
+			"zod": ["packages/domain/node_modules/zod"],
 			"@auto-upload/domain": ["packages/domain/src/index.ts"],
 			"@auto-upload/domain/*": ["packages/domain/src/*"]
 		}

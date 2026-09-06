@@ -20,14 +20,16 @@ export async function applyCoverViaModal(
 	root: ParentNode,
 	file: File,
 	platform: PlatformId,
+	horizontalFile?: File,
 ): Promise<boolean> {
 	if (platform === Platform.Douyin) {
-		return applyDouyinCoverViaModal(root, file);
+		return applyDouyinCoverViaModal(root, file, horizontalFile);
 	}
 
 	if (platform === Platform.Channels) {
-		return applyChannelsCoverViaModal(root, file);
+		return applyChannelsCoverViaModal(root, file, horizontalFile);
 	}
+
 
 	const trigger = findCoverTriggerForPlatform(root, platform);
 	if (!trigger) return false;

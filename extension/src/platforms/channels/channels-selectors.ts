@@ -55,6 +55,27 @@ export const CHANNELS_SHORT_TITLE_SELECTORS = [
 
 export const CHANNELS_ORIGINAL_DECLARE_LABEL_SELECTOR = "label.ant-checkbox-wrapper" as const;
 
+export const CHANNELS_MARK_TAG_LABEL_HINT = "视频标注" as const;
+
+export const CHANNELS_MARK_TAG_WRAPPER_SELECTOR = ".post-with-mark-tag" as const;
+
+export const CHANNELS_MARK_TAG_SELECT_SELECTOR = ".mark-tag-select" as const;
+
+export const CHANNELS_MARK_TAG_DISPLAY_SELECTOR = ".select-display" as const;
+
+export const CHANNELS_MARK_TAG_PLACEHOLDER_CLASS = "select-placeholder" as const;
+
+export const CHANNELS_MARK_TAG_OPTIONS_SELECTOR = ".mark-tag-options" as const;
+
+export const CHANNELS_MARK_TAG_OPTION_SELECTOR = ".mark-tag-option" as const;
+
+export const CHANNELS_MARK_TAG_OPTION_MAIN_CLASS = "option-main" as const;
+
+export const CHANNELS_MARK_TAG_SELECT_SELECTORS = [
+	`${CHANNELS_MARK_TAG_WRAPPER_SELECTOR} ${CHANNELS_MARK_TAG_SELECT_SELECTOR}`,
+	CHANNELS_MARK_TAG_SELECT_SELECTOR,
+] as const;
+
 export const CHANNELS_VIDEO_UPLOAD_TIP_TEXT_HINT = "MP4/H.264" as const;
 
 export const CHANNELS_VIDEO_UPLOAD_DURATION_HINT = "上传时长8小时内" as const;

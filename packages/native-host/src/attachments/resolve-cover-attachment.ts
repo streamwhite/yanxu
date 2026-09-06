@@ -9,6 +9,16 @@ import { guessImageMimeFromPath } from "../mime/guess-mime-from-path.js";
 const REASON_NO_PATH = "no_cover_path" as const;
 const REASON_TOO_LARGE = "cover_over_inline_limit" as const;
 
+const COVER_STREAM_MESSAGE_KINDS = {
+	cover: { start: "coverStreamStart", chunk: "coverStreamChunk" },
+	coverHorizontal: {
+		start: "horizontalCoverStreamStart",
+		chunk: "horizontalCoverStreamChunk",
+	},
+} as const;
+
+export type CoverStreamKind = keyof typeof COVER_STREAM_MESSAGE_KINDS;
+
 export type ResolvedCoverAttachment =
 	| { mode: "payload"; payload: AttachmentCoverPayload }
 	| { mode: "stream"; streamBatch: HostOutboundBatch };
@@ -26,7 +36,9 @@ export async function resolveCoverAttachment(input: {
 	absolutePath?: string;
 	maxCoverInlineBytes: number;
 	transferChunkBytes: number;
+	streamKind?: CoverStreamKind;
 }): Promise<ResolvedCoverAttachment> {
+	const messageKinds = COVER_STREAM_MESSAGE_KINDS[input.streamKind ?? "cover"];
 	if (!input.absolutePath) {
 		return { mode: "payload", payload: { kind: "skipped", reasonCode: REASON_NO_PATH } };
 	}
@@ -52,7 +64,7 @@ export async function resolveCoverAttachment(input: {
 
 	const streamBatch: HostOutboundBatch = [
 		{
-			type: "coverStreamStart",
+			type: messageKinds.start,
 			mimeType,
 			suggestedFileName,
 			totalBytes: stat.size,
@@ -63,7 +75,7 @@ export async function resolveCoverAttachment(input: {
 	for (let index = 0; index < chunks.length; index++) {
 		const base64 = chunks[index];
 		if (!base64) continue;
-		streamBatch.push({ type: "coverStreamChunk", index, base64 });
+		streamBatch.push({ type: messageKinds.chunk, index, base64 });
 	}
 
 	return { mode: "stream", streamBatch };

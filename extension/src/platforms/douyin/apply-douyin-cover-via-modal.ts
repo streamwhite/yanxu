@@ -91,8 +91,21 @@ async function assignDouyinCoverInModal(
 	return douyinCoverUploadLooksApplied(modal);
 }
 
-/** Vertical cover in modal, switch to horizontal via 设置横封面 (same cover, modal stays open). */
-export async function applyDouyinCoverViaModal(root: ParentNode, file: File): Promise<boolean> {
+async function assignDouyinHorizontalCoverInModal(modal: ParentNode, file: File): Promise<boolean> {
+	const clickTarget = await waitForDouyinCoverUploadClickTarget(modal);
+	if (!clickTarget) return false;
+
+	const dragArea = resolveDouyinCoverDragArea(modal, clickTarget);
+	const uploadRoot = dragArea ?? clickTarget;
+	return assignDouyinCoverInModal(modal, file, uploadRoot, clickTarget);
+}
+
+/** Vertical cover in modal, optionally switch to 设置横封面 and upload the -4x3 file there. */
+export async function applyDouyinCoverViaModal(
+	root: ParentNode,
+	file: File,
+	horizontalFile?: File,
+): Promise<boolean> {
 	const trigger = findDouyinCoverTrigger(root, "vertical");
 	if (!trigger) return false;
 
@@ -114,5 +127,7 @@ export async function applyDouyinCoverViaModal(root: ParentNode, file: File): Pr
 	dispatchClick(switchBtn);
 	await waitMs(DOUYIN_AFTER_HORIZONTAL_SWITCH_SETTLE_MS);
 
-	return true;
+	if (!horizontalFile) return true;
+	return assignDouyinHorizontalCoverInModal(modal, horizontalFile);
 }
+

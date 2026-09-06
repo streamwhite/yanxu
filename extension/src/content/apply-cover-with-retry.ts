@@ -13,10 +13,14 @@ function prepareUiBeforeCoverAttempt(platform: PlatformId): void {
 	dismissUiBeforeCover();
 }
 
-export async function applyCoverWithRetry(file: File, platform: PlatformId): Promise<boolean> {
+export async function applyCoverWithRetry(
+	file: File,
+	platform: PlatformId,
+	horizontalFile?: File,
+): Promise<boolean> {
 	for (let attempt = 0; attempt < COVER_MODAL_OPEN_RETRIES; attempt++) {
 		prepareUiBeforeCoverAttempt(platform);
-		if (await applyCoverViaModal(document, file, platform)) return true;
+		if (await applyCoverViaModal(document, file, platform, horizontalFile)) return true;
 	}
 
 	return false;

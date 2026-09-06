@@ -10,7 +10,8 @@
 		"title": "Example 视频号 title",
 		"description": "Example 视频号 description",
 		"shortTitle": "Example short title",
-		"sourceType": "original"
+		"sourceType": "original",
+		"markTag": "个人观点，仅供参考"
 	},
 	"pageFields": [],
 	"assets": {

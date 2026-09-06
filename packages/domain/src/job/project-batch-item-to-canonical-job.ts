@@ -29,6 +29,7 @@ function buildChannelsBlock(item: BatchJob["items"][number]) {
 	return {
 		...buildPlatformTextBlock(item),
 		sourceType: item.sourceType ?? BilibiliSourceType.Original,
+		...(item.markTag === undefined ? {} : { markTag: item.markTag }),
 	};
 }
 

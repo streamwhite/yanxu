@@ -1,6 +1,11 @@
 import type { PlatformId } from "@auto-upload/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
-import { resolveBatchPlatformIds } from "../shared/batch-platform-scope.js";
+import {
+	BATCH_PLATFORM_SCOPE_ALL,
+	type BatchPlatformScope,
+	formatBatchPlatformScopeLabel,
+	resolveBatchPlatformIds,
+} from "../shared/batch-platform-scope.js";
 import { PLATFORM_TAB_LABELS } from "./constants/platform-tab-labels.js";
 import {
 	countRequiredBatchItemsForPlatform,
@@ -44,7 +49,7 @@ export async function openPlatformUploadTabs(
 
 export async function openAllPlatformUploadTabs(
 	jobFilePath: string,
-	channelsOnly = false,
+	batchPlatformScope: BatchPlatformScope = BATCH_PLATFORM_SCOPE_ALL,
 ): Promise<ApplyJobFromRuntimeResult> {
 	const inspected = await inspectJobFileOutline(jobFilePath);
 	if (!inspected.ok) {
@@ -57,7 +62,7 @@ export async function openAllPlatformUploadTabs(
 	}
 
 	let openedAny = false;
-	const platformIds = resolveBatchPlatformIds(channelsOnly);
+	const platformIds = resolveBatchPlatformIds(batchPlatformScope);
 
 	for (const platform of platformIds) {
 		const tabCount = countTabsToOpenForOutline(inspected.outline, platform);
@@ -68,7 +73,7 @@ export async function openAllPlatformUploadTabs(
 	}
 
 	if (!openedAny) {
-		const scopeLabel = channelsOnly ? "channels (视频号)" : "bilibili, douyin, or channels";
+		const scopeLabel = formatBatchPlatformScopeLabel(batchPlatformScope);
 		return {
 			ok: false,
 			code: "no_platform_targets",

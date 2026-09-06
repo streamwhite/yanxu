@@ -1,4 +1,4 @@
-import { BATCH_COVER_FILE_EXTENSIONS } from "../constants/batch-assets.js";
+import { BATCH_COVER_FILE_EXTENSIONS, BATCH_HORIZONTAL_COVER_SUFFIX } from "../constants/batch-assets.js";
 import { resolveAssetPathFromParentFolder } from "./resolve-asset-path-from-parent-folder.js";
 
 function splitCoverPathStem(coverPathHint: string): { parentFolder: string; stem: string } {
@@ -10,9 +10,20 @@ function splitCoverPathStem(coverPathHint: string): { parentFolder: string; stem
 	return { parentFolder, stem };
 }
 
-export function listBatchCoverPathCandidates(coverPathHint: string): string[] {
-	const { parentFolder, stem } = splitCoverPathStem(coverPathHint);
+function listStemCandidates(parentFolder: string, stem: string): string[] {
 	return BATCH_COVER_FILE_EXTENSIONS.map((extension) =>
 		resolveAssetPathFromParentFolder(parentFolder, `${stem}${extension}`),
 	);
 }
+
+export function listBatchCoverPathCandidates(coverPathHint: string): string[] {
+	const { parentFolder, stem } = splitCoverPathStem(coverPathHint);
+	return listStemCandidates(parentFolder, stem);
+}
+
+/** Horizontal (4:3) cover candidates: `{cover stem}-4x3{extension}`. */
+export function listHorizontalCoverPathCandidates(coverPathHint: string): string[] {
+	const { parentFolder, stem } = splitCoverPathStem(coverPathHint);
+	return listStemCandidates(parentFolder, `${stem}${BATCH_HORIZONTAL_COVER_SUFFIX}`);
+}
+

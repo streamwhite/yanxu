@@ -19,6 +19,7 @@ export function buildApplyJobReady(
 	batch: BatchApplyContext,
 	video: AttachmentVideoPayload,
 	cover: AttachmentCoverPayload,
+	coverHorizontal?: AttachmentCoverPayload,
 ): HostOutboundMessage {
 	return {
 		type: "applyJobReady",
@@ -26,7 +27,7 @@ export function buildApplyJobReady(
 			applyPhase,
 			jobJson,
 			batch,
-			attachments: { video, cover },
+			attachments: coverHorizontal ? { video, cover, coverHorizontal } : { video, cover },
 		},
 	};
 }
@@ -35,11 +36,14 @@ function prependStreamBatches(
 	batch: HostOutboundBatch,
 	videoStream?: HostOutboundBatch,
 	coverStream?: HostOutboundBatch,
+	horizontalCoverStream?: HostOutboundBatch,
 ): HostOutboundBatch {
 	if (videoStream?.length) batch.push(...videoStream);
 	if (coverStream?.length) batch.push(...coverStream);
+	if (horizontalCoverStream?.length) batch.push(...horizontalCoverStream);
 	return batch;
 }
+
 
 export function buildOutboundApplyBatch(input: {
 	applyPhase: ApplyPhase;
@@ -48,8 +52,10 @@ export function buildOutboundApplyBatch(input: {
 	targetPlatform: PlatformId;
 	video: AttachmentVideoPayload;
 	cover: AttachmentCoverPayload;
+	coverHorizontal?: AttachmentCoverPayload;
 	videoStreamBatch?: HostOutboundBatch;
 	coverStreamBatch?: HostOutboundBatch;
+	coverHorizontalStreamBatch?: HostOutboundBatch;
 }): HostOutboundBatch {
 	const batch: BatchApplyContext = {
 		itemIndex: input.batchItemIndex,
@@ -64,12 +70,17 @@ export function buildOutboundApplyBatch(input: {
 		? { kind: "skipped" as const, reasonCode: REASON_STREAM_ASSEMBLED_IN_EXTENSION }
 		: input.cover;
 
+	const coverHorizontalForReady = input.coverHorizontalStreamBatch?.length
+		? ({ kind: "skipped" as const, reasonCode: REASON_STREAM_ASSEMBLED_IN_EXTENSION } as const)
+		: input.coverHorizontal;
+
 	const ready = buildApplyJobReady(
 		input.applyPhase,
 		input.jobJson,
 		batch,
 		videoForReady,
 		coverForReady,
+		coverHorizontalForReady,
 	);
 
 	const byteLength = estimateJsonByteLength(ready);
@@ -84,7 +95,13 @@ export function buildOutboundApplyBatch(input: {
 	}
 
 	const outbound: HostOutboundBatch = [];
-	prependStreamBatches(outbound, input.videoStreamBatch, input.coverStreamBatch);
+	prependStreamBatches(
+		outbound,
+		input.videoStreamBatch,
+		input.coverStreamBatch,
+		input.coverHorizontalStreamBatch,
+	);
 	outbound.push(ready);
 	return outbound;
 }
+

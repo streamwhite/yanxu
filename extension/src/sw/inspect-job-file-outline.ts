@@ -2,7 +2,13 @@ import { JobFileOutlineSchema } from "@auto-upload/domain";
 import { postNativeMessageSession } from "./post-native-message-session.js";
 
 export type InspectJobOutlineResult =
-	| { ok: true; outline: { jobVersion: number; items: { itemIndex: number; targets: string[] }[] } }
+	| {
+			ok: true;
+			outline: {
+				jobVersion: number;
+				items: { itemIndex: number; targets: string[]; name?: string }[];
+			};
+	  }
 	| { ok: false; code: string; message: string };
 
 export async function inspectJobFileOutline(jobFilePath: string): Promise<InspectJobOutlineResult> {

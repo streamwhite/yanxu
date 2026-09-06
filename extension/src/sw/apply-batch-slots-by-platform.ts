@@ -13,10 +13,15 @@ import { waitRandomStaggerMs } from "./wait-random-stagger-ms.js";
 
 export const BATCH_PARTIAL_FAILED_CODE = "batch_partial_failed" as const;
 
+export type BatchSlotApplyOptions = {
+	includeHorizontalCover?: boolean;
+};
+
 type SlotApplyOutcome = {
 	slot: BatchApplySlot;
 	result: ApplyJobFromRuntimeResult;
 };
+
 
 function groupSlotsByPlatform(slots: BatchApplySlot[]): Map<string, BatchApplySlot[]> {
 	const grouped = new Map<string, BatchApplySlot[]>();
@@ -33,6 +38,7 @@ async function applyOneSlotWithStagger(
 	applyPhase: ApplyPhaseType,
 	requestId: string,
 	slot: BatchApplySlot,
+	options: BatchSlotApplyOptions,
 ): Promise<ApplyJobFromRuntimeResult> {
 	await waitRandomStaggerMs();
 
@@ -42,7 +48,9 @@ async function applyOneSlotWithStagger(
 		tabId: slot.tabId,
 		itemIndex: slot.itemIndex,
 		platform: slot.platform,
+		includeHorizontalCover: options.includeHorizontalCover,
 	};
+
 
 	const result = await applyBatchItemViaNativeHost(input);
 	if (!result.ok) return result;
@@ -113,12 +121,13 @@ async function applySlotsInOrder(
 	applyPhase: ApplyPhaseType,
 	requestId: string,
 	platformSlots: BatchApplySlot[],
+	options: BatchSlotApplyOptions,
 ): Promise<SlotApplyOutcome[]> {
 	const outcomes: SlotApplyOutcome[] = [];
 	for (const slot of platformSlots) {
 		outcomes.push({
 			slot,
-			result: await applyOneSlotWithStagger(jobFilePath, applyPhase, requestId, slot),
+			result: await applyOneSlotWithStagger(jobFilePath, applyPhase, requestId, slot, options),
 		});
 	}
 	return outcomes;
@@ -129,11 +138,12 @@ async function applySlotsConcurrently(
 	applyPhase: ApplyPhaseType,
 	requestId: string,
 	platformSlots: BatchApplySlot[],
+	options: BatchSlotApplyOptions,
 ): Promise<SlotApplyOutcome[]> {
 	return Promise.all(
 		platformSlots.map(async (slot) => ({
 			slot,
-			result: await applyOneSlotWithStagger(jobFilePath, applyPhase, requestId, slot),
+			result: await applyOneSlotWithStagger(jobFilePath, applyPhase, requestId, slot, options),
 		})),
 	);
 }
@@ -143,6 +153,7 @@ async function applyPlatformSlots(
 	applyPhase: ApplyPhaseType,
 	requestId: string,
 	platformSlots: BatchApplySlot[],
+	options: BatchSlotApplyOptions,
 ): Promise<ApplyJobFromRuntimeResult> {
 	const platform = platformSlots[0]?.platform ?? "";
 	const firstSlot = platformSlots[0];
@@ -150,8 +161,9 @@ async function applyPlatformSlots(
 		await activateChannelsTabForApply(firstSlot.tabId);
 	}
 	const outcomes = platformAppliesSlotsSequentially(platform)
-		? await applySlotsInOrder(jobFilePath, applyPhase, requestId, platformSlots)
-		: await applySlotsConcurrently(jobFilePath, applyPhase, requestId, platformSlots);
+		? await applySlotsInOrder(jobFilePath, applyPhase, requestId, platformSlots, options)
+		: await applySlotsConcurrently(jobFilePath, applyPhase, requestId, platformSlots, options);
+
 
 	const failures = outcomes.filter(({ result }) => !result.ok);
 	await reportSlotFailures(requestId, failures);
@@ -181,21 +193,23 @@ export async function applyBatchSlotsConcurrentByPlatform(
 	applyPhase: ApplyPhaseType,
 	requestId: string,
 	slots: BatchApplySlot[],
+	options: BatchSlotApplyOptions = {},
 ): Promise<ApplyJobFromRuntimeResult> {
 	const grouped = groupSlotsByPlatform(slots);
 	const channelsSlots = grouped.get(Platform.Channels) ?? [];
 	if (channelsSlots.length > 0) grouped.delete(Platform.Channels);
 
 	const otherPlatformRuns = [...grouped.values()].map((platformSlots) =>
-		applyPlatformSlots(jobFilePath, applyPhase, requestId, platformSlots),
+		applyPlatformSlots(jobFilePath, applyPhase, requestId, platformSlots, options),
 	);
 	const otherResults =
 		otherPlatformRuns.length > 0 ? await Promise.all(otherPlatformRuns) : [];
 
 	const channelsResult =
 		channelsSlots.length > 0
-			? await applyPlatformSlots(jobFilePath, applyPhase, requestId, channelsSlots)
+			? await applyPlatformSlots(jobFilePath, applyPhase, requestId, channelsSlots, options)
 			: { ok: true as const };
+
 
 	return mergePlatformApplyResults([...otherResults, channelsResult]);
 }

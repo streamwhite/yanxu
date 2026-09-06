@@ -17,6 +17,7 @@ export type ApplyBatchItemViaNativeHostInput = {
 	tabId: number;
 	itemIndex: number;
 	platform: PlatformId;
+	includeHorizontalCover?: boolean;
 };
 
 export async function applyBatchItemViaNativeHost(
@@ -36,6 +37,7 @@ export async function applyBatchItemViaNativeHost(
 		applyPhase: input.applyPhase,
 		itemIndex: input.itemIndex,
 		platform: input.platform,
+		includeHorizontalCover: input.includeHorizontalCover,
 	});
 	const resolved = resolveApplyJobFromNativeSession(session);
 	if (!resolved.ok) return resolved;

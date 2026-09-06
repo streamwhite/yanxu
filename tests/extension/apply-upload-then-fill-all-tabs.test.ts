@@ -1,4 +1,5 @@
 import { ApplyPhase, Platform } from "@auto-upload/domain";
+import { BATCH_PLATFORM_SCOPE_ALL } from "../../extension/src/shared/batch-platform-scope";
 import { applyUploadThenFillAllTabs } from "../../extension/src/sw/apply-upload-then-fill-all-tabs";
 import * as batchSlotsModule from "../../extension/src/sw/apply-batch-slots-by-platform";
 import * as prepareModule from "../../extension/src/sw/prepare-batch-apply-context";
@@ -24,7 +25,7 @@ describe("applyUploadThenFillAllTabs", () => {
 			.mockResolvedValue({ ok: true });
 		const markSpy = jest.spyOn(uploadStateModule, "markBatchVideosUploaded").mockResolvedValue();
 
-		const result = await applyUploadThenFillAllTabs("/tmp/job.json", "req-1", 10);
+		const result = await applyUploadThenFillAllTabs("/tmp/job.json", "req-1", 10, BATCH_PLATFORM_SCOPE_ALL);
 
 		expect(result.ok).toBe(true);
 		expect(applySpy).toHaveBeenCalledTimes(6);
@@ -33,36 +34,42 @@ describe("applyUploadThenFillAllTabs", () => {
 			ApplyPhase.VideoOnly,
 			"req-1",
 			[{ platform: Platform.Bilibili, tabId: 1, itemIndex: 0 }],
+			expect.objectContaining({ includeHorizontalCover: false }),
 		);
 		expect(applySpy).toHaveBeenCalledWith(
 			"/tmp/job.json",
 			ApplyPhase.FieldsOnly,
 			"req-1",
 			[{ platform: Platform.Bilibili, tabId: 1, itemIndex: 0 }],
+			expect.objectContaining({ includeHorizontalCover: false }),
 		);
 		expect(applySpy).toHaveBeenCalledWith(
 			"/tmp/job.json",
 			ApplyPhase.VideoOnly,
 			"req-1",
 			[{ platform: Platform.Channels, tabId: 2, itemIndex: 0 }],
+			expect.objectContaining({ includeHorizontalCover: false }),
 		);
 		expect(applySpy).toHaveBeenCalledWith(
 			"/tmp/job.json",
 			ApplyPhase.FieldsOnly,
 			"req-1",
 			[{ platform: Platform.Channels, tabId: 2, itemIndex: 0 }],
+			expect.objectContaining({ includeHorizontalCover: false }),
 		);
 		expect(applySpy).toHaveBeenCalledWith(
 			"/tmp/job.json",
 			ApplyPhase.VideoOnly,
 			"req-1",
 			[{ platform: Platform.Douyin, tabId: 3, itemIndex: 0 }],
+			expect.objectContaining({ includeHorizontalCover: false }),
 		);
 		expect(applySpy).toHaveBeenCalledWith(
 			"/tmp/job.json",
 			ApplyPhase.FieldsOnly,
 			"req-1",
 			[{ platform: Platform.Douyin, tabId: 3, itemIndex: 0 }],
+			expect.objectContaining({ includeHorizontalCover: false }),
 		);
 		expect(markSpy).toHaveBeenCalled();
 	});
@@ -87,7 +94,12 @@ describe("applyUploadThenFillAllTabs", () => {
 				return { ok: true };
 			});
 
-		const result = await applyUploadThenFillAllTabs("/tmp/job.json", "req-order", 0);
+		const result = await applyUploadThenFillAllTabs(
+			"/tmp/job.json",
+			"req-order",
+			0,
+			BATCH_PLATFORM_SCOPE_ALL,
+		);
 
 		expect(result.ok).toBe(true);
 		const channelsVideoIndex = callOrder.indexOf(`${Platform.Channels}:${ApplyPhase.VideoOnly}`);
@@ -116,7 +128,12 @@ describe("applyUploadThenFillAllTabs", () => {
 				return { ok: true };
 			});
 
-		const result = await applyUploadThenFillAllTabs("/tmp/job.json", "req-ch", 0);
+		const result = await applyUploadThenFillAllTabs(
+			"/tmp/job.json",
+			"req-ch",
+			0,
+			BATCH_PLATFORM_SCOPE_ALL,
+		);
 
 		expect(result.ok).toBe(true);
 		expect(applySpy).toHaveBeenCalledTimes(2);
@@ -125,6 +142,7 @@ describe("applyUploadThenFillAllTabs", () => {
 			ApplyPhase.FieldsOnly,
 			"req-ch",
 			[{ platform: Platform.Channels, tabId: 2, itemIndex: 0 }],
+			expect.objectContaining({ includeHorizontalCover: false }),
 		);
 	});
 
@@ -136,7 +154,12 @@ describe("applyUploadThenFillAllTabs", () => {
 		});
 		const applySpy = jest.spyOn(batchSlotsModule, "applyBatchSlotsConcurrentByPlatform");
 
-		const result = await applyUploadThenFillAllTabs("/tmp/job.json", "req-2", 0);
+		const result = await applyUploadThenFillAllTabs(
+			"/tmp/job.json",
+			"req-2",
+			0,
+			BATCH_PLATFORM_SCOPE_ALL,
+		);
 
 		expect(result.ok).toBe(false);
 		expect(applySpy).not.toHaveBeenCalled();

@@ -1,8 +1,13 @@
-import { BilibiliSourceType, type CanonicalJob } from "@auto-upload/domain";
+import {
+	BilibiliSourceType,
+	CHANNELS_DEFAULT_MARK_TAG_OPTION,
+	type CanonicalJob,
+} from "@auto-upload/domain";
 import type { ApplyPageField } from "../../content/page-field-apply.js";
 import { PageFieldKind } from "../../content/page-field-apply.js";
 import {
 	CHANNELS_DESCRIPTION_SELECTORS,
+	CHANNELS_MARK_TAG_SELECT_SELECTOR,
 	CHANNELS_ORIGINAL_DECLARE_HINT,
 	CHANNELS_ORIGINAL_DECLARE_LABEL_SELECTOR,
 	CHANNELS_SHORT_TITLE_SELECTORS,
@@ -21,7 +26,14 @@ export function buildDefaultChannelsPageFields(job: CanonicalJob): ApplyPageFiel
 	if (!block) return [];
 
 	const fields: ApplyPageField[] = [];
-	const { title, description, shortTitle, sourceType } = block;
+	const { title, description, shortTitle, sourceType, markTag } = block;
+
+	fields.push({
+		kind: PageFieldKind.ChannelsMarkTag,
+		locator: { css: CHANNELS_MARK_TAG_SELECT_SELECTOR },
+		value: markTag ?? CHANNELS_DEFAULT_MARK_TAG_OPTION,
+		markTagOption: markTag ?? CHANNELS_DEFAULT_MARK_TAG_OPTION,
+	});
 
 	if (sourceType === BilibiliSourceType.Original) {
 		fields.push({

@@ -1,10 +1,16 @@
 import { ApplyPhase, Platform } from "@auto-upload/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
+import type { BatchPlatformScope } from "../shared/batch-platform-scope.js";
+import { isSinglePlatformScope } from "../shared/batch-platform-scope.js";
 import { clampFieldsSettleMs } from "../shared/fields-settle-config.js";
 import { markBatchVideosUploaded } from "../shared/batch-upload-state.js";
 import { waitMs } from "../content/wait-ms.js";
 import { BATCH_PARTIAL_FAILED_CODE } from "./apply-batch-slots-by-platform.js";
-import { applyBatchSlotsConcurrentByPlatform } from "./apply-batch-slots-by-platform.js";
+import {
+	applyBatchSlotsConcurrentByPlatform,
+	type BatchSlotApplyOptions,
+} from "./apply-batch-slots-by-platform.js";
+import { checkBatchJobAssets } from "./check-batch-job-assets.js";
 import { prepareBatchApplyContext } from "./prepare-batch-apply-context.js";
 import { runWithServiceWorkerKeepAlive } from "./run-with-service-worker-keep-alive.js";
 import { clearBatchProgress } from "../shared/batch-progress-store.js";
@@ -28,10 +34,12 @@ async function applySlotsPhase(
 	applyPhase: typeof ApplyPhase.VideoOnly | typeof ApplyPhase.FieldsOnly,
 	requestId: string,
 	slots: BatchApplySlot[],
+	options: BatchSlotApplyOptions,
 ): Promise<ApplyJobFromRuntimeResult> {
 	if (slots.length === 0) return { ok: true };
-	return applyBatchSlotsConcurrentByPlatform(jobFilePath, applyPhase, requestId, slots);
+	return applyBatchSlotsConcurrentByPlatform(jobFilePath, applyPhase, requestId, slots, options);
 }
+
 
 function combinePlatformUploadAndFill(
 	upload: ApplyJobFromRuntimeResult,
@@ -45,21 +53,39 @@ function combinePlatformUploadAndFill(
 	return mergePartialResults(upload, fill);
 }
 
+export type ApplyUploadThenFillAllTabsOptions = {
+	submitHorizontalCover?: boolean;
+	selectedPlatformItemIndices?: number[];
+};
+
 export async function applyUploadThenFillAllTabs(
 	jobFilePath: string,
 	requestId: string,
 	fieldsSettleMs: number,
-	channelsOnly = false,
-	selectedChannelsItemIndices?: number[],
+	batchPlatformScope: BatchPlatformScope,
+	options: ApplyUploadThenFillAllTabsOptions = {},
 ): Promise<ApplyJobFromRuntimeResult> {
 	return runWithServiceWorkerKeepAlive(async () => {
 		const settleMs = clampFieldsSettleMs(fieldsSettleMs);
+		const scopedPlatform = isSinglePlatformScope(batchPlatformScope)
+			? batchPlatformScope
+			: undefined;
+		const slotOptions: BatchSlotApplyOptions = {
+			includeHorizontalCover: options.submitHorizontalCover === true,
+		};
 
 		const prepared = await prepareBatchApplyContext(jobFilePath, {
-			channelsOnly,
-			selectedChannelsItemIndices: channelsOnly ? selectedChannelsItemIndices : undefined,
+			batchPlatformScope,
+			selectedPlatformItemIndices:
+				scopedPlatform === undefined ? undefined : options.selectedPlatformItemIndices,
 		});
+
 		if (!("slots" in prepared)) return prepared;
+
+		if (slotOptions.includeHorizontalCover) {
+			const assets = await checkBatchJobAssets(jobFilePath, { includeHorizontalCover: true });
+			if (!assets.ok) return assets;
+		}
 
 		await clearBatchProgress(requestId);
 
@@ -68,24 +94,26 @@ export async function applyUploadThenFillAllTabs(
 		const channelsSlots = prepared.slots.filter((slot) => slot.platform === Platform.Channels);
 
 		const [bilibiliUpload, douyinUpload] = await Promise.all([
-			applySlotsPhase(jobFilePath, ApplyPhase.VideoOnly, requestId, bilibiliSlots),
-			applySlotsPhase(jobFilePath, ApplyPhase.VideoOnly, requestId, douyinSlots),
+			applySlotsPhase(jobFilePath, ApplyPhase.VideoOnly, requestId, bilibiliSlots, slotOptions),
+			applySlotsPhase(jobFilePath, ApplyPhase.VideoOnly, requestId, douyinSlots, slotOptions),
 		]);
 		const channelsUpload = await applySlotsPhase(
 			jobFilePath,
 			ApplyPhase.VideoOnly,
 			requestId,
 			channelsSlots,
+			slotOptions,
 		);
 
 		await markBatchVideosUploaded(jobFilePath);
 		if (settleMs > 0) await waitMs(settleMs);
 
 		const [bilibiliFill, douyinFill, channelsFill] = await Promise.all([
-			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, bilibiliSlots),
-			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, douyinSlots),
-			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, channelsSlots),
+			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, bilibiliSlots, slotOptions),
+			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, douyinSlots, slotOptions),
+			applySlotsPhase(jobFilePath, ApplyPhase.FieldsOnly, requestId, channelsSlots, slotOptions),
 		]);
+
 
 		const bilibiliResult = combinePlatformUploadAndFill(bilibiliUpload, bilibiliFill, false);
 		const douyinResult = combinePlatformUploadAndFill(douyinUpload, douyinFill, false);

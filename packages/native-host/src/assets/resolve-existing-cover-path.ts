@@ -1,6 +1,9 @@
 import { constants as fsConstants, promises as fsp } from "node:fs";
 import { isAbsolute as isAbsolutePosixOrWin, resolve as resolveCrossPlatform } from "node:path";
-import { listBatchCoverPathCandidates } from "@auto-upload/domain";
+import {
+	listBatchCoverPathCandidates,
+	listHorizontalCoverPathCandidates,
+} from "@auto-upload/domain";
 
 async function isReadableFile(absolutePath: string): Promise<boolean> {
 	if (!isAbsolutePosixOrWin(absolutePath)) return false;
@@ -15,11 +18,22 @@ async function isReadableFile(absolutePath: string): Promise<boolean> {
 	}
 }
 
-export async function resolveExistingCoverPath(
-	coverPathHint: string,
+async function resolveExistingPathFromCandidates(
+	candidates: string[],
 ): Promise<string | undefined> {
-	for (const candidate of listBatchCoverPathCandidates(coverPathHint)) {
+	for (const candidate of candidates) {
 		if (await isReadableFile(candidate)) return candidate;
 	}
 	return undefined;
 }
+
+export async function resolveExistingCoverPath(coverPathHint: string): Promise<string | undefined> {
+	return resolveExistingPathFromCandidates(listBatchCoverPathCandidates(coverPathHint));
+}
+
+export async function resolveExistingHorizontalCoverPath(
+	coverPathHint: string,
+): Promise<string | undefined> {
+	return resolveExistingPathFromCandidates(listHorizontalCoverPathCandidates(coverPathHint));
+}
+

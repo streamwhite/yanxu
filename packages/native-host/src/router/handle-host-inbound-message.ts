@@ -10,7 +10,10 @@ import {
 	DEFAULT_JOB_POLICY,
 	DEFAULT_TRANSFER_CHUNK_BYTES,
 } from "@auto-upload/domain";
-import { resolveExistingCoverPath } from "../assets/resolve-existing-cover-path.js";
+import {
+	resolveExistingCoverPath,
+	resolveExistingHorizontalCoverPath,
+} from "../assets/resolve-existing-cover-path.js";
 import { resolveCoverAttachment } from "../attachments/resolve-cover-attachment.js";
 import { resolveVideoAttachment } from "../attachments/resolve-video-attachment.js";
 import { buildOutboundApplyBatch } from "./build-outbound-apply-batch.js";
@@ -51,27 +54,32 @@ export async function handleHostInboundMessage(
 			return await inspectJobFromFile(inbound.jobFilePath);
 		}
 		if (inbound.type === "checkBatchJobAssetsFromFile") {
-			return await checkBatchJobAssetsFromFile(inbound.jobFilePath);
+			return await checkBatchJobAssetsFromFile(inbound.jobFilePath, inbound.includeHorizontalCover);
 		}
 		return await applyJobFromFile(
 			inbound.jobFilePath,
 			inbound.applyPhase,
 			inbound.itemIndex,
 			inbound.platform,
+			inbound.includeHorizontalCover,
 		);
 	} catch (error) {
 		return [toErrorOutbound(error)];
 	}
 }
 
-async function checkBatchJobAssetsFromFile(jobFilePath: string): Promise<HostOutboundBatch> {
+async function checkBatchJobAssetsFromFile(
+	jobFilePath: string,
+	includeHorizontalCover?: boolean,
+): Promise<HostOutboundBatch> {
 	const rawJson = await readJobFileJson(jobFilePath);
-	const checked = await validateBatchJobAssetsFromFileJson(rawJson);
+	const checked = await validateBatchJobAssetsFromFileJson(rawJson, { includeHorizontalCover });
 	if (!checked.ok) {
 		return [{ type: "error", code: checked.code, message: checked.message }];
 	}
 	return [{ type: "batchAssetsReady" }];
 }
+
 
 async function inspectJobFromFile(jobFilePath: string): Promise<HostOutboundBatch> {
 	const rawJson = await readJobFileJson(jobFilePath);
@@ -87,6 +95,7 @@ async function applyJobFromFile(
 	applyPhase: ApplyPhase,
 	itemIndex: number,
 	platform: PlatformId,
+	includeHorizontalCover?: boolean,
 ): Promise<HostOutboundBatch> {
 	const rawJson = await readJobFileJson(jobFilePath);
 	const resolved = resolveCanonicalJobFromFileJson(rawJson, itemIndex, platform);
@@ -105,6 +114,10 @@ async function applyJobFromFile(
 	const resolvedCoverPath = coverPathHint
 		? await resolveExistingCoverPath(coverPathHint)
 		: undefined;
+	const resolvedHorizontalCoverPath =
+		includeHorizontalCover === true && coverPathHint
+			? await resolveExistingHorizontalCoverPath(coverPathHint)
+			: undefined;
 	const maxDirectAttachBytes =
 		job.policy?.maxDirectAttachBytes ?? DEFAULT_JOB_POLICY.maxDirectAttachBytes;
 	const maxCoverInlineBytes =
@@ -113,8 +126,9 @@ async function applyJobFromFile(
 	const jobJson = JSON.stringify(job);
 
 	if (applyPhase === ApplyPhase.FieldsOnly) {
-		const resolvedCover = await resolveCoverAttachment({
-			absolutePath: resolvedCoverPath,
+		const { resolvedCover, resolvedHorizontalCover } = await resolveCoverAttachments({
+			resolvedCoverPath,
+			resolvedHorizontalCoverPath,
 			maxCoverInlineBytes,
 			transferChunkBytes,
 		});
@@ -129,18 +143,26 @@ async function applyJobFromFile(
 				resolvedCover.mode === "payload"
 					? resolvedCover.payload
 					: { kind: "skipped", reasonCode: "stream_assembled_in_extension" },
+			coverHorizontal:
+				resolvedHorizontalCover?.mode === "payload"
+					? resolvedHorizontalCover.payload
+					: undefined,
 			coverStreamBatch: resolvedCover.mode === "stream" ? resolvedCover.streamBatch : undefined,
+			coverHorizontalStreamBatch:
+				resolvedHorizontalCover?.mode === "stream" ? resolvedHorizontalCover.streamBatch : undefined,
 		});
 	}
 
-	const resolvedCover =
+	const skippedCover = {
+		mode: "payload" as const,
+		payload: { kind: "skipped" as const, reasonCode: REASON_COVER_SKIPPED_VIDEO_PHASE },
+	};
+	const { resolvedCover, resolvedHorizontalCover } =
 		applyPhase === ApplyPhase.VideoOnly
-			? {
-					mode: "payload" as const,
-					payload: { kind: "skipped" as const, reasonCode: REASON_COVER_SKIPPED_VIDEO_PHASE },
-				}
-			: await resolveCoverAttachment({
-					absolutePath: resolvedCoverPath,
+			? { resolvedCover: skippedCover, resolvedHorizontalCover: undefined }
+			: await resolveCoverAttachments({
+					resolvedCoverPath,
+					resolvedHorizontalCoverPath,
 					maxCoverInlineBytes,
 					transferChunkBytes,
 				});
@@ -164,7 +186,34 @@ async function applyJobFromFile(
 			resolvedCover.mode === "payload"
 				? resolvedCover.payload
 				: { kind: "skipped", reasonCode: "stream_assembled_in_extension" },
+		coverHorizontal:
+			resolvedHorizontalCover?.mode === "payload" ? resolvedHorizontalCover.payload : undefined,
 		videoStreamBatch: resolvedVideo.mode === "stream" ? resolvedVideo.streamBatch : undefined,
 		coverStreamBatch: resolvedCover.mode === "stream" ? resolvedCover.streamBatch : undefined,
+		coverHorizontalStreamBatch:
+			resolvedHorizontalCover?.mode === "stream" ? resolvedHorizontalCover.streamBatch : undefined,
 	});
 }
+
+async function resolveCoverAttachments(input: {
+	resolvedCoverPath?: string;
+	resolvedHorizontalCoverPath?: string;
+	maxCoverInlineBytes: number;
+	transferChunkBytes: number;
+}) {
+	const resolvedCover = await resolveCoverAttachment({
+		absolutePath: input.resolvedCoverPath,
+		maxCoverInlineBytes: input.maxCoverInlineBytes,
+		transferChunkBytes: input.transferChunkBytes,
+	});
+	const resolvedHorizontalCover = input.resolvedHorizontalCoverPath
+		? await resolveCoverAttachment({
+				absolutePath: input.resolvedHorizontalCoverPath,
+				maxCoverInlineBytes: input.maxCoverInlineBytes,
+				transferChunkBytes: input.transferChunkBytes,
+				streamKind: "coverHorizontal",
+			})
+		: undefined;
+	return { resolvedCover, resolvedHorizontalCover };
+}
+

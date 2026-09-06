@@ -63,8 +63,10 @@ export const AppliedJobPayloadSchema = z.object({
 	attachments: z.object({
 		video: AttachmentVideoPayloadSchema,
 		cover: AttachmentCoverPayloadSchema,
+		coverHorizontal: AttachmentCoverPayloadSchema.optional(),
 	}),
 });
+
 
 export type AppliedJobPayload = z.infer<typeof AppliedJobPayloadSchema>;
 
@@ -92,6 +94,7 @@ export const HostInboundMessageSchema = z.discriminatedUnion("type", [
 	z.object({
 		type: z.literal("checkBatchJobAssetsFromFile"),
 		jobFilePath: z.string().min(1),
+		includeHorizontalCover: z.boolean().optional(),
 	}),
 	z.object({
 		type: z.literal("applyBatchItemFromFile"),
@@ -99,6 +102,7 @@ export const HostInboundMessageSchema = z.discriminatedUnion("type", [
 		applyPhase: z.enum([ApplyPhase.Full, ApplyPhase.VideoOnly, ApplyPhase.FieldsOnly]),
 		itemIndex: z.number().int().nonnegative(),
 		platform: PlatformIdSchema,
+		includeHorizontalCover: z.boolean().optional(),
 	}),
 ]);
 
@@ -132,6 +136,20 @@ export const CoverStreamChunkSchema = z.object({
 	base64: z.string().min(1),
 });
 
+export const HorizontalCoverStreamStartSchema = z.object({
+	type: z.literal("horizontalCoverStreamStart"),
+	mimeType: z.string().min(1),
+	suggestedFileName: z.string().min(1),
+	totalBytes: z.number().int().nonnegative(),
+	chunkCount: z.number().int().nonnegative(),
+});
+
+export const HorizontalCoverStreamChunkSchema = z.object({
+	type: z.literal("horizontalCoverStreamChunk"),
+	index: z.number().int().nonnegative(),
+	base64: z.string().min(1),
+});
+
 export const HostOutboundMessageSchema = z.discriminatedUnion("type", [
 	z.object({ type: z.literal("pong") }),
 	z.object({
@@ -148,6 +166,8 @@ export const HostOutboundMessageSchema = z.discriminatedUnion("type", [
 	VideoStreamChunkSchema,
 	CoverStreamStartSchema,
 	CoverStreamChunkSchema,
+	HorizontalCoverStreamStartSchema,
+	HorizontalCoverStreamChunkSchema,
 	z.object({
 		type: z.literal("applyJobReady"),
 		payload: AppliedJobPayloadSchema,

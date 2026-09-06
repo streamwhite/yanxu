@@ -2,10 +2,14 @@ import { postNativeMessageSession } from "./post-native-message-session.js";
 
 export type CheckBatchJobAssetsResult = { ok: true } | { ok: false; code: string; message: string };
 
-export async function checkBatchJobAssets(jobFilePath: string): Promise<CheckBatchJobAssetsResult> {
+export async function checkBatchJobAssets(
+	jobFilePath: string,
+	options: { includeHorizontalCover?: boolean } = {},
+): Promise<CheckBatchJobAssetsResult> {
 	const session = await postNativeMessageSession({
 		type: "checkBatchJobAssetsFromFile",
 		jobFilePath,
+		includeHorizontalCover: options.includeHorizontalCover,
 	});
 
 	if (!session.ok) {

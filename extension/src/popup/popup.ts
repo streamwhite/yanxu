@@ -3,7 +3,13 @@ import {
   RuntimeMessageType,
   type ApplyJobFromRuntimeResult,
 } from "../runtime/runtime-message.js";
-import { STORAGE_KEY_CHANNELS_ONLY } from "../shared/batch-platform-scope.js";
+import {
+  BATCH_PLATFORM_SCOPE_ALL,
+  type BatchPlatformScope,
+  STORAGE_KEY_BATCH_PLATFORM_SCOPE,
+  isSinglePlatformScope,
+  parseBatchPlatformScope,
+} from "../shared/batch-platform-scope.js";
 import {
   BATCH_PROGRESS_STORAGE_KEY,
   type StoredBatchProgress,
@@ -34,11 +40,24 @@ import {
   collectSubmitAllPlatformsButton,
 } from "./platform-submit-controls.js";
 import {
-  hasChannelsItemSelection,
-  loadChannelsItemSelectionEntries,
-  readSelectedChannelsItemIndices,
-  renderChannelsItemSelectionList,
-} from "./channels-item-selection.js";
+  batchPlatformScopeOpenTabsButtonLabel,
+  batchPlatformScopeOpenTabsHelp,
+  batchPlatformScopeOpenedLabel,
+  batchPlatformScopeOpeningLabel,
+  batchPlatformScopeSinglePlatformHelp,
+  batchPlatformScopeUploadBusyLabel,
+  batchPlatformScopeUploadFillButtonLabel,
+  batchPlatformScopeUploadFillHelp,
+  batchPlatformScopeUploadSuccessLabel,
+  isBatchPlatformScopeValue,
+  platformItemSelectionLabel as formatPlatformItemSelectionLabel,
+} from "./batch-platform-scope-ui.js";
+import {
+  hasPlatformItemSelection,
+  loadPlatformItemSelectionEntries,
+  readSelectedPlatformItemIndices,
+  renderPlatformItemSelectionList,
+} from "./platform-item-selection.js";
 import {
   buildOutcomeAlertClass,
   inferOutcomeVariant,
@@ -182,7 +201,8 @@ async function runRuntimeBatchAction(
       );
 
     if (result.ok === true) {
-      setOutcome(successLabel, PopupOutcomeVariant.Success);
+      const label = result.message ? `${successLabel} ${result.message}` : successLabel;
+      setOutcome(label, PopupOutcomeVariant.Success);
       return;
     }
 
@@ -261,80 +281,79 @@ async function runRuntimeSubmitAllPlatformsAction(
   }
 }
 
-function readChannelsOnlyCheckbox(checkbox: HTMLInputElement): boolean {
-  return checkbox.checked;
+function readBatchPlatformScopeSelect(select: HTMLSelectElement): BatchPlatformScope {
+  const value = select.value;
+  return isBatchPlatformScopeValue(value) ? value : BATCH_PLATFORM_SCOPE_ALL;
 }
 
-async function loadChannelsOnlyIntoCheckbox(
-  checkbox: HTMLInputElement,
+async function loadBatchPlatformScopeIntoSelect(
+  select: HTMLSelectElement,
 ): Promise<void> {
-  const stored = await chrome.storage.local.get(STORAGE_KEY_CHANNELS_ONLY);
-  const value = stored[STORAGE_KEY_CHANNELS_ONLY];
-  checkbox.checked = value === true;
+  const stored = await chrome.storage.local.get(STORAGE_KEY_BATCH_PLATFORM_SCOPE);
+  select.value = parseBatchPlatformScope(stored[STORAGE_KEY_BATCH_PLATFORM_SCOPE]);
 }
 
-async function persistChannelsOnly(channelsOnly: boolean): Promise<void> {
-  await chrome.storage.local.set({ [STORAGE_KEY_CHANNELS_ONLY]: channelsOnly });
+async function persistBatchPlatformScope(scope: BatchPlatformScope): Promise<void> {
+  await chrome.storage.local.set({ [STORAGE_KEY_BATCH_PLATFORM_SCOPE]: scope });
 }
 
-function syncChannelsOnlyUi(
-  channelsOnly: boolean,
+function syncBatchPlatformScopeUi(
+  scope: BatchPlatformScope,
   openTabsHelp: HTMLElement,
   uploadFillHelp: HTMLElement,
-  channelsOnlyHelp: HTMLElement,
-  channelsItemSelectionSection: HTMLElement,
+  batchPlatformScopeHelp: HTMLElement,
+  platformItemSelectionSection: HTMLElement,
+  platformItemSelectionLabelEl: HTMLElement,
   openAllTabsButton: HTMLButtonElement,
   uploadAndFillAllTabsButton: HTMLButtonElement,
 ): void {
-  channelsOnlyHelp.classList.toggle("d-none", !channelsOnly);
-  channelsItemSelectionSection.classList.toggle("d-none", !channelsOnly);
-  openTabsHelp.textContent = channelsOnly
-    ? "Opens 视频号 tabs only — one per job item targeting channels."
-    : "Opens bilibili, douyin, and 视频号 tabs — one per job item per platform.";
-  uploadFillHelp.textContent = channelsOnly
-    ? "Uploads videos on 视频号 tabs only, waits, then fills fields and cover."
-    : "Uploads videos on all tabs, waits for pages to settle, then fills fields and cover.";
-  openAllTabsButton.textContent = channelsOnly
-    ? "Open 视频号 tabs"
-    : "Open all upload tabs";
-  uploadAndFillAllTabsButton.textContent = channelsOnly
-    ? "Upload and fill (视频号 only)"
-    : "Upload and fill (all tabs)";
+  const singlePlatform = isSinglePlatformScope(scope) ? scope : undefined;
+  batchPlatformScopeHelp.classList.toggle("d-none", singlePlatform === undefined);
+  platformItemSelectionSection.classList.toggle("d-none", singlePlatform === undefined);
+  if (singlePlatform !== undefined) {
+    batchPlatformScopeHelp.textContent = batchPlatformScopeSinglePlatformHelp(scope);
+    platformItemSelectionLabelEl.textContent =
+      formatPlatformItemSelectionLabel(singlePlatform);
+  }
+  openTabsHelp.textContent = batchPlatformScopeOpenTabsHelp(scope);
+  uploadFillHelp.textContent = batchPlatformScopeUploadFillHelp(scope);
+  openAllTabsButton.textContent = batchPlatformScopeOpenTabsButtonLabel(scope);
+  uploadAndFillAllTabsButton.textContent = batchPlatformScopeUploadFillButtonLabel(scope);
 }
 
-async function refreshChannelsItemSelectionList(
+async function refreshPlatformItemSelectionList(
   jobFilePath: string,
-  channelsOnly: boolean,
+  scope: BatchPlatformScope,
   listContainer: HTMLElement,
 ): Promise<void> {
-  if (!channelsOnly || !jobFilePath) {
+  if (!isSinglePlatformScope(scope) || !jobFilePath) {
     listContainer.replaceChildren();
     return;
   }
 
   try {
-    const entries = await loadChannelsItemSelectionEntries(jobFilePath);
+    const entries = await loadPlatformItemSelectionEntries(jobFilePath, scope);
     if (!entries) {
-      renderChannelsItemSelectionList(listContainer, []);
+      renderPlatformItemSelectionList(listContainer, [], scope);
       return;
     }
-    renderChannelsItemSelectionList(listContainer, entries);
+    renderPlatformItemSelectionList(listContainer, entries, scope);
   } catch {
-    renderChannelsItemSelectionList(listContainer, []);
+    renderPlatformItemSelectionList(listContainer, [], scope);
   }
 }
 
 function bindOpenAllTabsButton(
   button: HTMLButtonElement,
   readJobPath: () => string | null,
-  readChannelsOnly: () => boolean,
+  readBatchPlatformScope: () => BatchPlatformScope,
 ): void {
   button.addEventListener("click", () => {
     const jobFilePath = readJobPath();
     if (!jobFilePath) return;
 
-    const channelsOnly = readChannelsOnly();
-    void persistChannelsOnly(channelsOnly);
+    const batchPlatformScope = readBatchPlatformScope();
+    void persistBatchPlatformScope(batchPlatformScope);
 
     void runRuntimeBatchAction(
       button,
@@ -342,14 +361,10 @@ function bindOpenAllTabsButton(
       {
         type: RuntimeMessageType.OpenAllPlatformTabs,
         jobFilePath,
-        channelsOnly,
+        batchPlatformScope,
       },
-      channelsOnly
-        ? "Opening 视频号 upload tabs…"
-        : "Opening upload tabs for all platforms…",
-      channelsOnly
-        ? "Opened 视频号 upload tabs for this job."
-        : "Opened upload tabs for this job.",
+      batchPlatformScopeOpeningLabel(batchPlatformScope),
+      batchPlatformScopeOpenedLabel(batchPlatformScope),
       null,
     );
   });
@@ -358,64 +373,68 @@ function bindOpenAllTabsButton(
 async function bootstrap(): Promise<void> {
   const jobFilePathInput = byId("jobFilePathInput");
   const fieldsSettleMsInput = byId("fieldsSettleMsInput");
-  const channelsOnlyCheckbox = byId("channelsOnlyCheckbox");
+  const batchPlatformScopeSelect = byId("batchPlatformScopeSelect");
   const uploadAndFillAllTabsButton = byId("uploadAndFillAllTabsButton");
+  const submitHorizontalCoverCheckbox = byId("submitHorizontalCoverCheckbox");
   const openAllTabsButton = byId("openAllTabsButton");
   const progressLog = byId("batchProgressLog");
   const openTabsHelp = byId("openTabsHelp");
   const uploadFillHelp = byId("uploadFillHelp");
-  const channelsOnlyHelp = byId("channelsOnlyHelp");
-  const channelsItemSelectionSection = byId("channelsItemSelectionSection");
-  const channelsItemSelectionList = byId("channelsItemSelectionList");
+  const batchPlatformScopeHelp = byId("batchPlatformScopeHelp");
+  const platformItemSelectionSection = byId("platformItemSelectionSection");
+  const platformItemSelectionLabelEl = byId("platformItemSelectionLabel");
+  const platformItemSelectionList = byId("platformItemSelectionList");
   const channelsSubmitBatchSizeInput = byId("channelsSubmitBatchSizeInput");
   const channelsSubmitBatchIntervalMinInput = byId("channelsSubmitBatchIntervalMinInput");
 
   if (!(jobFilePathInput instanceof HTMLInputElement)) return;
   if (!(fieldsSettleMsInput instanceof HTMLInputElement)) return;
-  if (!(channelsOnlyCheckbox instanceof HTMLInputElement)) return;
+  if (!(batchPlatformScopeSelect instanceof HTMLSelectElement)) return;
   if (!(uploadAndFillAllTabsButton instanceof HTMLButtonElement)) return;
   if (!(openAllTabsButton instanceof HTMLButtonElement)) return;
   if (!(progressLog instanceof HTMLElement)) return;
   if (!(openTabsHelp instanceof HTMLElement)) return;
   if (!(uploadFillHelp instanceof HTMLElement)) return;
-  if (!(channelsOnlyHelp instanceof HTMLElement)) return;
-  if (!(channelsItemSelectionSection instanceof HTMLElement)) return;
-  if (!(channelsItemSelectionList instanceof HTMLElement)) return;
+  if (!(batchPlatformScopeHelp instanceof HTMLElement)) return;
+  if (!(platformItemSelectionSection instanceof HTMLElement)) return;
+  if (!(platformItemSelectionLabelEl instanceof HTMLElement)) return;
+  if (!(platformItemSelectionList instanceof HTMLElement)) return;
   if (!(channelsSubmitBatchSizeInput instanceof HTMLInputElement)) return;
   if (!(channelsSubmitBatchIntervalMinInput instanceof HTMLInputElement)) return;
 
   await loadStoredPathIntoInput(jobFilePathInput);
   await loadFieldsSettleMsIntoInput(fieldsSettleMsInput);
-  await loadChannelsOnlyIntoCheckbox(channelsOnlyCheckbox);
+  await loadBatchPlatformScopeIntoSelect(batchPlatformScopeSelect);
   await loadChannelsSubmitBatchSizeIntoInput(channelsSubmitBatchSizeInput);
   await loadChannelsSubmitBatchIntervalMinIntoInput(channelsSubmitBatchIntervalMinInput);
 
-  const readChannelsOnly = (): boolean =>
-    readChannelsOnlyCheckbox(channelsOnlyCheckbox);
+  const readBatchPlatformScope = (): BatchPlatformScope =>
+    readBatchPlatformScopeSelect(batchPlatformScopeSelect);
 
-  const refreshChannelsOnlyUi = (): void => {
-    syncChannelsOnlyUi(
-      readChannelsOnly(),
+  const refreshBatchPlatformScopeUi = (): void => {
+    syncBatchPlatformScopeUi(
+      readBatchPlatformScope(),
       openTabsHelp,
       uploadFillHelp,
-      channelsOnlyHelp,
-      channelsItemSelectionSection,
+      batchPlatformScopeHelp,
+      platformItemSelectionSection,
+      platformItemSelectionLabelEl,
       openAllTabsButton,
       uploadAndFillAllTabsButton,
     );
   };
 
-  const reloadChannelsItemSelection = (): void => {
+  const reloadPlatformItemSelection = (): void => {
     const jobFilePath = jobFilePathInput.value.trim();
-    void refreshChannelsItemSelectionList(
+    void refreshPlatformItemSelectionList(
       jobFilePath,
-      readChannelsOnly(),
-      channelsItemSelectionList,
+      readBatchPlatformScope(),
+      platformItemSelectionList,
     );
   };
 
-  refreshChannelsOnlyUi();
-  reloadChannelsItemSelection();
+  refreshBatchPlatformScopeUi();
+  reloadPlatformItemSelection();
 
   const readJobPath = (): string | null => {
     const jobFilePath = jobFilePathInput.value.trim();
@@ -431,7 +450,7 @@ async function bootstrap(): Promise<void> {
 
   jobFilePathInput.addEventListener("input", () => {
     void persistJobFilePath(jobFilePathInput.value.trim());
-    reloadChannelsItemSelection();
+    reloadPlatformItemSelection();
   });
 
   fieldsSettleMsInput.addEventListener("change", () => {
@@ -454,36 +473,38 @@ async function bootstrap(): Promise<void> {
       channelsSubmitBatchIntervalMinInput,
     );
 
-  channelsOnlyCheckbox.addEventListener("change", () => {
-    void persistChannelsOnly(readChannelsOnly());
-    refreshChannelsOnlyUi();
-    reloadChannelsItemSelection();
+  batchPlatformScopeSelect.addEventListener("change", () => {
+    void persistBatchPlatformScope(readBatchPlatformScope());
+    refreshBatchPlatformScopeUi();
+    reloadPlatformItemSelection();
   });
 
-  bindOpenAllTabsButton(openAllTabsButton, readJobPath, readChannelsOnly);
+  bindOpenAllTabsButton(openAllTabsButton, readJobPath, readBatchPlatformScope);
 
   uploadAndFillAllTabsButton.addEventListener("click", () => {
     const jobFilePath = readJobPath();
     if (!jobFilePath) return;
 
     const fieldsSettleMs = readFieldsSettleMsInput(fieldsSettleMsInput);
-    const channelsOnly = readChannelsOnly();
+    const batchPlatformScope = readBatchPlatformScope();
     void persistFieldsSettleMs(fieldsSettleMs);
-    void persistChannelsOnly(channelsOnly);
+    void persistBatchPlatformScope(batchPlatformScope);
 
-    let selectedChannelsItemIndices: number[] | undefined;
-    if (channelsOnly) {
-      if (!hasChannelsItemSelection(channelsItemSelectionList)) {
+    let selectedPlatformItemIndices: number[] | undefined;
+    if (isSinglePlatformScope(batchPlatformScope)) {
+      if (!hasPlatformItemSelection(platformItemSelectionList)) {
         setOutcome(
-          "Load 视频号 job items first — enter a valid batch job path.",
+          `Load ${formatPlatformItemSelectionLabel(batchPlatformScope).toLowerCase()} first — enter a valid batch job path.`,
           PopupOutcomeVariant.Secondary,
         );
         return;
       }
-      selectedChannelsItemIndices = readSelectedChannelsItemIndices(channelsItemSelectionList);
-      if (selectedChannelsItemIndices.length === 0) {
+      selectedPlatformItemIndices = readSelectedPlatformItemIndices(
+        platformItemSelectionList,
+      );
+      if (selectedPlatformItemIndices.length === 0) {
         setOutcome(
-          "Select at least one 视频号 job item to upload.",
+          `Select at least one ${formatPlatformItemSelectionLabel(batchPlatformScope).toLowerCase()} to upload.`,
           PopupOutcomeVariant.Secondary,
         );
         return;
@@ -497,15 +518,15 @@ async function bootstrap(): Promise<void> {
         type: RuntimeMessageType.UploadAndFillAllTabs,
         jobFilePath,
         fieldsSettleMs,
-        channelsOnly,
-        selectedChannelsItemIndices,
+        batchPlatformScope,
+        selectedPlatformItemIndices,
+        submitHorizontalCover:
+          submitHorizontalCoverCheckbox instanceof HTMLInputElement &&
+          submitHorizontalCoverCheckbox.checked === true,
       },
-      channelsOnly
-        ? `Uploading 视频号 videos, waiting ${String(fieldsSettleMs)} ms, then filling fields…`
-        : `Uploading videos, waiting ${String(fieldsSettleMs)} ms, then filling fields…`,
-      channelsOnly
-        ? "视频号 upload and fill finished. Review progress below, then publish manually."
-        : "Upload and fill finished. Review progress below, then publish manually.",
+
+      batchPlatformScopeUploadBusyLabel(batchPlatformScope, fieldsSettleMs),
+      batchPlatformScopeUploadSuccessLabel(batchPlatformScope),
       progressLog,
     );
   });

@@ -1,6 +1,9 @@
 import type { CanonicalJob } from "../schema/canonical-job";
+import type { BasicTextFields } from "../schema/basic-text-fields";
+import type { ChannelsTarget } from "../schema/channels-target";
 import type { PageField } from "../schema/field-locator";
 import { normalizeBasicTextFields } from "./normalize-basic-text-fields.js";
+import { normalizeChannelsTitle } from "../text/normalize-channels-title.js";
 import { sanitizeText } from "../text/sanitize-text";
 
 function normalizePageFields(pageFields: PageField[] | undefined): PageField[] | undefined {
@@ -29,6 +32,24 @@ function normalizeV1(
 	};
 }
 
+function normalizeChannelsTextFields(fields: BasicTextFields): BasicTextFields {
+	const normalized = normalizeBasicTextFields(fields);
+	if (normalized.title === undefined) return normalized;
+
+	return {
+		...normalized,
+		title: normalizeChannelsTitle(normalized.title),
+	};
+}
+
+function normalizeChannelsTarget(fields: ChannelsTarget): ChannelsTarget {
+	const { markTag, ...rest } = fields;
+	return {
+		...normalizeChannelsTextFields(rest),
+		...(markTag === undefined ? {} : { markTag: sanitizeText(markTag) }),
+	};
+}
+
 function normalizeV2(
 	job: Extract<CanonicalJob, { jobVersion: 2 }>,
 ): Extract<CanonicalJob, { jobVersion: 2 }> {
@@ -52,7 +73,7 @@ function normalizeV2(
 		...job,
 		...(bilibili === undefined ? {} : { bilibili }),
 		...(job.douyin === undefined ? {} : { douyin: normalizeBasicTextFields(job.douyin) }),
-		...(job.channels === undefined ? {} : { channels: normalizeBasicTextFields(job.channels) }),
+		...(job.channels === undefined ? {} : { channels: normalizeChannelsTarget(job.channels) }),
 		pageFields: normalizePageFields(job.pageFields),
 	};
 }

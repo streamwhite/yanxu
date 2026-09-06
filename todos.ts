@@ -49,7 +49,7 @@ export const todos = {
         `the take different field from bilibili, just add a few basic fields like title, description, for now.`,
       ],
       {
-        "allow to add one by one": {
+        'allow to add one by one': {
           scenario: [
             `i will open multiple tabs to upload content`,
             `check how many tabs are open, it should be more than job items for a plat`,
@@ -262,8 +262,24 @@ Error in event handler: TypeError: runWithServiceWorkerKeepAlive(...) is not a f
       `when upload and filling field for wechat only, show the job items to let me multiple slect the ones to upload since some  are already uploaded and filled.`,
       `now put submit checkbox and submit button into one for all 3 plats, but still keep features for wechat to not submit all once(avoid rate limit for wechat)  `,
       `one btn for 3 plats to submit`,
+      `the btn to submit for all plats does not trigger submit`,
+    ],
+    [
+      `before upload and submit, check name in a item full lengh(white space and other chars) over 16 chars; list titles over 16 chars and do not upload(filling too)`,
+      `when filling wechat title , check for '.' and replace with '点' like 'MiniMax豪募160.4亿港元'`,
+      `if over 17 chars, all video for all plats should not  be uploaded and make notice concise `,
+      `remove checks on name length`,
+    ],
+    [
+      `do same for douyin and bili, to upload and filling for one plat when selected, just as wechat only (re-upload).`,
+      `and one plat selected, open tabs for that plat only, not all plats`,
+    ],
+    [
+      `提交横向图片(不再使用现有逻辑:把默认(纵向)图片提交到横向图片元素),添加一个checkbox,如果选中(默认不选中),检查横向图片都存在,然后查找每个对应4:3图片并提交,横向命名:{图片名称}-4x3`,
+      `微信新元素'内容标注',<div data-v-2255f95a="" data-v-0fd4f537="" class="form-item cell-center post-with-mark-tag"><div data-v-2255f95a="" class="label with-tip-label"><span data-v-2255f95a="">视频标注</span></div><div data-v-2255f95a="" class="form-item-body mark-tag-body"><div data-v-2255f95a="" class="mark-tag-select"><div data-v-2255f95a="" class="select-display"><span data-v-2255f95a="" class="select-placeholder">选择视频标注</span></div><span data-v-2255f95a="" class="select-arrow weui-icon-outlined-arrow"></span><div data-v-2255f95a="" class="mark-tag-options" style="display: none;"><div data-v-2255f95a="" class="mark-tag-option"><div data-v-2255f95a="" class="option-main">无需标注</div><!----></div><div data-v-2255f95a="" class="mark-tag-option"><div data-v-2255f95a="" class="option-main">含AI生成内容</div><!----></div><div data-v-2255f95a="" class="mark-tag-option"><div data-v-2255f95a="" class="option-main">内容为虚构剧情，仅供娱乐</div><!----></div><div data-v-2255f95a="" class="mark-tag-option"><div data-v-2255f95a="" class="option-main">个人观点，仅供参考</div><!----></div><div data-v-2255f95a="" class="mark-tag-option"><div data-v-2255f95a="" class="option-main">内容包含营销广告</div><!----></div><div data-v-2255f95a="" class="mark-tag-option"><div data-v-2255f95a="" class="option-main">内容为自行拍摄</div><div data-v-2255f95a="" class="option-sub">添加拍摄时间和地点</div></div><div data-v-2255f95a="" class="mark-tag-option"><div data-v-2255f95a="" class="option-main">内容为转载</div><div data-v-2255f95a="" class="option-sub">添加转载来源(选填)</div></div></div></div><!----></div><!----></div> 默认选择'个人观点，仅供参考'`,
     ],
   ],
+  new: [],
   knowledge: [
     `插件开发只能使用输出问题来调试,没法进行断点,不然看不到是哪里出了问题,问下.`,
     `但是tests还是可以运行,保证unit正常.`,

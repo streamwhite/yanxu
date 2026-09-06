@@ -56,7 +56,14 @@ function mergedPayloadFromBatch(batch: HostOutboundMessage[]): AppliedJobPayload
 }
 
 function shouldStreamBatchToTab(batch: HostOutboundMessage[]): boolean {
-	if (batch.some((message) => message.type === "videoStreamChunk" || message.type === "coverStreamChunk")) {
+	if (
+		batch.some(
+			(message) =>
+				message.type === "videoStreamChunk" ||
+				message.type === "coverStreamChunk" ||
+				message.type === "horizontalCoverStreamChunk",
+		)
+	) {
 		return true;
 	}
 

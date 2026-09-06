@@ -1,3 +1,4 @@
+import { applyChannelsMarkTag, channelsMarkTagMissingLabel } from "./apply-channels-mark-tag.js";
 import { applyChannelsOriginalDeclare } from "./apply-channels-original-declare.js";
 import {
 	applyBilibiliCreativeStatement,
@@ -72,6 +73,10 @@ function resolveFieldLabel(field: ApplyPageField): string {
 			field.statementOption ?? field.value,
 			field.statementAuth ?? "",
 		);
+	}
+
+	if (field.kind === PageFieldKind.ChannelsMarkTag) {
+		return channelsMarkTagMissingLabel(field.markTagOption ?? field.value);
 	}
 
 	return locatorToCssSelector(field.locator);
@@ -161,6 +166,17 @@ export async function applyPageFields(
 			}
 			continue;
 		}
+	if (field.kind === PageFieldKind.ChannelsMarkTag) {
+		const markTagOption = field.markTagOption ?? field.value;
+		const applied = await applyChannelsMarkTag(root, markTagOption);
+		if (!applied) {
+			missing.push(resolveFieldLabel(field));
+		} else {
+			notifyFieldApplied(progress, resolveFieldLabel(field));
+		}
+		continue;
+	}
+
 
 		const found = findFieldElement(root, field);
 		if (!found) {

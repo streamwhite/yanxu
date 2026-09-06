@@ -61,6 +61,7 @@ export const BatchJobItemSchema = z
 		partition: z.string().min(1).max(MAX_PARTITION_LENGTH).optional(),
 		creativeStatement: z.string().min(1).max(MAX_PARTITION_LENGTH).optional(),
 		creativeStatementAuth: z.string().min(1).max(MAX_PARTITION_LENGTH).optional(),
+		markTag: z.string().min(1).max(MAX_PARTITION_LENGTH).optional(),
 		pageFields: z.array(PageFieldSchema).optional(),
 	})
 	.superRefine((item, ctx) => {
