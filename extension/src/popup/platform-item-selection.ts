@@ -48,7 +48,7 @@ export function renderPlatformItemSelectionList(
 	if (entries.length === 0) {
 		const empty = document.createElement("p");
 		empty.className = "small text-muted mb-0";
-		empty.textContent = `No job items target ${PLATFORM_TAB_LABELS[platform]}.`;
+		empty.textContent = `没有指向 ${PLATFORM_TAB_LABELS[platform]} 的任务条目。`;
 		container.append(empty);
 		return;
 	}

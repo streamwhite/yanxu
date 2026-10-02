@@ -15,14 +15,14 @@ describe("platform submit labels", () => {
   });
 
   it("describes bilibili, douyin, then batched 视频号 in busy label", () => {
-    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("bilibili and douyin");
-    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("batches of 5");
-    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("5 min between batches");
+    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("bilibili 和 douyin");
+    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("每批 5 个");
+    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("间隔 5 分钟");
   });
 
   it("mentions all platforms and 视频号 batch size in success label", () => {
-    expect(allPlatformsSubmitSuccessLabel(channelsBatch)).toContain("bilibili, douyin, and 视频号");
-    expect(allPlatformsSubmitSuccessLabel(channelsBatch)).toContain("batches of 5");
+    expect(allPlatformsSubmitSuccessLabel(channelsBatch)).toContain("bilibili、douyin 和视频号");
+    expect(allPlatformsSubmitSuccessLabel(channelsBatch)).toContain("每批 5 个");
   });
 });
 

@@ -15,10 +15,6 @@ import {
   type StoredBatchProgress,
 } from "../shared/batch-progress.js";
 import {
-  clampChannelsSubmitBatchIntervalMin,
-  clampChannelsSubmitBatchSize,
-  DEFAULT_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
-  DEFAULT_CHANNELS_SUBMIT_BATCH_SIZE,
   resolveChannelsSubmitBatchConfig,
   STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
   STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE,
@@ -85,6 +81,10 @@ function setOutcome(text: string, variant?: PopupOutcomeVariant): void {
   out.classList.remove("d-none");
 }
 
+function setSubmitAllPlatformsTitle(button: HTMLButtonElement, channelsBatch: ChannelsSubmitBatchConfig): void {
+  button.title = allPlatformsSubmitBusyLabel(channelsBatch);
+}
+
 async function loadStoredPathIntoInput(input: HTMLInputElement): Promise<void> {
   const stored = await chrome.storage.local.get(STORAGE_KEY_SEMI_JOB_FILE_PATH);
   const value = stored[STORAGE_KEY_SEMI_JOB_FILE_PATH];
@@ -95,72 +95,28 @@ async function persistJobFilePath(path: string): Promise<void> {
   await chrome.storage.local.set({ [STORAGE_KEY_SEMI_JOB_FILE_PATH]: path });
 }
 
-async function loadFieldsSettleMsIntoInput(
-  input: HTMLInputElement,
-): Promise<void> {
+async function loadFieldsSettleMsFromStorage(): Promise<number> {
   const stored = await chrome.storage.local.get(STORAGE_KEY_FIELDS_SETTLE_MS);
   const value = stored[STORAGE_KEY_FIELDS_SETTLE_MS];
-  const ms =
-    typeof value === "number"
-      ? clampFieldsSettleMs(value)
-      : DEFAULT_FIELDS_SETTLE_MS;
-  input.value = String(ms);
+  return typeof value === "number"
+    ? clampFieldsSettleMs(value)
+    : DEFAULT_FIELDS_SETTLE_MS;
 }
 
-async function persistFieldsSettleMs(ms: number): Promise<void> {
-  await chrome.storage.local.set({
-    [STORAGE_KEY_FIELDS_SETTLE_MS]: clampFieldsSettleMs(ms),
-  });
+function readStoredNumber(value: unknown): number | undefined {
+  return typeof value === "number" ? value : undefined;
 }
 
-function readFieldsSettleMsInput(input: HTMLInputElement): number {
-  return clampFieldsSettleMs(Number(input.value));
-}
-
-async function loadChannelsSubmitBatchSizeIntoInput(
-  input: HTMLInputElement,
-): Promise<void> {
-  const stored = await chrome.storage.local.get(STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE);
-  const value = stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE];
-  const batchSize =
-    typeof value === "number"
-      ? clampChannelsSubmitBatchSize(value)
-      : DEFAULT_CHANNELS_SUBMIT_BATCH_SIZE;
-  input.value = String(batchSize);
-}
-
-async function loadChannelsSubmitBatchIntervalMinIntoInput(
-  input: HTMLInputElement,
-): Promise<void> {
-  const stored = await chrome.storage.local.get(
+async function loadChannelsSubmitBatchConfig(): Promise<ChannelsSubmitBatchConfig> {
+  const stored = await chrome.storage.local.get([
+    STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE,
     STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
-  );
-  const value = stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN];
-  const intervalMin =
-    typeof value === "number"
-      ? clampChannelsSubmitBatchIntervalMin(value)
-      : DEFAULT_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN;
-  input.value = String(intervalMin);
-}
-
-async function persistChannelsSubmitBatchSettings(
-  batchSize: number,
-  intervalMin: number,
-): Promise<void> {
-  await chrome.storage.local.set({
-    [STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE]: clampChannelsSubmitBatchSize(batchSize),
-    [STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN]:
-      clampChannelsSubmitBatchIntervalMin(intervalMin),
-  });
-}
-
-function readChannelsSubmitBatchConfig(
-  batchSizeInput: HTMLInputElement,
-  intervalMinInput: HTMLInputElement,
-): ChannelsSubmitBatchConfig {
+  ]);
   return resolveChannelsSubmitBatchConfig({
-    batchSize: clampChannelsSubmitBatchSize(Number(batchSizeInput.value)),
-    batchIntervalMin: clampChannelsSubmitBatchIntervalMin(Number(intervalMinInput.value)),
+    batchSize: readStoredNumber(stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE]),
+    batchIntervalMin: readStoredNumber(
+      stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN],
+    ),
   });
 }
 
@@ -207,12 +163,12 @@ async function runRuntimeBatchAction(
     }
 
     setOutcome(
-      `Failed (${result.code}): ${result.message}`,
+      `失败（${result.code}）：${result.message}`,
       PopupOutcomeVariant.Danger,
     );
   } catch (error: unknown) {
     const detail = error instanceof Error ? error.message : "unexpected_error";
-    setOutcome(`Failed: ${detail}`, PopupOutcomeVariant.Danger);
+    setOutcome(`失败：${detail}`, PopupOutcomeVariant.Danger);
   } finally {
     stopListen();
     if (progressContainer) {
@@ -275,10 +231,17 @@ async function runRuntimeSubmitAllPlatformsAction(
       return;
     }
 
-    setOutcome(`Failed: ${failures.join("; ")}`, PopupOutcomeVariant.Danger);
+    setOutcome(`失败：${failures.join("; ")}`, PopupOutcomeVariant.Danger);
   } finally {
     submitButton.disabled = false;
   }
+}
+
+async function runSubmitAllPlatformsWithStoredSettings(
+  submitButton: HTMLButtonElement,
+): Promise<void> {
+  const channelsBatch = await loadChannelsSubmitBatchConfig();
+  await runRuntimeSubmitAllPlatformsAction(submitButton, channelsBatch);
 }
 
 function readBatchPlatformScopeSelect(select: HTMLSelectElement): BatchPlatformScope {
@@ -318,7 +281,9 @@ function syncBatchPlatformScopeUi(
   openTabsHelp.textContent = batchPlatformScopeOpenTabsHelp(scope);
   uploadFillHelp.textContent = batchPlatformScopeUploadFillHelp(scope);
   openAllTabsButton.textContent = batchPlatformScopeOpenTabsButtonLabel(scope);
+  openAllTabsButton.title = batchPlatformScopeOpenTabsHelp(scope);
   uploadAndFillAllTabsButton.textContent = batchPlatformScopeUploadFillButtonLabel(scope);
+  uploadAndFillAllTabsButton.title = batchPlatformScopeUploadFillHelp(scope);
 }
 
 async function refreshPlatformItemSelectionList(
@@ -372,7 +337,6 @@ function bindOpenAllTabsButton(
 
 async function bootstrap(): Promise<void> {
   const jobFilePathInput = byId("jobFilePathInput");
-  const fieldsSettleMsInput = byId("fieldsSettleMsInput");
   const batchPlatformScopeSelect = byId("batchPlatformScopeSelect");
   const uploadAndFillAllTabsButton = byId("uploadAndFillAllTabsButton");
   const submitHorizontalCoverCheckbox = byId("submitHorizontalCoverCheckbox");
@@ -384,11 +348,7 @@ async function bootstrap(): Promise<void> {
   const platformItemSelectionSection = byId("platformItemSelectionSection");
   const platformItemSelectionLabelEl = byId("platformItemSelectionLabel");
   const platformItemSelectionList = byId("platformItemSelectionList");
-  const channelsSubmitBatchSizeInput = byId("channelsSubmitBatchSizeInput");
-  const channelsSubmitBatchIntervalMinInput = byId("channelsSubmitBatchIntervalMinInput");
-
   if (!(jobFilePathInput instanceof HTMLInputElement)) return;
-  if (!(fieldsSettleMsInput instanceof HTMLInputElement)) return;
   if (!(batchPlatformScopeSelect instanceof HTMLSelectElement)) return;
   if (!(uploadAndFillAllTabsButton instanceof HTMLButtonElement)) return;
   if (!(openAllTabsButton instanceof HTMLButtonElement)) return;
@@ -399,14 +359,9 @@ async function bootstrap(): Promise<void> {
   if (!(platformItemSelectionSection instanceof HTMLElement)) return;
   if (!(platformItemSelectionLabelEl instanceof HTMLElement)) return;
   if (!(platformItemSelectionList instanceof HTMLElement)) return;
-  if (!(channelsSubmitBatchSizeInput instanceof HTMLInputElement)) return;
-  if (!(channelsSubmitBatchIntervalMinInput instanceof HTMLInputElement)) return;
 
   await loadStoredPathIntoInput(jobFilePathInput);
-  await loadFieldsSettleMsIntoInput(fieldsSettleMsInput);
   await loadBatchPlatformScopeIntoSelect(batchPlatformScopeSelect);
-  await loadChannelsSubmitBatchSizeIntoInput(channelsSubmitBatchSizeInput);
-  await loadChannelsSubmitBatchIntervalMinIntoInput(channelsSubmitBatchIntervalMinInput);
 
   const readBatchPlatformScope = (): BatchPlatformScope =>
     readBatchPlatformScopeSelect(batchPlatformScopeSelect);
@@ -440,7 +395,7 @@ async function bootstrap(): Promise<void> {
     const jobFilePath = jobFilePathInput.value.trim();
     if (!jobFilePath) {
       setOutcome(
-        "Please enter an absolute path to batch job.json.",
+        "请输入批量任务 job.json 的绝对路径。",
         PopupOutcomeVariant.Secondary,
       );
       return null;
@@ -452,26 +407,6 @@ async function bootstrap(): Promise<void> {
     void persistJobFilePath(jobFilePathInput.value.trim());
     reloadPlatformItemSelection();
   });
-
-  fieldsSettleMsInput.addEventListener("change", () => {
-    void persistFieldsSettleMs(readFieldsSettleMsInput(fieldsSettleMsInput));
-  });
-
-  const persistChannelsSubmitBatchInputs = (): void => {
-    void persistChannelsSubmitBatchSettings(
-      Number(channelsSubmitBatchSizeInput.value),
-      Number(channelsSubmitBatchIntervalMinInput.value),
-    );
-  };
-
-  channelsSubmitBatchSizeInput.addEventListener("change", persistChannelsSubmitBatchInputs);
-  channelsSubmitBatchIntervalMinInput.addEventListener("change", persistChannelsSubmitBatchInputs);
-
-  const readChannelsSubmitBatch = (): ChannelsSubmitBatchConfig =>
-    readChannelsSubmitBatchConfig(
-      channelsSubmitBatchSizeInput,
-      channelsSubmitBatchIntervalMinInput,
-    );
 
   batchPlatformScopeSelect.addEventListener("change", () => {
     void persistBatchPlatformScope(readBatchPlatformScope());
@@ -485,16 +420,14 @@ async function bootstrap(): Promise<void> {
     const jobFilePath = readJobPath();
     if (!jobFilePath) return;
 
-    const fieldsSettleMs = readFieldsSettleMsInput(fieldsSettleMsInput);
     const batchPlatformScope = readBatchPlatformScope();
-    void persistFieldsSettleMs(fieldsSettleMs);
     void persistBatchPlatformScope(batchPlatformScope);
 
     let selectedPlatformItemIndices: number[] | undefined;
     if (isSinglePlatformScope(batchPlatformScope)) {
       if (!hasPlatformItemSelection(platformItemSelectionList)) {
         setOutcome(
-          `Load ${formatPlatformItemSelectionLabel(batchPlatformScope).toLowerCase()} first — enter a valid batch job path.`,
+          `请先加载 ${formatPlatformItemSelectionLabel(batchPlatformScope).toLowerCase()} —— 输入有效的批量任务路径。`,
           PopupOutcomeVariant.Secondary,
         );
         return;
@@ -504,39 +437,42 @@ async function bootstrap(): Promise<void> {
       );
       if (selectedPlatformItemIndices.length === 0) {
         setOutcome(
-          `Select at least one ${formatPlatformItemSelectionLabel(batchPlatformScope).toLowerCase()} to upload.`,
+          `请至少选择一个要上传的${formatPlatformItemSelectionLabel(batchPlatformScope)}。`,
           PopupOutcomeVariant.Secondary,
         );
         return;
       }
     }
 
-    void runRuntimeBatchAction(
-      uploadAndFillAllTabsButton,
-      jobFilePath,
-      {
-        type: RuntimeMessageType.UploadAndFillAllTabs,
+    void (async () => {
+      const fieldsSettleMs = await loadFieldsSettleMsFromStorage();
+      await runRuntimeBatchAction(
+        uploadAndFillAllTabsButton,
         jobFilePath,
-        fieldsSettleMs,
-        batchPlatformScope,
-        selectedPlatformItemIndices,
-        submitHorizontalCover:
-          submitHorizontalCoverCheckbox instanceof HTMLInputElement &&
-          submitHorizontalCoverCheckbox.checked === true,
-      },
-
-      batchPlatformScopeUploadBusyLabel(batchPlatformScope, fieldsSettleMs),
-      batchPlatformScopeUploadSuccessLabel(batchPlatformScope),
-      progressLog,
-    );
+        {
+          type: RuntimeMessageType.UploadAndFillAllTabs,
+          jobFilePath,
+          fieldsSettleMs,
+          batchPlatformScope,
+          selectedPlatformItemIndices,
+          submitHorizontalCover:
+            submitHorizontalCoverCheckbox instanceof HTMLInputElement &&
+            submitHorizontalCoverCheckbox.checked === true,
+        },
+        batchPlatformScopeUploadBusyLabel(batchPlatformScope, fieldsSettleMs),
+        batchPlatformScopeUploadSuccessLabel(batchPlatformScope),
+        progressLog,
+      );
+    })();
   });
 
   const submitAllPlatformsButton = collectSubmitAllPlatformsButton();
   if (submitAllPlatformsButton) {
+    void loadChannelsSubmitBatchConfig().then((channelsBatch) => {
+      setSubmitAllPlatformsTitle(submitAllPlatformsButton, channelsBatch);
+    });
     bindSubmitAllPlatformsButton(submitAllPlatformsButton, () => {
-      const channelsBatch = readChannelsSubmitBatch();
-      persistChannelsSubmitBatchInputs();
-      void runRuntimeSubmitAllPlatformsAction(submitAllPlatformsButton, channelsBatch);
+      void runSubmitAllPlatformsWithStoredSettings(submitAllPlatformsButton);
     });
   }
 }

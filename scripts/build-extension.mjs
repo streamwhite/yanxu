@@ -11,6 +11,7 @@ const ZOD_ENTRY = requireFromDomain.resolve("zod");
 
 const ENTRY_SW = path.join(ROOT_DIR, "extension/src/sw.ts");
 const ENTRY_POPUP = path.join(ROOT_DIR, "extension/src/popup/popup.ts");
+const ENTRY_OPTIONS = path.join(ROOT_DIR, "extension/src/options/options.ts");
 const ENTRY_CONTENT = path.join(ROOT_DIR, "extension/src/content/platform-fill.ts");
 
 const OUT_DIR = path.join(ROOT_DIR, "extension/dist");
@@ -68,6 +69,7 @@ function createSharedOptions() {
 		entryPoints: {
 			sw: ENTRY_SW,
 			popup: ENTRY_POPUP,
+			options: ENTRY_OPTIONS,
 			"content-platform-fill": ENTRY_CONTENT,
 		},
 		outdir: OUT_DIR,

@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>auto-upload semi-auto</title>
+  <title>auto-upload 半自动</title>
   <link rel="stylesheet" href="./dist/vendor/bootstrap/bootstrap.min.css" />
   <link rel="stylesheet" href="./popup.css" />
 </head>
@@ -13,49 +13,44 @@
   <main class="popup-shell container-fluid py-3">
     <header class="mb-3">
       <h1 class="h6 mb-1 fw-semibold">auto-upload</h1>
-      <p class="text-muted small mb-0">Batch job (v3) — open tabs, upload, fill, submit when reviewed.</p>
     </header>
 
-    <div class="mb-3">
-      <label class="form-label small fw-semibold" for="jobFilePathInput">Batch job file path</label>
-      <input id="jobFilePathInput" class="form-control form-control-sm font-monospace" type="text"
-        placeholder="/absolute/path/to/batch.job.json" autocomplete="off" spellcheck="false" />
-    </div>
+    <section class="mb-3">
+      <div class="mb-3">
+        <label class="form-label small fw-semibold" for="jobFilePathInput">批量任务文件路径</label>
+        <input id="jobFilePathInput" class="form-control form-control-sm font-monospace" type="text"
+          placeholder="/绝对路径/到/batch.job.json" autocomplete="off" spellcheck="false" />
+      </div>
+
+      <div>
+        <label class="form-label small fw-semibold" for="batchPlatformScopeSelect">平台范围</label>
+        <select id="batchPlatformScopeSelect" class="form-select form-select-sm mb-2">
+          <option value="all">全部平台</option>
+          <option value="bilibili">仅 bilibili（重新上传）</option>
+          <option value="douyin">仅 douyin（重新上传）</option>
+          <option value="channels">仅 视频号（重新上传）</option>
+        </select>
+        <p id="batchPlatformScopeHelp" class="form-text small text-muted mb-2 d-none"></p>
+        <div id="platformItemSelectionSection" class="d-none mb-2">
+          <label id="platformItemSelectionLabel" class="form-label small fw-semibold mb-1">待上传条目</label>
+          <div id="platformItemSelectionList" class="platform-item-selection-list border rounded p-2 bg-white"></div>
+          <p class="form-text small text-muted mb-0 mt-1">
+            取消勾选已上传的条目。上传与填充只对勾选的条目执行。
+          </p>
+        </div>
+      </div>
+    </section>
 
     <section class="mb-3">
-      <label class="form-label small fw-semibold" for="batchPlatformScopeSelect">Platform scope</label>
-      <select id="batchPlatformScopeSelect" class="form-select form-select-sm mb-2">
-        <option value="all">All platforms</option>
-        <option value="bilibili">bilibili only (re-upload)</option>
-        <option value="douyin">douyin only (re-upload)</option>
-        <option value="channels">视频号 only (re-upload)</option>
-      </select>
-      <p id="batchPlatformScopeHelp" class="form-text small text-muted mb-2 d-none"></p>
-      <div id="platformItemSelectionSection" class="d-none mb-2">
-        <label id="platformItemSelectionLabel" class="form-label small fw-semibold mb-1">Items to upload</label>
-        <div id="platformItemSelectionList" class="platform-item-selection-list border rounded p-2 bg-white"></div>
-        <p class="form-text small text-muted mb-0 mt-1">
-          Uncheck items already uploaded. Upload and fill runs only on checked items.
-        </p>
-      </div>
       <div class="d-grid">
         <button id="openAllTabsButton" type="button" class="btn btn-outline-secondary btn-sm">
-          Open all upload tabs
+          打开全部上传标签页
         </button>
       </div>
-      <p id="openTabsHelp" class="form-text small text-muted mb-0 mt-2">
-        Opens bilibili, douyin, and 视频号 tabs — one per job item per platform.
-      </p>
+      <p id="openTabsHelp" class="form-text small text-muted mb-0 mt-2"></p>
     </section>
 
     <section>
-      <div class="mb-2">
-        <label class="form-label small fw-semibold mb-1" for="fieldsSettleMsInput">
-          Wait after upload before fill (ms)
-        </label>
-        <input id="fieldsSettleMsInput" class="form-control form-control-sm" type="number" min="0" max="120000"
-          step="500" />
-      </div>
       <div class="form-check mb-2">
         <input id="submitHorizontalCoverCheckbox" class="form-check-input" type="checkbox" />
         <label class="form-check-label small" for="submitHorizontalCoverCheckbox">
@@ -64,41 +59,19 @@
       </div>
       <div class="d-grid">
         <button id="uploadAndFillAllTabsButton" type="button" class="btn btn-primary btn-sm">
-          Upload and fill (all tabs)
+          上传并填充（全部标签页）
         </button>
       </div>
-      <p id="uploadFillHelp" class="form-text small text-muted mb-0 mt-2">
-        Uploads videos on all tabs, waits for pages to settle, then fills fields and cover.
-      </p>
+      <p id="uploadFillHelp" class="form-text small text-muted mb-0 mt-2"></p>
     </section>
 
     <section class="mb-0">
-      <h2 class="h6 small fw-semibold mb-1">Publish (after review)</h2>
-      <p class="form-text small text-muted mb-2">
-        After reviewing tabs in the browser, submit all tabs on bilibili, douyin, and 视频号.
-      </p>
+      <h2 class="h6 small fw-semibold mb-1">发布（审核后）</h2>
 
-      <div class="d-grid mb-2">
+      <div class="d-grid">
         <button id="submitAllPlatformsButton" type="button" class="btn btn-outline-primary btn-sm">
-          Submit all platforms
+          提交全部平台
         </button>
-      </div>
-      <div class="row g-2 mb-0">
-        <div class="col-6">
-          <label class="form-label small mb-0" for="channelsSubmitBatchSizeInput">视频号 batch size</label>
-          <input id="channelsSubmitBatchSizeInput" class="form-control form-control-sm" type="number" min="1"
-            max="20" step="1" />
-        </div>
-        <div class="col-6">
-          <label class="form-label small mb-0" for="channelsSubmitBatchIntervalMinInput">Batch interval (min)</label>
-          <input id="channelsSubmitBatchIntervalMinInput" class="form-control form-control-sm" type="number" min="1"
-            max="60" step="1" />
-        </div>
-        <div class="col-12">
-          <p class="form-text small text-muted mb-0">
-            视频号 submit runs in batches with a pause between batches to reduce rate limits.
-          </p>
-        </div>
       </div>
     </section>
 

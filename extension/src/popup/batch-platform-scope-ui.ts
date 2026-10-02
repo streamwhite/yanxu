@@ -9,51 +9,51 @@ import { PLATFORM_TAB_LABELS } from "../sw/constants/platform-tab-labels.js";
 
 export function batchPlatformScopeOpenTabsHelp(scope: BatchPlatformScope): string {
 	if (!isSinglePlatformScope(scope)) {
-		return "Opens bilibili, douyin, and 视频号 tabs — one per job item per platform.";
+		return "为每个平台、每个任务条目各打开一个标签页。";
 	}
 
-	return `Opens ${PLATFORM_TAB_LABELS[scope]} tabs only — one per job item targeting ${PLATFORM_TAB_LABELS[scope]}.`;
+	return `仅为 ${PLATFORM_TAB_LABELS[scope]} 打开标签页——每个指向 ${PLATFORM_TAB_LABELS[scope]} 的任务条目一个。`;
 }
 
 export function batchPlatformScopeUploadFillHelp(scope: BatchPlatformScope): string {
 	if (!isSinglePlatformScope(scope)) {
-		return "Uploads videos on all tabs, waits for pages to settle, then fills fields and cover.";
+		return "在所有标签页上传视频，等待页面稳定后填充字段和封面。";
 	}
 
-	return `Uploads videos on ${PLATFORM_TAB_LABELS[scope]} tabs only, waits, then fills fields and cover.`;
+	return `仅在 ${PLATFORM_TAB_LABELS[scope]} 标签页上传视频，等待后填充字段和封面。`;
 }
 
 export function batchPlatformScopeOpenTabsButtonLabel(scope: BatchPlatformScope): string {
 	return isSinglePlatformScope(scope)
-		? `Open ${PLATFORM_TAB_LABELS[scope]} tabs`
-		: "Open all upload tabs";
+		? `打开 ${PLATFORM_TAB_LABELS[scope]} 标签页`
+		: "打开全部上传标签页";
 }
 
 export function batchPlatformScopeUploadFillButtonLabel(scope: BatchPlatformScope): string {
 	return isSinglePlatformScope(scope)
-		? `Upload and fill (${PLATFORM_TAB_LABELS[scope]} only)`
-		: "Upload and fill (all tabs)";
+		? `上传并填充（仅 ${PLATFORM_TAB_LABELS[scope]}）`
+		: "上传并填充（全部标签页）";
 }
 
 export function batchPlatformScopeSinglePlatformHelp(scope: BatchPlatformScope): string {
 	if (!isSinglePlatformScope(scope)) return "";
-	return `Runs on ${formatBatchPlatformScopeLabel(scope)} only — use a job file with items that need re-upload.`;
+	return `仅在 ${formatBatchPlatformScopeLabel(scope)} 上运行——请使用包含需重新上传条目的任务文件。`;
 }
 
 export function platformItemSelectionLabel(platform: PlatformId): string {
-	return `${PLATFORM_TAB_LABELS[platform]} items to upload`;
+	return `${PLATFORM_TAB_LABELS[platform]} 待上传条目`;
 }
 
 export function batchPlatformScopeOpeningLabel(scope: BatchPlatformScope): string {
 	return isSinglePlatformScope(scope)
-		? `Opening ${PLATFORM_TAB_LABELS[scope]} upload tabs…`
-		: "Opening upload tabs for all platforms…";
+		? `正在打开 ${PLATFORM_TAB_LABELS[scope]} 上传标签页…`
+		: "正在为全部平台打开上传标签页…";
 }
 
 export function batchPlatformScopeOpenedLabel(scope: BatchPlatformScope): string {
 	return isSinglePlatformScope(scope)
-		? `Opened ${PLATFORM_TAB_LABELS[scope]} upload tabs for this job.`
-		: "Opened upload tabs for this job.";
+		? `已为本次任务打开 ${PLATFORM_TAB_LABELS[scope]} 上传标签页。`
+		: "已为本次任务打开上传标签页。";
 }
 
 export function batchPlatformScopeUploadBusyLabel(
@@ -62,14 +62,14 @@ export function batchPlatformScopeUploadBusyLabel(
 ): string {
 	const waitLabel = String(fieldsSettleMs);
 	return isSinglePlatformScope(scope)
-		? `Uploading ${PLATFORM_TAB_LABELS[scope]} videos, waiting ${waitLabel} ms, then filling fields…`
-		: `Uploading videos, waiting ${waitLabel} ms, then filling fields…`;
+		? `正在上传 ${PLATFORM_TAB_LABELS[scope]} 视频，等待 ${waitLabel} 毫秒后填充字段…`
+		: `正在上传视频，等待 ${waitLabel} 毫秒后填充字段…`;
 }
 
 export function batchPlatformScopeUploadSuccessLabel(scope: BatchPlatformScope): string {
 	return isSinglePlatformScope(scope)
-		? `${PLATFORM_TAB_LABELS[scope]} upload and fill finished. Review progress below, then publish manually.`
-		: "Upload and fill finished. Review progress below, then publish manually.";
+		? `${PLATFORM_TAB_LABELS[scope]} 上传与填充已完成。请在下方查看进度，然后手动发布。`
+		: "上传与填充已完成。请在下方查看进度，然后手动发布。";
 }
 
 export function isBatchPlatformScopeValue(value: string): value is BatchPlatformScope {

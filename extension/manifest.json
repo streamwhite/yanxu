@@ -14,6 +14,10 @@
   "action": {
     "default_title": "auto-upload semi-auto"
   },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
   "background": {
     "service_worker": "dist/sw.js",
     "type": "module"

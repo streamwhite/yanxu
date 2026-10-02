@@ -21,15 +21,22 @@ export function buildOutcomeAlertClass(variant: PopupOutcomeVariant): string {
 }
 
 export function inferOutcomeVariant(message: string): PopupOutcomeVariant {
-	if (message.startsWith("Failed")) return PopupOutcomeVariant.Danger;
+	if (message.startsWith("Failed") || message.startsWith("失败")) {
+		return PopupOutcomeVariant.Danger;
+	}
 	if (
 		message.includes("filled") ||
 		message.includes("attached") ||
 		message.includes("Opened") ||
-		message.includes("finished")
+		message.includes("finished") ||
+		message.includes("已完成") ||
+		message.includes("已打开") ||
+		message.includes("已填写")
 	) {
 		return PopupOutcomeVariant.Success;
 	}
-	if (message.startsWith("Please enter")) return PopupOutcomeVariant.Secondary;
+	if (message.startsWith("请输入") || message.startsWith("请先") || message.startsWith("请至少")) {
+		return PopupOutcomeVariant.Secondary;
+	}
 	return PopupOutcomeVariant.Info;
 }
