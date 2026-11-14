@@ -17,22 +17,23 @@ describe("popup UI layout", () => {
 		const prepStart = popupHtml.indexOf('id="jobFilePathInput"');
 		const prepEnd = popupHtml.indexOf("</section>", prepStart);
 		const scopeIndex = popupHtml.indexOf('id="batchPlatformScopeSelect"');
-		const openTabsIndex = popupHtml.indexOf('id="openAllTabsButton"');
 		const uploadFillIndex = popupHtml.indexOf('id="uploadAndFillAllTabsButton"');
 		expect(scopeIndex).toBeGreaterThan(prepStart);
 		expect(scopeIndex).toBeLessThan(prepEnd);
-		// The open-tabs and upload/fill actions live in their own sections,
-		// away from the preparation section.
-		expect(openTabsIndex).toBeGreaterThan(prepEnd);
-		expect(uploadFillIndex).toBeGreaterThan(openTabsIndex);
+		// The upload action lives in its own section, away from preparation.
+		expect(uploadFillIndex).toBeGreaterThan(prepEnd);
 	});
 
-	it("presents the four popup areas as numbered workflow steps", () => {
-		expect(popupHtml.match(/class="workflow-step-number"/g)).toHaveLength(4);
-		expect(popupHtml).toMatch(/01[\s\S]*准备任务/);
-		expect(popupHtml).toMatch(/02[\s\S]*打开上传页面/);
-		expect(popupHtml).toMatch(/03[\s\S]*上传并填充/);
-		expect(popupHtml).toMatch(/04[\s\S]*发布（审核后）/);
+	it("opens the upload tabs from the upload step instead of a separate step", () => {
+		expect(popupHtml).not.toContain('id="openAllTabsButton"');
+		expect(popupHtml).not.toContain("打开上传页面");
+	});
+
+	it("presents the three popup areas as numbered workflow steps", () => {
+		expect(popupHtml.match(/class="workflow-step-number"/g)).toHaveLength(3);
+		expect(popupHtml).toMatch(/01[\s\S]*准备/);
+		expect(popupHtml).toMatch(/02[\s\S]*上传和填写/);
+		expect(popupHtml).toMatch(/03[\s\S]*发布（审核后）/);
 	});
 
 	it("keeps the video upload and horizontal cover controls together", () => {

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ApplyPhase, JobFileOutlineSchema, PLATFORM_IDS } from "@auto-upload/domain";
+import { ApplyPhase, JobFileOutlineSchema, PLATFORM_IDS } from "@yanxu/domain";
 import { BATCH_PLATFORM_SCOPE_ALL } from "../shared/batch-platform-scope.js";
 import { MAX_FIELDS_SETTLE_MS, MIN_FIELDS_SETTLE_MS } from "../shared/fields-settle-config.js";
 import {

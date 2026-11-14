@@ -2,7 +2,7 @@ import {
 	BATCH_HORIZONTAL_COVER_SUFFIX,
 	listBatchCoverPathCandidates,
 	listHorizontalCoverPathCandidates,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 describe("listHorizontalCoverPathCandidates", () => {
 	it("derives -4x3 suffixed candidates in the same folder", () => {

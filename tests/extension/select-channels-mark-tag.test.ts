@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 import { selectChannelsMarkTagValue } from "../../extension/src/platforms/channels/select-channels-mark-tag-value";
-import { CHANNELS_DEFAULT_MARK_TAG_OPTION } from "@auto-upload/domain";
+import { CHANNELS_DEFAULT_MARK_TAG_OPTION } from "@yanxu/domain";
 
 const PLACEHOLDER = "选择视频标注";
 

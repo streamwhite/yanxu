@@ -3,7 +3,7 @@ import {
 	isAllowedPlatformUrl,
 	PLATFORM_IDS,
 	type PlatformId,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 export type PlatformUploadTab = {
 	tabId: number;

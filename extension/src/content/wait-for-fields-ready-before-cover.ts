@@ -1,4 +1,4 @@
-import { getJobPlatform, Platform, type CanonicalJob } from "@auto-upload/domain";
+import { getJobPlatform, Platform, type CanonicalJob } from "@yanxu/domain";
 import { platformSupportsCoverUpload } from "../platforms/platform-supports-cover-upload.js";
 import { FIELDS_READY_POLL_MS, FIELDS_READY_WAIT_MS } from "./constants/cover-modal-timing.js";
 import { blurActiveFieldBeforeCover } from "./blur-active-field-before-cover.js";

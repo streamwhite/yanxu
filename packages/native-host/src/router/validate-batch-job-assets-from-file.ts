@@ -7,7 +7,7 @@ import {
 	normalizeBatchJobTexts,
 	type MissingBatchAsset,
 	validateJobFile,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 import { resolveExistingCoverPath } from "../assets/resolve-existing-cover-path.js";
 
 const ERROR_BATCH_ASSETS_MISSING = "batch_assets_missing" as const;

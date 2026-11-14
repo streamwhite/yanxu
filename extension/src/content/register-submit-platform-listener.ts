@@ -1,4 +1,4 @@
-import { PLATFORM_IDS, type PlatformId } from "@auto-upload/domain";
+import { PLATFORM_IDS, type PlatformId } from "@yanxu/domain";
 import { clickPlatformSubmitControl } from "./click-platform-submit-control.js";
 import { ContentMessageType } from "./content-message-type.js";
 

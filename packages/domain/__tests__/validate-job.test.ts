@@ -1,4 +1,4 @@
-import { PublishMode, SubmitPolicy, validateJob } from "@auto-upload/domain";
+import { PublishMode, SubmitPolicy, validateJob } from "@yanxu/domain";
 
 describe("validateJob", () => {
 	it("accepts a minimal semi manual bilibili job v1", () => {

@@ -1,4 +1,4 @@
-import { NATIVE_MESSAGE_MAX_BYTES } from "@auto-upload/domain";
+import { NATIVE_MESSAGE_MAX_BYTES } from "@yanxu/domain";
 
 const STREAM_FRAME_BUDGET_BYTES = Math.floor(NATIVE_MESSAGE_MAX_BYTES * 0.75);
 

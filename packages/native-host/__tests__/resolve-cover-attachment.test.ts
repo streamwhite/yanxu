@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { DEFAULT_MAX_COVER_INLINE_BYTES, MAX_NATIVE_INLINE_COVER_BYTES } from "@auto-upload/domain";
+import { DEFAULT_MAX_COVER_INLINE_BYTES, MAX_NATIVE_INLINE_COVER_BYTES } from "@yanxu/domain";
 import { resolveCoverAttachment } from "../src/attachments/resolve-cover-attachment";
 
 describe("resolveCoverAttachment", () => {

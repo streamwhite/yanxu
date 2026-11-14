@@ -1,5 +1,5 @@
 import { constants as fsConstants, promises as fsp } from "node:fs";
-import type { AttachmentCoverPayload } from "@auto-upload/domain";
+import type { AttachmentCoverPayload } from "@yanxu/domain";
 import { guessImageMimeFromPath } from "../mime/guess-mime-from-path.js";
 
 const REASON_NO_PATH = "no_cover_path" as const;

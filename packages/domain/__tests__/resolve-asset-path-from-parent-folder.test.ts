@@ -1,4 +1,4 @@
-import { resolveAssetPathFromParentFolder } from "@auto-upload/domain";
+import { resolveAssetPathFromParentFolder } from "@yanxu/domain";
 
 describe("resolveAssetPathFromParentFolder", () => {
 	it("joins parent folder and file name", () => {

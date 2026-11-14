@@ -10,7 +10,7 @@ import {
 	resolveBatchItemAssets,
 	validateJobFile,
 	BatchAssetKind,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 describe("batch job v3", () => {
 	const baseBatch = {

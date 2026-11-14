@@ -3,7 +3,7 @@ import {
 	projectBatchItemToCanonicalJob,
 	SubmitPolicy,
 	validateJobFile,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 describe("projectBatchItemToCanonicalJob", () => {
 	const batch = {

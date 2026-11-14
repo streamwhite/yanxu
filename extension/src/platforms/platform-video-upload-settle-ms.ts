@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import {
 	BILIBILI_VIDEO_UPLOAD_SETTLE_MS,
 	CHANNELS_VIDEO_UPLOAD_SETTLE_MS,

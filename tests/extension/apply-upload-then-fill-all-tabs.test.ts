@@ -1,4 +1,4 @@
-import { ApplyPhase, Platform } from "@auto-upload/domain";
+import { ApplyPhase, Platform } from "@yanxu/domain";
 import { BATCH_PLATFORM_SCOPE_ALL } from "../../extension/src/shared/batch-platform-scope";
 import { applyUploadThenFillAllTabs } from "../../extension/src/sw/apply-upload-then-fill-all-tabs";
 import * as batchSlotsModule from "../../extension/src/sw/apply-batch-slots-by-platform";
@@ -144,6 +144,35 @@ describe("applyUploadThenFillAllTabs", () => {
 			[{ platform: Platform.Channels, tabId: 2, itemIndex: 0 }],
 			expect.objectContaining({ includeHorizontalCover: false }),
 		);
+	});
+
+	it("surfaces a channels daily upload limit even if fields can still be filled", async () => {
+		jest.spyOn(prepareModule, "prepareBatchApplyContext").mockResolvedValue({
+			slots: [{ platform: Platform.Channels, tabId: 2, itemIndex: 0 }],
+		});
+		jest.spyOn(progressModule, "clearBatchProgress").mockResolvedValue();
+		jest.spyOn(uploadStateModule, "markBatchVideosUploaded").mockResolvedValue();
+		jest.spyOn(batchSlotsModule, "applyBatchSlotsConcurrentByPlatform").mockImplementation(
+			async (_path, phase) =>
+				phase === ApplyPhase.VideoOnly
+					? {
+							ok: false,
+							code: "upload_daily_limit_reached",
+							message: "每日上传上限已达",
+						}
+					: { ok: true },
+		);
+
+		const result = await applyUploadThenFillAllTabs(
+			"/tmp/job.json",
+			"req-limit",
+			0,
+			BATCH_PLATFORM_SCOPE_ALL,
+		);
+
+		expect(result.ok).toBe(false);
+		if (result.ok) return;
+		expect(result.message).toContain("每日上传上限已达");
 	});
 
 	it("stops when prepare fails", async () => {

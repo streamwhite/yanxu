@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { BILIBILI_ACTIVATE_TAB_SETTLE_MS, DOUYIN_ACTIVATE_TAB_SETTLE_MS } from "../platforms/constants/platform-video-upload-timing.js";
 import {
 	ACTIVATE_TAB_SETTLE_MS,

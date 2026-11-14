@@ -33,9 +33,9 @@ const basePlugins = [
 		},
 	},
 	{
-		name: "@auto-upload/domain-alias",
+		name: "@yanxu/domain-alias",
 		setup(build) {
-			build.onResolve({ filter: /^@auto-upload\/domain$/ }, () => ({ path: DOMAIN_INDEX }));
+			build.onResolve({ filter: /^@yanxu\/domain$/ }, () => ({ path: DOMAIN_INDEX }));
 		},
 	},
 ];

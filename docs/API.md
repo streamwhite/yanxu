@@ -1,6 +1,6 @@
 ### API surface (semi-auto MVP)
 
-This package is currently split into `@auto-upload/domain` (shared contracts + validators), `@auto-upload/native-host` (Chrome Native Messaging stdin/stdout bridge), and a Chromium extension (`extension/`).
+This package is currently split into `@yanxu/domain` (shared contracts + validators), `@yanxu/native-host` (Chrome Native Messaging stdin/stdout bridge), and a Chromium extension (`extension/`).
 
 #### Install / toolchain
 
@@ -10,7 +10,7 @@ This package is currently split into `@auto-upload/domain` (shared contracts + v
 - Lint: [`pnpm lint`](package.json)
 - Tests: [`pnpm test`](package.json)
 
-#### Canonical job (`@auto-upload/domain`)
+#### Canonical job (`@yanxu/domain`)
 
 The job file consumed by `applyJobFromFile` is validated by [`CanonicalJobSchema`](packages/domain/src/schema/canonical-job.ts):
 
@@ -40,11 +40,13 @@ Legacy v1/v2 single-platform examples remain for native-host / schema reference 
 
 **`bilibili.creativeStatement` / `bilibili.creativeStatementAuth`:** optional; default to **内容无需标注** and **内容为自制：未经作者允许，禁止转载** (`.statement-content .bcc-select` dropdown). Omitted from batch JSON when defaults apply.
 
-**Popup actions (batch only):** Click the toolbar icon to open a **persistent control window** (stays open until you close it). **打开全部上传标签页** opens one tab per job item for each targeted platform (`bilibili`, `douyin`, `视频号`; canonical upload URLs in [`PLATFORM_UPLOAD_PAGE_URLS`](packages/domain/src/constants/platform-upload-page-urls.ts)). **上传并填充（全部标签页）** runs `videoOnly`, waits **`fieldsSettleMs`** (default 4000, configurable on the extension **options page**, stored in `semiAutoFieldsSettleMs`), then `fieldsOnly` — platforms run in parallel; within each platform, items run in parallel with a random **1–3 s** stagger (视频号 / `channels` runs **sequentially** and activates each tab before upload/fill). Progress logs use short field names (e.g. `描述`, `标题`) instead of CSS selectors. Legacy runtime messages `runtime.uploadAllTabs` / `runtime.fillAllTabs` / `runtime.openPlatformTabs` remain for automation; use `runtime.openAllPlatformTabs` to open every platform at once. Non-batch job files return `batch_job_required`.
+**Popup actions (batch only):** Click the toolbar icon to open a **persistent control window** (stays open until you close it). **开始** first opens one upload tab per job item for each targeted platform (`bilibili`, `douyin`, `视频号`; canonical upload URLs in [`PLATFORM_UPLOAD_PAGE_URLS`](packages/domain/src/constants/platform-upload-page-urls.ts)), then runs `videoOnly`, waits **`fieldsSettleMs`** (default 4000, configurable on the extension **options page**, stored in `semiAutoFieldsSettleMs`), then `fieldsOnly`. Video attachments use the upload pacing below; fields are applied after the settle interval, with 视频号 / `channels` processed sequentially and its tab activated before each action. Progress logs use short field names (e.g. `描述`, `标题`) instead of CSS selectors. Legacy runtime messages `runtime.uploadAllTabs` / `runtime.fillAllTabs` / `runtime.openPlatformTabs` remain for automation; use `runtime.openAllPlatformTabs` to open every platform at once. Non-batch job files return `batch_job_required`.
+
+**Upload pacing:** Each platform is limited to **30 upload starts in a rolling 24-hour window**. Reaching that limit stops remaining uploads for that platform and reports when it can resume; other platforms are unaffected. The rate history is stored locally and survives browser restarts.
 
 **Host `inspectJobFromFile`:** returns `jobFileOutline` with `items[].itemIndex` and `targets` (no file attachments). **`applyBatchItemFromFile`** requires `itemIndex` + `platform` (including `0`) to project one batch item to v2 before attach. Tab _n_ (by tab id among upload URLs) maps to the *n*th item index for that platform.
 
-#### Limits / routing constants (`@auto-upload/domain`)
+#### Limits / routing constants (`@yanxu/domain`)
 
 Configured in [`packages/domain/src/constants/limits.ts`](packages/domain/src/constants/limits.ts):
 
@@ -54,13 +56,13 @@ Configured in [`packages/domain/src/constants/limits.ts`](packages/domain/src/co
 
 URLs allowed for content injection: [`isAllowedPlatformUrl`](packages/domain/src/url/is-allowed-platform-url.ts), [`detectPlatformFromUrl`](packages/domain/src/url/detect-platform-from-url.ts). Bilibili helper: [`isAllowedBilibiliMatchUrl`](packages/domain/src/url/is-allowed-bilibili-url.ts).
 
-#### Chrome Native Messaging host (`@auto-upload/native-host`)
+#### Chrome Native Messaging host (`@yanxu/native-host`)
 
 - Binary name configured in Chromium manifests: [`NATIVE_HOST_NAME`](packages/domain/src/constants/native-messaging.ts)
 - Implemented entrypoint: [`packages/native-host/src/main.ts`](packages/native-host/src/main.ts)
 - Message contracts: [`HostInboundMessageSchema`](packages/domain/src/messaging/host-protocol.ts), [`HostOutboundMessageSchema`](packages/domain/src/messaging/host-protocol.ts)
 
-Host install template: [`packages/native-host/dev/com.auto_upload.upload_host.json.template`](packages/native-host/dev/com.auto_upload.upload_host.json.template)
+Host install template: [`packages/native-host/dev/com.yanxu.upload_host.json.template`](packages/native-host/dev/com.yanxu.upload_host.json.template)
 
 Common OS manifest locations (Chromium family):
 
@@ -85,9 +87,9 @@ Then **fully restart** Chromium.
 
 **Linux note:** Chrome runs the manifest `path` as an **executable**, not `node <file>`. Use the wrapper [`packages/native-host/run-native-host.sh`](packages/native-host/run-native-host.sh) (not `dist/main.js` alone). `pnpm build` / `pnpm install:native-host` set mode `755` on the wrapper.
 
-Manual template [`com.auto_upload.upload_host.json.template`](packages/native-host/dev/com.auto_upload.upload_host.json.template):
+Manual template [`com.yanxu.upload_host.json.template`](packages/native-host/dev/com.yanxu.upload_host.json.template):
 
-- `__AUTO_UPLOAD_NATIVE_HOST_WRAPPER__` → absolute path to `packages/native-host/run-native-host.sh`
+- `__YANXU_NATIVE_HOST_WRAPPER__` → absolute path to `packages/native-host/run-native-host.sh`
 - `__EXTENSION_ID__` → extension id from `chrome://extensions` (must match the profile you use)
 
 #### Chromium extension runtime messages
@@ -131,7 +133,7 @@ Chromium **does not** auto-reload unpacked extensions when `extension/dist/*` ch
 
 #### Build outputs
 
-- Workspace build: [`pnpm build`](package.json) builds `@auto-upload/domain`, `@auto-upload/native-host`, and bundles `extension/dist/*` via [`scripts/build-extension.mjs`](scripts/build-extension.mjs)
+- Workspace build: [`pnpm build`](package.json) builds `@yanxu/domain`, `@yanxu/native-host`, and bundles `extension/dist/*` via [`scripts/build-extension.mjs`](scripts/build-extension.mjs)
 - Load unpacked: select the [`extension`](extension/manifest.json) directory (after `pnpm build`)
 
 ## fields

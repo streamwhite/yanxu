@@ -1,4 +1,4 @@
-import type { ApplyPhase } from "@auto-upload/domain";
+import type { ApplyPhase } from "@yanxu/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import { clearBatchProgress } from "../shared/batch-progress-store.js";
 import { applyBatchSlotsConcurrentByPlatform } from "./apply-batch-slots-by-platform.js";

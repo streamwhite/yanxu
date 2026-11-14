@@ -1,7 +1,7 @@
 import { basename } from "node:path";
 import { constants as fsConstants, promises as fsp } from "node:fs";
-import type { AttachmentVideoPayload, HostOutboundBatch } from "@auto-upload/domain";
-import { MAX_NATIVE_INLINE_VIDEO_BYTES } from "@auto-upload/domain";
+import type { AttachmentVideoPayload, HostOutboundBatch } from "@yanxu/domain";
+import { MAX_NATIVE_INLINE_VIDEO_BYTES } from "@yanxu/domain";
 import { buildVideoAttachmentPayload } from "./build-video-payload.js";
 import { chunkBufferToBase64 } from "./chunk-buffer-to-base64.js";
 import { estimateStreamChunkBytes } from "./estimate-stream-chunk-bytes.js";

@@ -1,7 +1,7 @@
 import { basename } from "node:path";
 import { constants as fsConstants, promises as fsp } from "node:fs";
-import type { AttachmentCoverPayload, HostOutboundBatch } from "@auto-upload/domain";
-import { MAX_NATIVE_INLINE_COVER_BYTES } from "@auto-upload/domain";
+import type { AttachmentCoverPayload, HostOutboundBatch } from "@yanxu/domain";
+import { MAX_NATIVE_INLINE_COVER_BYTES } from "@yanxu/domain";
 import { chunkBufferToBase64 } from "./chunk-buffer-to-base64.js";
 import { estimateStreamChunkBytes } from "./estimate-stream-chunk-bytes.js";
 import { guessImageMimeFromPath } from "../mime/guess-mime-from-path.js";

@@ -1,4 +1,4 @@
-import { ApplyPhase, HostInboundMessageSchema } from "@auto-upload/domain";
+import { ApplyPhase, HostInboundMessageSchema } from "@yanxu/domain";
 
 describe("HostInboundMessageSchema", () => {
 	it("parses applyBatchItemFromFile with itemIndex 0", () => {

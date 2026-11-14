@@ -1,4 +1,4 @@
-import { PLATFORM_IDS, Platform } from "@auto-upload/domain";
+import { PLATFORM_IDS, Platform } from "@yanxu/domain";
 import {
   RuntimeMessageType,
   type ApplyJobFromRuntimeResult,
@@ -36,14 +36,10 @@ import {
   collectSubmitAllPlatformsButton,
 } from "./platform-submit-controls.js";
 import {
-  batchPlatformScopeOpenTabsButtonLabel,
-  batchPlatformScopeOpenTabsHelp,
-  batchPlatformScopeOpenedLabel,
   batchPlatformScopeOpeningLabel,
   batchPlatformScopeSinglePlatformHelp,
   batchPlatformScopeUploadBusyLabel,
   batchPlatformScopeUploadFillButtonLabel,
-  batchPlatformScopeUploadFillHelp,
   batchPlatformScopeUploadSuccessLabel,
   isBatchPlatformScopeValue,
   platformItemSelectionLabel as formatPlatformItemSelectionLabel,
@@ -64,6 +60,7 @@ import {
   sendPingToServiceWorker,
   sendRuntimeMessageWithTimeout,
 } from "./send-runtime-message.js";
+import { startUploadFlow } from "./start-upload-flow.js";
 
 const STORAGE_KEY_SEMI_JOB_FILE_PATH = "semiAutoJobFilePath" as const;
 
@@ -262,12 +259,9 @@ async function persistBatchPlatformScope(scope: BatchPlatformScope): Promise<voi
 
 function syncBatchPlatformScopeUi(
   scope: BatchPlatformScope,
-  openTabsHelp: HTMLElement,
-  uploadFillHelp: HTMLElement,
   batchPlatformScopeHelp: HTMLElement,
   platformItemSelectionSection: HTMLElement,
   platformItemSelectionLabelEl: HTMLElement,
-  openAllTabsButton: HTMLButtonElement,
   uploadAndFillAllTabsButton: HTMLButtonElement,
 ): void {
   const singlePlatform = isSinglePlatformScope(scope) ? scope : undefined;
@@ -278,12 +272,7 @@ function syncBatchPlatformScopeUi(
     platformItemSelectionLabelEl.textContent =
       formatPlatformItemSelectionLabel(singlePlatform);
   }
-  openTabsHelp.textContent = batchPlatformScopeOpenTabsHelp(scope);
-  uploadFillHelp.textContent = batchPlatformScopeUploadFillHelp(scope);
-  openAllTabsButton.textContent = batchPlatformScopeOpenTabsButtonLabel(scope);
-  openAllTabsButton.title = batchPlatformScopeOpenTabsHelp(scope);
   uploadAndFillAllTabsButton.textContent = batchPlatformScopeUploadFillButtonLabel(scope);
-  uploadAndFillAllTabsButton.title = batchPlatformScopeUploadFillHelp(scope);
 }
 
 async function refreshPlatformItemSelectionList(
@@ -308,31 +297,18 @@ async function refreshPlatformItemSelectionList(
   }
 }
 
-function bindOpenAllTabsButton(
-  button: HTMLButtonElement,
-  readJobPath: () => string | null,
-  readBatchPlatformScope: () => BatchPlatformScope,
-): void {
-  button.addEventListener("click", () => {
-    const jobFilePath = readJobPath();
-    if (!jobFilePath) return;
-
-    const batchPlatformScope = readBatchPlatformScope();
-    void persistBatchPlatformScope(batchPlatformScope);
-
-    void runRuntimeBatchAction(
-      button,
-      jobFilePath,
-      {
-        type: RuntimeMessageType.OpenAllPlatformTabs,
-        jobFilePath,
-        batchPlatformScope,
-      },
-      batchPlatformScopeOpeningLabel(batchPlatformScope),
-      batchPlatformScopeOpenedLabel(batchPlatformScope),
-      null,
-    );
+async function openUploadTabsForJob(
+  jobFilePath: string,
+  batchPlatformScope: BatchPlatformScope,
+): Promise<ApplyJobFromRuntimeResult> {
+  setOutcome(batchPlatformScopeOpeningLabel(batchPlatformScope), PopupOutcomeVariant.Info);
+  await wakeServiceWorker();
+  const { result } = await sendRuntimeMessageWithTimeout<ApplyJobFromRuntimeResult>({
+    type: RuntimeMessageType.OpenAllPlatformTabs,
+    jobFilePath,
+    batchPlatformScope,
   });
+  return result;
 }
 
 async function bootstrap(): Promise<void> {
@@ -340,10 +316,7 @@ async function bootstrap(): Promise<void> {
   const batchPlatformScopeSelect = byId("batchPlatformScopeSelect");
   const uploadAndFillAllTabsButton = byId("uploadAndFillAllTabsButton");
   const submitHorizontalCoverCheckbox = byId("submitHorizontalCoverCheckbox");
-  const openAllTabsButton = byId("openAllTabsButton");
   const progressLog = byId("batchProgressLog");
-  const openTabsHelp = byId("openTabsHelp");
-  const uploadFillHelp = byId("uploadFillHelp");
   const batchPlatformScopeHelp = byId("batchPlatformScopeHelp");
   const platformItemSelectionSection = byId("platformItemSelectionSection");
   const platformItemSelectionLabelEl = byId("platformItemSelectionLabel");
@@ -351,10 +324,7 @@ async function bootstrap(): Promise<void> {
   if (!(jobFilePathInput instanceof HTMLInputElement)) return;
   if (!(batchPlatformScopeSelect instanceof HTMLSelectElement)) return;
   if (!(uploadAndFillAllTabsButton instanceof HTMLButtonElement)) return;
-  if (!(openAllTabsButton instanceof HTMLButtonElement)) return;
   if (!(progressLog instanceof HTMLElement)) return;
-  if (!(openTabsHelp instanceof HTMLElement)) return;
-  if (!(uploadFillHelp instanceof HTMLElement)) return;
   if (!(batchPlatformScopeHelp instanceof HTMLElement)) return;
   if (!(platformItemSelectionSection instanceof HTMLElement)) return;
   if (!(platformItemSelectionLabelEl instanceof HTMLElement)) return;
@@ -369,12 +339,9 @@ async function bootstrap(): Promise<void> {
   const refreshBatchPlatformScopeUi = (): void => {
     syncBatchPlatformScopeUi(
       readBatchPlatformScope(),
-      openTabsHelp,
-      uploadFillHelp,
       batchPlatformScopeHelp,
       platformItemSelectionSection,
       platformItemSelectionLabelEl,
-      openAllTabsButton,
       uploadAndFillAllTabsButton,
     );
   };
@@ -414,8 +381,6 @@ async function bootstrap(): Promise<void> {
     reloadPlatformItemSelection();
   });
 
-  bindOpenAllTabsButton(openAllTabsButton, readJobPath, readBatchPlatformScope);
-
   uploadAndFillAllTabsButton.addEventListener("click", () => {
     const jobFilePath = readJobPath();
     if (!jobFilePath) return;
@@ -446,23 +411,38 @@ async function bootstrap(): Promise<void> {
 
     void (async () => {
       const fieldsSettleMs = await loadFieldsSettleMsFromStorage();
-      await runRuntimeBatchAction(
-        uploadAndFillAllTabsButton,
-        jobFilePath,
-        {
-          type: RuntimeMessageType.UploadAndFillAllTabs,
-          jobFilePath,
-          fieldsSettleMs,
-          batchPlatformScope,
-          selectedPlatformItemIndices,
-          submitHorizontalCover:
-            submitHorizontalCoverCheckbox instanceof HTMLInputElement &&
-            submitHorizontalCoverCheckbox.checked === true,
-        },
-        batchPlatformScopeUploadBusyLabel(batchPlatformScope, fieldsSettleMs),
-        batchPlatformScopeUploadSuccessLabel(batchPlatformScope),
-        progressLog,
-      );
+      uploadAndFillAllTabsButton.disabled = true;
+      try {
+        const { stage, result } = await startUploadFlow(
+          () => openUploadTabsForJob(jobFilePath, batchPlatformScope),
+          () =>
+            runRuntimeBatchAction(
+              uploadAndFillAllTabsButton,
+              jobFilePath,
+              {
+                type: RuntimeMessageType.UploadAndFillAllTabs,
+                jobFilePath,
+                fieldsSettleMs,
+                batchPlatformScope,
+                selectedPlatformItemIndices,
+                submitHorizontalCover:
+                  submitHorizontalCoverCheckbox instanceof HTMLInputElement &&
+                  submitHorizontalCoverCheckbox.checked === true,
+              },
+              batchPlatformScopeUploadBusyLabel(batchPlatformScope, fieldsSettleMs),
+              batchPlatformScopeUploadSuccessLabel(batchPlatformScope),
+              progressLog,
+            ),
+        );
+        if (stage === "openTabs" && !result.ok) {
+          setOutcome(`失败（${result.code}）：${result.message}`, PopupOutcomeVariant.Danger);
+        }
+      } catch (error: unknown) {
+        const detail = error instanceof Error ? error.message : "unexpected_error";
+        setOutcome(`失败：${detail}`, PopupOutcomeVariant.Danger);
+      } finally {
+        uploadAndFillAllTabsButton.disabled = false;
+      }
     })();
   });
 

@@ -1,4 +1,4 @@
-import { isAllowedBilibiliMatchUrl } from "@auto-upload/domain";
+import { isAllowedBilibiliMatchUrl } from "@yanxu/domain";
 
 describe("isAllowedBilibiliMatchUrl", () => {
 	it("allows member upload pages", () => {

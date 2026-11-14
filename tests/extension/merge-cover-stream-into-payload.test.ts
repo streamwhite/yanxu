@@ -1,5 +1,5 @@
-import { ApplyPhase } from "@auto-upload/domain";
-import type { AppliedJobPayload, HostOutboundMessage } from "@auto-upload/domain";
+import { ApplyPhase } from "@yanxu/domain";
+import type { AppliedJobPayload, HostOutboundMessage } from "@yanxu/domain";
 import { mergeCoverStreamIntoApplyPayload } from "../../extension/src/shared/merge-cover-stream-into-payload";
 
 const BASE_PAYLOAD: AppliedJobPayload = {

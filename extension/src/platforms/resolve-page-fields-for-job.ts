@@ -1,4 +1,4 @@
-import { getJobPlatform, Platform, type CanonicalJob } from "@auto-upload/domain";
+import { getJobPlatform, Platform, type CanonicalJob } from "@yanxu/domain";
 import { buildDefaultBilibiliPageFields } from "../content/bilibili-default-fields.js";
 import type { ApplyPageField } from "../content/page-field-apply.js";
 import { buildDefaultChannelsPageFields } from "./channels/channels-default-fields.js";

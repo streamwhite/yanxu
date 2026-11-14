@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import { COVER_MODAL_POLL_MS, COVER_MODAL_WAIT_MS } from "./constants/cover-modal-timing.js";
 import { findCoverModalUploadArea } from "./find-cover-modal-upload-area.js";
 import { waitMs } from "./wait-ms.js";

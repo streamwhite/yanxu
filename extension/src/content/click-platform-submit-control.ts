@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import { dispatchClick } from "./dispatch-click.js";
 import { findPlatformSubmitControl } from "../platforms/find-platform-submit-control.js";
 

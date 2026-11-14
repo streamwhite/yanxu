@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { listPlatformOutlineItems } from "../../extension/src/shared/list-platform-outline-items";
 
 describe("listPlatformOutlineItems", () => {

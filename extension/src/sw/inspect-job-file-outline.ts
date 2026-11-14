@@ -1,4 +1,4 @@
-import { JobFileOutlineSchema } from "@auto-upload/domain";
+import { JobFileOutlineSchema } from "@yanxu/domain";
 import { postNativeMessageSession } from "./post-native-message-session.js";
 
 export type InspectJobOutlineResult =

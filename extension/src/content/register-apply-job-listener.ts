@@ -1,4 +1,4 @@
-import type { AppliedJobPayload, HostOutboundMessage } from "@auto-upload/domain";
+import type { AppliedJobPayload, HostOutboundMessage } from "@yanxu/domain";
 import {
 	commitApplyJobHostBatch,
 	pushApplyJobHostBatchPart,

@@ -1,4 +1,4 @@
-import type { HostOutboundMessage } from "@auto-upload/domain";
+import type { HostOutboundMessage } from "@yanxu/domain";
 import { mergeStreamsIntoApplyPayload } from "../shared/merge-streams-into-payload.js";
 import { applyJobPayload } from "./apply-job.js";
 

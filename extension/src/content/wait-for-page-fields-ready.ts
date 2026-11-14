@@ -1,4 +1,4 @@
-import { getJobPlatform, Platform, type CanonicalJob } from "@auto-upload/domain";
+import { getJobPlatform, Platform, type CanonicalJob } from "@yanxu/domain";
 import { BILIBILI_TITLE_SELECTORS } from "./bilibili-selectors.js";
 import { CHANNELS_FIELDS_READY_WAIT_MS } from "../platforms/constants/platform-video-upload-timing.js";
 import { channelsPostUploadFormReady } from "../platforms/channels/channels-post-upload-form-ready.js";

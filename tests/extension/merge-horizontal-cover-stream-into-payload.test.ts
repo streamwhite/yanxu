@@ -1,5 +1,5 @@
 import { mergeHorizontalCoverStreamIntoApplyPayload } from "../../extension/src/shared/merge-horizontal-cover-stream-into-payload";
-import type { AppliedJobPayload, HostOutboundMessage } from "@auto-upload/domain";
+import type { AppliedJobPayload, HostOutboundMessage } from "@yanxu/domain";
 
 function buildPayload(): AppliedJobPayload {
 	return {

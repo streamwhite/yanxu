@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { buildBatchApplySlots } from "../../extension/src/sw/build-batch-apply-slots";
 import type { PlatformUploadTab } from "../../extension/src/sw/query-platform-upload-tabs";
 

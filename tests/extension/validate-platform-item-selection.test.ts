@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { validatePlatformItemSelection } from "../../extension/src/shared/validate-platform-item-selection";
 
 const outline = {

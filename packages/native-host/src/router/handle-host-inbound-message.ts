@@ -9,7 +9,7 @@ import {
 	assertExtensionSupportedPublishPolicy,
 	DEFAULT_JOB_POLICY,
 	DEFAULT_TRANSFER_CHUNK_BYTES,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 import {
 	resolveExistingCoverPath,
 	resolveExistingHorizontalCoverPath,

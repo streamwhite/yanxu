@@ -1,14 +1,42 @@
-import { ApplyPhase, Platform } from "@auto-upload/domain";
+import { ApplyPhase, Platform } from "@yanxu/domain";
 import { applyBatchSlotsConcurrentByPlatform } from "../../extension/src/sw/apply-batch-slots-by-platform";
 import * as progressModule from "../../extension/src/shared/batch-progress-store";
 import * as applyItemModule from "../../extension/src/sw/apply-batch-item-via-native-host";
 import * as staggerModule from "../../extension/src/sw/wait-random-stagger-ms";
 import * as activateModule from "../../extension/src/sw/activate-tab-for-apply";
+import * as rateLimitModule from "../../extension/src/sw/upload-rate-limit";
 
 describe("applyBatchSlotsConcurrentByPlatform", () => {
 	beforeEach(() => {
 		jest.restoreAllMocks();
 		jest.spyOn(activateModule, "activateChannelsTabForApply").mockResolvedValue();
+		jest.spyOn(rateLimitModule, "acquireVideoUploadPermit").mockResolvedValue({
+			allowed: true,
+		});
+	});
+
+	it("checks the daily upload quota before sending a video", async () => {
+		const permitSpy = jest
+			.spyOn(rateLimitModule, "acquireVideoUploadPermit")
+			.mockResolvedValue({ allowed: false, retryAt: 123_000 });
+		const applySpy = jest
+			.spyOn(applyItemModule, "applyBatchItemViaNativeHost")
+			.mockResolvedValue({ ok: true });
+		jest.spyOn(staggerModule, "waitRandomStaggerMs").mockResolvedValue();
+		jest.spyOn(progressModule, "appendBatchProgress").mockResolvedValue();
+
+		const result = await applyBatchSlotsConcurrentByPlatform(
+			"/tmp/job.json",
+			ApplyPhase.VideoOnly,
+			"req-limit",
+			[{ platform: Platform.Bilibili, tabId: 1, itemIndex: 0 }],
+		);
+
+		expect(permitSpy).toHaveBeenCalledWith(Platform.Bilibili);
+		expect(applySpy).not.toHaveBeenCalled();
+		expect(result.ok).toBe(false);
+		if (result.ok) return;
+		expect(result.message).toContain("30");
 	});
 
 	it("applies all slots on one platform concurrently after stagger", async () => {

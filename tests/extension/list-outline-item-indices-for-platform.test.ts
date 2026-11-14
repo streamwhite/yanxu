@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { listOutlineItemIndicesForPlatform } from "../../extension/src/sw/list-outline-item-indices-for-platform";
 
 describe("listOutlineItemIndicesForPlatform", () => {

@@ -5,17 +5,23 @@ import {
 	CHANNELS_VIDEO_FILE_INPUT_SELECTORS,
 	CHANNELS_VIDEO_UPLOAD_AREA_SELECTORS,
 	CHANNELS_VIDEO_UPLOAD_DURATION_HINT,
+	CHANNELS_VIDEO_UPLOAD_RECENT_HINT,
+	CHANNELS_VIDEO_UPLOAD_SIZE_HINT,
 	CHANNELS_VIDEO_UPLOAD_TIP_TEXT_HINT,
 } from "./channels-selectors.js";
 
 const CHANNELS_UPLOAD_CONTENT_SELECTOR = ".upload-content" as const;
 
+const CHANNELS_VIDEO_UPLOAD_TEXT_HINTS = [
+	CHANNELS_VIDEO_UPLOAD_TIP_TEXT_HINT,
+	CHANNELS_VIDEO_UPLOAD_DURATION_HINT,
+	CHANNELS_VIDEO_UPLOAD_SIZE_HINT,
+	CHANNELS_VIDEO_UPLOAD_RECENT_HINT,
+] as const;
+
 export function uploadAreaTextLooksLikeVideoPicker(area: HTMLElement): boolean {
 	const text = area.textContent ?? "";
-	return (
-		text.includes(CHANNELS_VIDEO_UPLOAD_TIP_TEXT_HINT) ||
-		text.includes(CHANNELS_VIDEO_UPLOAD_DURATION_HINT)
-	);
+	return CHANNELS_VIDEO_UPLOAD_TEXT_HINTS.some((hint) => text.includes(hint));
 }
 
 function resolveUploadAreaFromTip(tip: HTMLElement): HTMLElement | null {

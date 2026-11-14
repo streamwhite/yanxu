@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { waitForPageFieldsReady } from "../../extension/src/content/wait-for-page-fields-ready";
 
 describe("waitForPageFieldsReady", () => {

@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import { PLATFORM_TAB_LABELS } from "../sw/constants/platform-tab-labels.js";
 import type { JobOutlineForTabCount } from "../sw/count-required-batch-items-for-platform.js";

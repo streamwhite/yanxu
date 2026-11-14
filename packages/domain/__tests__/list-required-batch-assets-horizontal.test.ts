@@ -2,7 +2,7 @@ import {
 	BatchAssetKind,
 	type BatchJob,
 	listRequiredBatchAssets,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 function buildBatch(): BatchJob {
 	return {

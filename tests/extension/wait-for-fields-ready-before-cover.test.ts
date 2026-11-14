@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import type { CanonicalJob } from "@auto-upload/domain";
+import type { CanonicalJob } from "@yanxu/domain";
 import { waitForFieldsReadyBeforeCover } from "../../extension/src/content/wait-for-fields-ready-before-cover";
 
 describe("waitForFieldsReadyBeforeCover", () => {

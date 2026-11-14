@@ -1,5 +1,5 @@
-import { ApplyPhase } from "@auto-upload/domain";
-import type { HostOutboundMessage } from "@auto-upload/domain";
+import { ApplyPhase } from "@yanxu/domain";
+import type { HostOutboundMessage } from "@yanxu/domain";
 import { ContentMessageType } from "../../extension/src/content/content-message-type";
 import { TAB_MESSAGE_SAFE_BYTES } from "../../extension/src/shared/constants/tab-message-limits";
 import * as estimateModule from "../../extension/src/shared/estimate-json-utf8-byte-length";

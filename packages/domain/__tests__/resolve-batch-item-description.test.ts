@@ -1,4 +1,4 @@
-import { resolveBatchItemDescription } from "@auto-upload/domain";
+import { resolveBatchItemDescription } from "@yanxu/domain";
 
 describe("resolveBatchItemDescription", () => {
 	it("uses description when non-empty", () => {

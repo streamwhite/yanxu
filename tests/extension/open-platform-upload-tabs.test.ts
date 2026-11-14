@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { openPlatformUploadTabs } from "../../extension/src/sw/open-platform-upload-tabs";
 import * as inspectModule from "../../extension/src/sw/inspect-job-file-outline";
 import * as waitMsModule from "../../extension/src/content/wait-ms";
@@ -110,7 +110,7 @@ describe("openAllPlatformUploadTabs", () => {
 		const { openAllPlatformUploadTabs } = await import(
 			"../../extension/src/sw/open-platform-upload-tabs"
 		);
-		const { Platform } = await import("@auto-upload/domain");
+		const { Platform } = await import("@yanxu/domain");
 		const result = await openAllPlatformUploadTabs("/tmp/batch.job.json", Platform.Bilibili);
 
 		expect(result.ok).toBe(true);
@@ -135,7 +135,7 @@ describe("openAllPlatformUploadTabs", () => {
 		const { openAllPlatformUploadTabs } = await import(
 			"../../extension/src/sw/open-platform-upload-tabs"
 		);
-		const { Platform } = await import("@auto-upload/domain");
+		const { Platform } = await import("@yanxu/domain");
 		const result = await openAllPlatformUploadTabs("/tmp/batch.job.json", Platform.Channels);
 
 		expect(result.ok).toBe(true);

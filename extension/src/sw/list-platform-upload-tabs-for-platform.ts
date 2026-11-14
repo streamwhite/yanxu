@@ -1,4 +1,4 @@
-import { scorePlatformUploadUrl, type PlatformId } from "@auto-upload/domain";
+import { scorePlatformUploadUrl, type PlatformId } from "@yanxu/domain";
 import type { PlatformUploadTab } from "./query-platform-upload-tabs.js";
 
 function compareUploadTabPreference(a: PlatformUploadTab, b: PlatformUploadTab): number {

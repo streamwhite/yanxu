@@ -1,7 +1,7 @@
 import { mkdtemp, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { PublishMode, SubmitPolicy } from "@auto-upload/domain";
+import { PublishMode, SubmitPolicy } from "@yanxu/domain";
 import { validateBatchJobAssetsFromFileJson } from "../src/router/validate-batch-job-assets-from-file.js";
 
 describe("validateBatchJobAssetsFromFileJson", () => {

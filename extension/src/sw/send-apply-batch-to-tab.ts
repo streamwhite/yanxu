@@ -1,4 +1,4 @@
-import type { AppliedJobPayload, HostOutboundMessage } from "@auto-upload/domain";
+import type { AppliedJobPayload, HostOutboundMessage } from "@yanxu/domain";
 import { ContentMessageType } from "../content/content-message-type.js";
 import { TAB_MESSAGE_SAFE_BYTES } from "../shared/constants/tab-message-limits.js";
 import { estimateJsonUtf8ByteLength } from "../shared/estimate-json-utf8-byte-length.js";

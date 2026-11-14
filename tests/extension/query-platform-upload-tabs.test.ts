@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { queryPlatformUploadTabs } from "../../extension/src/sw/query-platform-upload-tabs";
 
 describe("queryPlatformUploadTabs", () => {

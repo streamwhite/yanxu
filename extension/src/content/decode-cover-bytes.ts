@@ -1,4 +1,4 @@
-import type { AttachmentCoverPayload } from "@auto-upload/domain";
+import type { AttachmentCoverPayload } from "@yanxu/domain";
 import { decodeBase64ChunksToUint8, decodeBase64ToUint8 } from "./binary.js";
 
 export function decodeCoverAttachmentBytes(cover: AttachmentCoverPayload): Uint8Array {

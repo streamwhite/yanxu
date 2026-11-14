@@ -1,6 +1,6 @@
 import { basename } from "node:path";
 import { constants as fsConstants, promises as fsp } from "node:fs";
-import type { AttachmentVideoPayload } from "@auto-upload/domain";
+import type { AttachmentVideoPayload } from "@yanxu/domain";
 import { chunkBufferToBase64 } from "./chunk-buffer-to-base64.js";
 import { guessVideoMimeFromPath } from "../mime/guess-mime-from-path.js";
 

@@ -1,4 +1,4 @@
-import type { FieldLocator } from "@auto-upload/domain";
+import type { FieldLocator } from "@yanxu/domain";
 
 export function locatorToCssSelector(locator: FieldLocator): string {
 	if (locator.css) return locator.css;

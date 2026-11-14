@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { BATCH_PLATFORM_SCOPE_ALL } from "../../extension/src/shared/batch-platform-scope";
 import { applyUploadThenFillAllTabs } from "../../extension/src/sw/apply-upload-then-fill-all-tabs";
 import * as batchSlotsModule from "../../extension/src/sw/apply-batch-slots-by-platform";

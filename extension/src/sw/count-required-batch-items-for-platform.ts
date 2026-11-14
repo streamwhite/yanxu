@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 
 export type JobOutlineForTabCount = {
 	items: { targets: readonly string[]; itemIndex: number }[];

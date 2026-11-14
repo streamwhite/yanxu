@@ -1,4 +1,4 @@
-import { FieldLocatorSchema } from "@auto-upload/domain";
+import { FieldLocatorSchema } from "@yanxu/domain";
 
 describe("FieldLocatorSchema", () => {
 	it("accepts css locator", () => {

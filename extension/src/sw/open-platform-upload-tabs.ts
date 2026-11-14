@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import {
 	BATCH_PLATFORM_SCOPE_ALL,

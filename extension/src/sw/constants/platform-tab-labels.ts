@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 
 export const PLATFORM_TAB_LABELS: Record<PlatformId, string> = {
 	[Platform.Bilibili]: "bilibili",

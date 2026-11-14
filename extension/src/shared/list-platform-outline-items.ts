@@ -1,4 +1,4 @@
-import type { JobFileOutlinePayload, PlatformId } from "@auto-upload/domain";
+import type { JobFileOutlinePayload, PlatformId } from "@yanxu/domain";
 
 export type PlatformOutlineItem = {
 	itemIndex: number;

@@ -1,4 +1,4 @@
-import { Platform, PLATFORM_IDS, type PlatformId } from "@auto-upload/domain";
+import { Platform, PLATFORM_IDS, type PlatformId } from "@yanxu/domain";
 import { PLATFORM_TAB_LABELS } from "../sw/constants/platform-tab-labels.js";
 
 export const BATCH_PLATFORM_SCOPE_ALL = "all" as const;

@@ -1,4 +1,4 @@
-import { ApplyPhase, Platform } from "@auto-upload/domain";
+import { ApplyPhase, Platform } from "@yanxu/domain";
 import { BATCH_PLATFORM_SCOPE_ALL } from "./shared/batch-platform-scope.js";
 import { resolveChannelsSubmitBatchConfig } from "./shared/channels-submit-batch-config.js";
 import { applyJobToAllTabs } from "./sw/apply-job-to-all-tabs.js";

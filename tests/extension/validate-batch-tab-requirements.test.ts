@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { resolveBatchPlatformIds } from "../../extension/src/shared/batch-platform-scope";
 import { validateBatchTabRequirements } from "../../extension/src/sw/validate-batch-tab-requirements";
 import type { PlatformUploadTab } from "../../extension/src/sw/query-platform-upload-tabs";

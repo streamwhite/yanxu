@@ -3,7 +3,7 @@ import { isAbsolute as isAbsolutePosixOrWin, resolve as resolveCrossPlatform } f
 import {
 	listBatchCoverPathCandidates,
 	listHorizontalCoverPathCandidates,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 async function isReadableFile(absolutePath: string): Promise<boolean> {
 	if (!isAbsolutePosixOrWin(absolutePath)) return false;

@@ -1,4 +1,4 @@
-import { validateJob } from "@auto-upload/domain";
+import { validateJob } from "@yanxu/domain";
 
 describe("bilibili partition", () => {
 	it("accepts partition on job v2", () => {

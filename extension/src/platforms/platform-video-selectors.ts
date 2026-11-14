@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { BILIBILI_VIDEO_FILE_INPUT_SELECTORS } from "../content/bilibili-selectors.js";
 import { CHANNELS_VIDEO_FILE_INPUT_SELECTORS } from "./channels/channels-selectors.js";
 import { DOUYIN_VIDEO_FILE_INPUT_SELECTORS } from "./douyin/douyin-selectors.js";

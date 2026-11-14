@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import { ContentMessageType } from "./content-message-type.js";
 import type { BatchProgressKind } from "../shared/batch-progress.js";
 

@@ -1,4 +1,4 @@
-import { Platform, type ApplyPhase, type PlatformId } from "@auto-upload/domain";
+import { Platform, type ApplyPhase, type PlatformId } from "@yanxu/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import {
 	activateChannelsTabForApply,

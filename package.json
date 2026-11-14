@@ -1,12 +1,13 @@
 {
-  "name": "auto-upload-monorepo",
+  "name": "yanxu-workspace",
   "private": true,
   "scripts": {
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "test": "jest --runInBand",
-    "typecheck": "pnpm --filter @auto-upload/domain build && pnpm -r run typecheck",
-    "build": "pnpm --filter @auto-upload/domain build && pnpm --filter @auto-upload/native-host build && node ./scripts/build-extension.mjs",
+    "typecheck": "pnpm --filter @yanxu/domain build && pnpm -r run typecheck",
+    "build": "pnpm --filter @yanxu/domain build && pnpm --filter @yanxu/native-host build && node ./scripts/build-extension.mjs",
+    "package": "pnpm build && node ./scripts/package-extension.mjs",
     "dev": "node ./scripts/dev.mjs",
     "install:native-host": "node ./scripts/install-native-host.mjs",
     "setup:host": "./scripts/setup-host.sh"

@@ -1,4 +1,4 @@
-import { HostOutboundMessageSchema, type HostOutboundMessage } from "@auto-upload/domain";
+import { HostOutboundMessageSchema, type HostOutboundMessage } from "@yanxu/domain";
 import type { NativeSessionResult } from "./post-native-message-session.js";
 
 export type ResolvedApplyJob =

@@ -1,4 +1,4 @@
-import type { PageField } from "@auto-upload/domain";
+import type { PageField } from "@yanxu/domain";
 
 export const PageFieldKind = {
 	Text: "text",

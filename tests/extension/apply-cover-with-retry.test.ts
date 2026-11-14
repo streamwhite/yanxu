@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { applyCoverWithRetry } from "../../extension/src/content/apply-cover-with-retry";
 
 const modalAttempts = { value: 0 };

@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { applyCoverViaModal } from "../../extension/src/content/apply-cover-via-modal";
 
 describe("applyCoverViaModal", () => {

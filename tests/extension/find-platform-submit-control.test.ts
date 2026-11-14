@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { findPlatformSubmitControl } from "../../extension/src/platforms/find-platform-submit-control";
 
 describe("findPlatformSubmitControl", () => {

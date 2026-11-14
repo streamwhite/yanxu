@@ -4,11 +4,11 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 
-EXTENSION_ID="${1:-${AUTO_UPLOAD_EXTENSION_ID:-}}"
+EXTENSION_ID="${1:-${YANXU_EXTENSION_ID:-}}"
 
 if [[ -z "${EXTENSION_ID}" ]]; then
 	echo "Usage: ./scripts/setup-host.sh <extension-id-from-chrome://extensions>"
-	echo "   or: AUTO_UPLOAD_EXTENSION_ID=<id> ./scripts/setup-host.sh"
+	echo "   or: YANXU_EXTENSION_ID=<id> ./scripts/setup-host.sh"
 	exit 1
 fi
 

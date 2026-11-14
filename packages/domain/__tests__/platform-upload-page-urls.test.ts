@@ -1,4 +1,4 @@
-import { PLATFORM_UPLOAD_PAGE_URLS, Platform } from "@auto-upload/domain";
+import { PLATFORM_UPLOAD_PAGE_URLS, Platform } from "@yanxu/domain";
 
 describe("platform upload page URLs", () => {
 	it("defines a canonical upload URL per platform", () => {

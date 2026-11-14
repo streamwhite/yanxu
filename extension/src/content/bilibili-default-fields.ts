@@ -1,8 +1,8 @@
-import type { CanonicalJob } from "@auto-upload/domain";
+import type { CanonicalJob } from "@yanxu/domain";
 import {
 	BILIBILI_DEFAULT_CREATIVE_STATEMENT_AUTH,
 	BILIBILI_DEFAULT_CREATIVE_STATEMENT_OPTION,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 import {
 	BILIBILI_DESCRIPTION_SELECTORS,
 	BILIBILI_SOURCE_TYPE_GROUP_SELECTORS,

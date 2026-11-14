@@ -1,4 +1,4 @@
-import type { CanonicalJob } from "@auto-upload/domain";
+import type { CanonicalJob } from "@yanxu/domain";
 import type { ApplyPageField } from "../../content/page-field-apply.js";
 import { DOUYIN_DESCRIPTION_SELECTORS, DOUYIN_TITLE_SELECTORS } from "./douyin-selectors.js";
 

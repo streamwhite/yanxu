@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { findBilibiliVideoFileInput } from "../platforms/bilibili/find-bilibili-video-file-input.js";
 import { findChannelsVideoFileInput } from "../platforms/channels/find-channels-video-file-input.js";
 import { waitForChannelsVideoFileInput } from "../platforms/channels/wait-for-channels-video-file-input.js";

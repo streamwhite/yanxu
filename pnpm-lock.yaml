@@ -44,7 +44,7 @@ importers:
 
   packages/native-host:
     dependencies:
-      '@auto-upload/domain':
+      '@yanxu/domain':
         specifier: workspace:*
         version: link:../domain
 

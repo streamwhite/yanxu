@@ -5,8 +5,8 @@ import {
 	Platform,
 	getJobPlatform,
 	validateJob,
-} from "@auto-upload/domain";
-import type { AppliedJobPayload } from "@auto-upload/domain";
+} from "@yanxu/domain";
+import type { AppliedJobPayload } from "@yanxu/domain";
 import { assertBatchPayloadMatchesJob } from "./assert-batch-payload-matches-job.js";
 import { clickVideoUploadTriggerForPlatform } from "../platforms/click-video-upload-trigger-for-platform.js";
 import { platformFullPhaseVideoToFieldsSettleMs } from "../platforms/platform-full-phase-video-to-fields-settle-ms.js";

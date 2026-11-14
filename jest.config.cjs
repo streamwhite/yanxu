@@ -6,8 +6,8 @@ module.exports = {
 	moduleNameMapper: {
 		"^zod$": "<rootDir>/packages/domain/node_modules/zod",
 
-		"^@auto-upload/domain$": "<rootDir>/packages/domain/src/index.ts",
-		"^@auto-upload/domain/(.*)$": "<rootDir>/packages/domain/src/$1",
+		"^@yanxu/domain$": "<rootDir>/packages/domain/src/index.ts",
+		"^@yanxu/domain/(.*)$": "<rootDir>/packages/domain/src/$1",
 		"^(\\.{1,2}/.*)\\.js$": "$1",
 	},
 	transform: {

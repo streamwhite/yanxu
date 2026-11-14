@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import process from "node:process";
-import { HostInboundMessageSchema, type HostOutboundMessage } from "@auto-upload/domain";
+import { HostInboundMessageSchema, type HostOutboundMessage } from "@yanxu/domain";
 import { NativeMessageReader } from "./io/native-message-reader.js";
 import { writeNativeJsonMessage } from "./io/write-native-message.js";
 import { handleHostInboundMessage } from "./router/handle-host-inbound-message.js";

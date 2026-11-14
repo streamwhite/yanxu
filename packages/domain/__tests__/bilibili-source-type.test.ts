@@ -1,4 +1,4 @@
-import { BilibiliSourceType, validateJob } from "@auto-upload/domain";
+import { BilibiliSourceType, validateJob } from "@yanxu/domain";
 
 describe("bilibili sourceType", () => {
 	it("accepts sourceType on job v2", () => {

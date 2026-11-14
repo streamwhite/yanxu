@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import * as waitMsModule from "../../extension/src/content/wait-ms";
 import * as activateSubmitModule from "../../extension/src/sw/activate-tab-for-submit";
 import * as queryModule from "../../extension/src/sw/query-platform-upload-tabs";

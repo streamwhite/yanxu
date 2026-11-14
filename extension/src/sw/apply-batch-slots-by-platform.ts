@@ -1,4 +1,4 @@
-import { ApplyPhase, Platform, type ApplyPhase as ApplyPhaseType } from "@auto-upload/domain";
+import { ApplyPhase, Platform, type ApplyPhase as ApplyPhaseType } from "@yanxu/domain";
 import { activateChannelsTabForApply } from "./activate-tab-for-apply.js";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import { appendBatchProgress } from "../shared/batch-progress-store.js";
@@ -10,8 +10,14 @@ import {
 import type { BatchApplySlot } from "./build-batch-apply-slots.js";
 import { formatBatchSlotFailure } from "./format-batch-slot-failure.js";
 import { waitRandomStaggerMs } from "./wait-random-stagger-ms.js";
+import { UPLOAD_DAILY_LIMIT, acquireVideoUploadPermit } from "./upload-rate-limit.js";
 
 export const BATCH_PARTIAL_FAILED_CODE = "batch_partial_failed" as const;
+
+const RATE_LIMIT_CODES: readonly string[] = [
+	"upload_daily_limit_reached",
+	"upload_rate_limit_unavailable",
+];
 
 export type BatchSlotApplyOptions = {
 	includeHorizontalCover?: boolean;
@@ -21,7 +27,6 @@ type SlotApplyOutcome = {
 	slot: BatchApplySlot;
 	result: ApplyJobFromRuntimeResult;
 };
-
 
 function groupSlotsByPlatform(slots: BatchApplySlot[]): Map<string, BatchApplySlot[]> {
 	const grouped = new Map<string, BatchApplySlot[]>();
@@ -33,6 +38,28 @@ function groupSlotsByPlatform(slots: BatchApplySlot[]): Map<string, BatchApplySl
 	return grouped;
 }
 
+async function requestUploadPermit(
+	slot: BatchApplySlot,
+): Promise<ApplyJobFromRuntimeResult | null> {
+	try {
+		const permit = await acquireVideoUploadPermit(slot.platform);
+		if (permit.allowed) return null;
+		const availableAt = new Date(permit.retryAt).toLocaleString("zh-CN");
+		return {
+			ok: false,
+			code: "upload_daily_limit_reached",
+			message: `该平台已达到滚动 24 小时 ${String(UPLOAD_DAILY_LIMIT)} 次上传上限；${availableAt} 后可继续`,
+		};
+	} catch (error: unknown) {
+		const detail = error instanceof Error ? error.message : "rate_limit_check_failed";
+		return {
+			ok: false,
+			code: "upload_rate_limit_unavailable",
+			message: `无法确认上传额度，已停止上传：${detail}`,
+		};
+	}
+}
+
 async function applyOneSlotWithStagger(
 	jobFilePath: string,
 	applyPhase: ApplyPhaseType,
@@ -42,6 +69,11 @@ async function applyOneSlotWithStagger(
 ): Promise<ApplyJobFromRuntimeResult> {
 	await waitRandomStaggerMs();
 
+	if (applyPhase !== ApplyPhase.FieldsOnly) {
+		const denied = await requestUploadPermit(slot);
+		if (denied) return denied;
+	}
+
 	const input: ApplyBatchItemViaNativeHostInput = {
 		jobFilePath,
 		applyPhase,
@@ -50,7 +82,6 @@ async function applyOneSlotWithStagger(
 		platform: slot.platform,
 		includeHorizontalCover: options.includeHorizontalCover,
 	};
-
 
 	const result = await applyBatchItemViaNativeHost(input);
 	if (!result.ok) return result;
@@ -100,6 +131,11 @@ async function reportSlotFailures(
 function resolvePlatformSlotResults(outcomes: SlotApplyOutcome[]): ApplyJobFromRuntimeResult {
 	const failures = outcomes.filter(({ result }) => !result.ok);
 	if (failures.length === 0) return { ok: true };
+
+	const rateLimited = failures.find(
+		({ result }) => !result.ok && RATE_LIMIT_CODES.includes(result.code),
+	);
+	if (rateLimited) return rateLimited.result;
 
 	if (failures.length === outcomes.length) {
 		return failures[0]?.result ?? { ok: false, code: "tab_apply_failed", message: "unknown" };
@@ -164,7 +200,6 @@ async function applyPlatformSlots(
 		? await applySlotsInOrder(jobFilePath, applyPhase, requestId, platformSlots, options)
 		: await applySlotsConcurrently(jobFilePath, applyPhase, requestId, platformSlots, options);
 
-
 	const failures = outcomes.filter(({ result }) => !result.ok);
 	await reportSlotFailures(requestId, failures);
 
@@ -209,7 +244,6 @@ export async function applyBatchSlotsConcurrentByPlatform(
 		channelsSlots.length > 0
 			? await applyPlatformSlots(jobFilePath, applyPhase, requestId, channelsSlots, options)
 			: { ok: true as const };
-
 
 	return mergePlatformApplyResults([...otherResults, channelsResult]);
 }

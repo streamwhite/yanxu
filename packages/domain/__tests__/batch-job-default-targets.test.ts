@@ -3,7 +3,7 @@ import {
 	PublishMode,
 	SubmitPolicy,
 	validateJobFile,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 describe("batch job default targets", () => {
 	const baseBatch = {

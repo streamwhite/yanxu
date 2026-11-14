@@ -2,7 +2,7 @@ import {
 	BILIBILI_SOURCE_TYPE_LABEL_ORIGINAL,
 	BILIBILI_SOURCE_TYPE_LABEL_REPOST,
 	type BilibiliSourceType,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 const SOURCE_TYPE_LABEL_BY_VALUE: Record<BilibiliSourceType, string> = {
 	original: BILIBILI_SOURCE_TYPE_LABEL_ORIGINAL,

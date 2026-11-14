@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { findBilibiliCoverTrigger } from "../platforms/bilibili/find-bilibili-cover-trigger.js";
 import { findChannelsCoverTrigger } from "../platforms/channels/find-channels-cover-trigger.js";
 import { findDouyinCoverTrigger } from "../platforms/douyin/find-douyin-cover-trigger.js";

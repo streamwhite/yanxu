@@ -1,5 +1,5 @@
-import { NATIVE_HOST_NAME } from "@auto-upload/domain";
-import type { HostOutboundMessage } from "@auto-upload/domain";
+import { NATIVE_HOST_NAME } from "@yanxu/domain";
+import type { HostOutboundMessage } from "@yanxu/domain";
 import {
 	NATIVE_DISCONNECT_GRACE_MS,
 	NATIVE_HOST_SESSION_TIMEOUT_MS,

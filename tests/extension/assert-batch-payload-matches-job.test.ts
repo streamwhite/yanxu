@@ -5,7 +5,7 @@ import {
 	SubmitPolicy,
 	type AppliedJobPayload,
 	validateJobFile,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 import { assertBatchPayloadMatchesJob } from "../../extension/src/content/assert-batch-payload-matches-job";
 
 describe("assertBatchPayloadMatchesJob", () => {

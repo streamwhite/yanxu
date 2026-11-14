@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { filterBatchApplySlotsByItemIndices } from "../../extension/src/shared/filter-batch-apply-slots-by-item-indices";
 import type { BatchApplySlot } from "../../extension/src/sw/build-batch-apply-slots";
 

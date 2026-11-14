@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import { listPlatformOutlineItems } from "../shared/list-platform-outline-items.js";
 import { PLATFORM_TAB_LABELS } from "../sw/constants/platform-tab-labels.js";
 import { inspectJobFileFromPopup } from "./inspect-job-file-from-popup.js";

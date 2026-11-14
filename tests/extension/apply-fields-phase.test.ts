@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import { ApplyPhase } from "@auto-upload/domain";
-import type { AppliedJobPayload } from "@auto-upload/domain";
+import { ApplyPhase } from "@yanxu/domain";
+import type { AppliedJobPayload } from "@yanxu/domain";
 
 const applyPageFieldsCalls: unknown[] = [];
 const applyCoverCalls: unknown[] = [];

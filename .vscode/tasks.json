@@ -2,7 +2,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "auto-upload: dev (watch)",
+			"label": "雁序: dev (watch)",
 			"type": "shell",
 			"command": "pnpm dev",
 			"problemMatcher": [],
@@ -19,7 +19,7 @@
 			}
 		},
 		{
-			"label": "auto-upload: build (once)",
+			"label": "雁序: build (once)",
 			"type": "shell",
 			"command": "pnpm build",
 			"problemMatcher": ["$tsc"]

@@ -3,8 +3,8 @@ import {
 	allPlatformsSubmitSuccessLabel,
 } from "../../extension/src/popup/platform-submit-controls";
 import {
-	batchPlatformScopeOpenTabsHelp,
-	batchPlatformScopeUploadFillHelp,
+	batchPlatformScopeOpeningLabel,
+	batchPlatformScopeUploadFillButtonLabel,
 } from "../../extension/src/popup/batch-platform-scope-ui";
 import { resolveChannelsSubmitBatchConfig } from "../../extension/src/shared/channels-submit-batch-config";
 
@@ -21,8 +21,8 @@ describe("popup user-facing text is Chinese", () => {
 		expect(allPlatformsSubmitSuccessLabel(channelsBatch)).toMatch(CJK_UNIFIED_IDEOGRAPHS);
 	});
 
-	it("localizes the scope help text", () => {
-		expect(batchPlatformScopeOpenTabsHelp("all")).toMatch(CJK_UNIFIED_IDEOGRAPHS);
-		expect(batchPlatformScopeUploadFillHelp("all")).toMatch(CJK_UNIFIED_IDEOGRAPHS);
+	it("localizes the scope labels", () => {
+		expect(batchPlatformScopeOpeningLabel("all")).toMatch(CJK_UNIFIED_IDEOGRAPHS);
+		expect(batchPlatformScopeUploadFillButtonLabel("bilibili")).toMatch(CJK_UNIFIED_IDEOGRAPHS);
 	});
 });

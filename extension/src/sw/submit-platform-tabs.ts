@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { waitMs } from "../content/wait-ms.js";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import type { ChannelsSubmitBatchConfig } from "../shared/channels-submit-batch-config.js";

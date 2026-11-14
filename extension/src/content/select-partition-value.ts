@@ -1,4 +1,4 @@
-import { BILIBILI_PARTITION_SECTION_TITLE } from "@auto-upload/domain";
+import { BILIBILI_PARTITION_SECTION_TITLE } from "@yanxu/domain";
 import { selectBilibiliPartitionValue } from "../platforms/bilibili/select-bilibili-partition-value.js";
 
 export async function selectPartitionValue(root: ParentNode, value: string): Promise<boolean> {

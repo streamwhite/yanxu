@@ -6,8 +6,8 @@ import {
 	type HostOutboundMessage,
 	type PlatformId,
 	NATIVE_MESSAGE_MAX_BYTES,
-} from "@auto-upload/domain";
-import type { BatchApplyContext } from "@auto-upload/domain";
+} from "@yanxu/domain";
+import type { BatchApplyContext } from "@yanxu/domain";
 import { estimateJsonByteLength } from "../outbound/estimate-json-byte-length.js";
 
 const REASON_RESPONSE_TOO_LARGE = "native_message_response_too_large" as const;

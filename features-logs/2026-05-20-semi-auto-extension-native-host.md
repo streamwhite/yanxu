@@ -2,7 +2,7 @@
 
 ### Summary
 
-Implemented a pnpm TypeScript workspace with `@auto-upload/domain`, `@auto-upload/native-host`, and a Manifest V3 Chromium extension that fills Bilibili creator upload fields from a local JSON job file via Chrome Native Messaging.
+Implemented a pnpm TypeScript workspace with `@yanxu/domain`, `@yanxu/native-host`, and a Manifest V3 Chromium extension that fills Bilibili creator upload fields from a local JSON job file via Chrome Native Messaging.
 
 ### Workflow
 

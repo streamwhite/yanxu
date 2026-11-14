@@ -1,4 +1,4 @@
-import { BilibiliSourceType, PublishMode, SubmitPolicy, validateJob } from "@auto-upload/domain";
+import { BilibiliSourceType, PublishMode, SubmitPolicy, validateJob } from "@yanxu/domain";
 
 describe("validateJob multi-platform v2", () => {
 	it("accepts douyin with title and description", () => {

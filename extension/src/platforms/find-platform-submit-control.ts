@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { findBilibiliSubmitControl } from "./bilibili/find-bilibili-submit-control.js";
 import { findChannelsSubmitControl } from "./channels/find-channels-submit-control.js";
 import { findDouyinSubmitControl } from "./douyin/find-douyin-submit-control.js";

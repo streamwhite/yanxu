@@ -1,4 +1,4 @@
-import { validateJobFile } from "@auto-upload/domain";
+import { validateJobFile } from "@yanxu/domain";
 
 describe("validateJobFile error messages", () => {
 	it("reports missing batch fields instead of canonical union errors", () => {

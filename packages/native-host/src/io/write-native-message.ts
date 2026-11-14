@@ -1,4 +1,4 @@
-import { NATIVE_MESSAGE_MAX_BYTES } from "@auto-upload/domain";
+import { NATIVE_MESSAGE_MAX_BYTES } from "@yanxu/domain";
 
 export async function writeNativeJsonMessage(
 	output: NodeJS.WritableStream,

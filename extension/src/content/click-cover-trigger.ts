@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import { COVER_TRIGGER_OPEN_WAIT_MS } from "./constants/cover-modal-timing.js";
 import { dispatchClick } from "./dispatch-click.js";
 import { waitForCoverModalUploadArea } from "./wait-for-cover-modal-upload-area.js";

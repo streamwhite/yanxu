@@ -1,4 +1,4 @@
-import { getJobPlatform, type AppliedJobPayload, type CanonicalJob } from "@auto-upload/domain";
+import { getJobPlatform, type AppliedJobPayload, type CanonicalJob } from "@yanxu/domain";
 
 const PATH_SEPARATOR_PATTERN = /[/\\]/;
 

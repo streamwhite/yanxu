@@ -80,6 +80,12 @@ export const CHANNELS_VIDEO_UPLOAD_TIP_TEXT_HINT = "MP4/H.264" as const;
 
 export const CHANNELS_VIDEO_UPLOAD_DURATION_HINT = "上传时长8小时内" as const;
 
+/** Present in both the old and the newer WeChat upload tip. */
+export const CHANNELS_VIDEO_UPLOAD_SIZE_HINT = "20GB" as const;
+
+/** Newer tip wording: “支持上传 8 小时以内、不超过20GB 的视频”. */
+export const CHANNELS_VIDEO_UPLOAD_RECENT_HINT = "8 小时以内" as const;
+
 export const CHANNELS_VIDEO_UPLOAD_AREA_SELECTORS = [".upload-content"] as const;
 
 export const CHANNELS_VIDEO_FILE_INPUT_SELECTORS = [

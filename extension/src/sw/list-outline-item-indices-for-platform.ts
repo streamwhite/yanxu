@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import type { JobOutlineForTabCount } from "./count-required-batch-items-for-platform.js";
 
 export function listOutlineItemIndicesForPlatform(

@@ -1,5 +1,5 @@
 import { resolvePageFieldsForJob } from "../../extension/src/platforms/resolve-page-fields-for-job";
-import { CHANNELS_DEFAULT_MARK_TAG_OPTION } from "@auto-upload/domain";
+import { CHANNELS_DEFAULT_MARK_TAG_OPTION } from "@yanxu/domain";
 
 describe("resolvePageFieldsForJob", () => {
 	it("maps douyin title and description", () => {

@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { applyChannelsCoverViaModal } from "../platforms/channels/apply-channels-cover-via-modal.js";
 import { applyDouyinCoverViaModal } from "../platforms/douyin/apply-douyin-cover-via-modal.js";
 import { assignFileViaDragDrop } from "./assign-file-via-drag-drop.js";

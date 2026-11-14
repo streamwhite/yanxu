@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { listPlatformUploadTabsForPlatform } from "../../extension/src/sw/list-platform-upload-tabs-for-platform";
 import type { PlatformUploadTab } from "../../extension/src/sw/query-platform-upload-tabs";
 

@@ -1,4 +1,4 @@
-import { sanitizeText } from "@auto-upload/domain";
+import { sanitizeText } from "@yanxu/domain";
 
 describe("sanitizeText", () => {
 	it("trims and normalizes CRLF", () => {

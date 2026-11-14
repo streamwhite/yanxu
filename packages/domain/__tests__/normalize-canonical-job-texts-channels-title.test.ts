@@ -1,4 +1,4 @@
-import { normalizeCanonicalJobTexts } from "@auto-upload/domain";
+import { normalizeCanonicalJobTexts } from "@yanxu/domain";
 
 describe("normalizeCanonicalJobTexts channels title", () => {
 	it("replaces dots in channels title before fill", () => {

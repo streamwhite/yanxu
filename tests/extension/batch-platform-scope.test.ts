@@ -1,4 +1,4 @@
-import { Platform, PLATFORM_IDS } from "@auto-upload/domain";
+import { Platform, PLATFORM_IDS } from "@yanxu/domain";
 import {
 	BATCH_PLATFORM_SCOPE_ALL,
 	isSinglePlatformScope,

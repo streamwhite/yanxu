@@ -1,5 +1,5 @@
-import type { PlatformId } from "@auto-upload/domain";
-import { Platform } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
+import { Platform } from "@yanxu/domain";
 import { COVER_MODAL_OPEN_RETRIES } from "./constants/cover-modal-timing.js";
 import { blurActiveFieldBeforeCover } from "./blur-active-field-before-cover.js";
 import { dismissUiBeforeCover } from "./dismiss-ui-before-cover.js";

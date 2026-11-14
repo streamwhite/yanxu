@@ -1,4 +1,4 @@
-import type { AppliedJobPayload, AttachmentCoverPayload } from "@auto-upload/domain";
+import type { AppliedJobPayload, AttachmentCoverPayload } from "@yanxu/domain";
 import { applyCoverWithRetry } from "./apply-cover-with-retry.js";
 import { decodeCoverAttachmentBytes } from "./decode-cover-bytes.js";
 

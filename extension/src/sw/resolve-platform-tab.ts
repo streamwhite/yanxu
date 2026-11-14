@@ -1,4 +1,4 @@
-import { detectPlatformFromUrl, isAllowedPlatformUrl, type PlatformId } from "@auto-upload/domain";
+import { detectPlatformFromUrl, isAllowedPlatformUrl, type PlatformId } from "@yanxu/domain";
 
 export type ResolvedPlatformTab = {
 	tabId: number;

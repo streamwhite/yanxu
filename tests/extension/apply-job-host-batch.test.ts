@@ -1,5 +1,5 @@
-import { ApplyPhase } from "@auto-upload/domain";
-import type { HostOutboundMessage } from "@auto-upload/domain";
+import { ApplyPhase } from "@yanxu/domain";
+import type { HostOutboundMessage } from "@yanxu/domain";
 import {
 	commitApplyJobHostBatch,
 	pushApplyJobHostBatchPart,

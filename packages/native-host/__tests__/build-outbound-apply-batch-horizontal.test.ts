@@ -1,4 +1,4 @@
-import type { HostOutboundBatch } from "@auto-upload/domain";
+import type { HostOutboundBatch } from "@yanxu/domain";
 import { buildOutboundApplyBatch } from "../src/router/build-outbound-apply-batch";
 
 const BASE_INPUT = {

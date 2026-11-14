@@ -4,7 +4,7 @@ import {
 	PublishMode,
 	SubmitPolicy,
 	validateJobFile,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 describe("listRequiredBatchAssets", () => {
 	const twoItemBatch = {

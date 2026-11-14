@@ -2,7 +2,7 @@ import {
 	PLATFORM_UPLOAD_PAGE_URLS,
 	Platform,
 	type PlatformId,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 import { waitMs } from "../content/wait-ms.js";
 import {
 	CHANNELS_TAB_OPEN_RELOAD_SETTLE_MS,

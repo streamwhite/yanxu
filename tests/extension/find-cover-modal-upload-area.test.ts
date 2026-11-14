@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import { findCoverModalUploadArea } from "../../extension/src/content/find-cover-modal-upload-area";
 
 describe("findCoverModalUploadArea", () => {

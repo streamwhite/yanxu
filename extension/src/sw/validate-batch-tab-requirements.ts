@@ -1,4 +1,4 @@
-import { PLATFORM_IDS, type PlatformId } from "@auto-upload/domain";
+import { PLATFORM_IDS, type PlatformId } from "@yanxu/domain";
 import {
 	countRequiredBatchItemsForPlatform,
 	type JobOutlineForTabCount,

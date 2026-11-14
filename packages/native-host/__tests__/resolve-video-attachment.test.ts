@@ -4,7 +4,7 @@ import { join } from "node:path";
 import {
 	DEFAULT_MAX_DIRECT_ATTACH_BYTES,
 	MAX_NATIVE_INLINE_VIDEO_BYTES,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 import { resolveVideoAttachment } from "../src/attachments/resolve-video-attachment";
 
 describe("resolveVideoAttachment", () => {

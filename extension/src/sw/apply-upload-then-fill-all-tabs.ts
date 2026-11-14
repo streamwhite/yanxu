@@ -1,4 +1,4 @@
-import { ApplyPhase, Platform } from "@auto-upload/domain";
+import { ApplyPhase, Platform } from "@yanxu/domain";
 import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import type { BatchPlatformScope } from "../shared/batch-platform-scope.js";
 import { isSinglePlatformScope } from "../shared/batch-platform-scope.js";
@@ -46,6 +46,13 @@ function combinePlatformUploadAndFill(
 	fill: ApplyJobFromRuntimeResult,
 	allowFillAfterUploadFailure: boolean,
 ): ApplyJobFromRuntimeResult {
+	if (
+		!upload.ok &&
+		(upload.code === "upload_daily_limit_reached" ||
+			upload.code === "upload_rate_limit_unavailable")
+	) {
+		return upload;
+	}
 	if (upload.ok && fill.ok) return { ok: true };
 	if (upload.ok) return fill;
 	if (fill.ok && allowFillAfterUploadFailure) return { ok: true };

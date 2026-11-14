@@ -1,4 +1,4 @@
-import type { AppliedJobPayload } from "@auto-upload/domain";
+import type { AppliedJobPayload } from "@yanxu/domain";
 import { applyJobPayload } from "./apply-job.js";
 import { ContentMessageType } from "./content-message-type.js";
 

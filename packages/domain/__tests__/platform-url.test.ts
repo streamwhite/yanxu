@@ -3,7 +3,7 @@ import {
 	isAllowedPlatformUrl,
 	Platform,
 	scorePlatformUploadUrl,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 describe("platform URL helpers", () => {
 	it("detects douyin creator URL", () => {

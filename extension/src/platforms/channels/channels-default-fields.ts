@@ -2,7 +2,7 @@ import {
 	BilibiliSourceType,
 	CHANNELS_DEFAULT_MARK_TAG_OPTION,
 	type CanonicalJob,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 import type { ApplyPageField } from "../../content/page-field-apply.js";
 import { PageFieldKind } from "../../content/page-field-apply.js";
 import {

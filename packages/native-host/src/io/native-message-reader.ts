@@ -1,6 +1,6 @@
 import type { Readable } from "node:stream";
 import { once } from "node:events";
-import { NATIVE_MESSAGE_MAX_BYTES } from "@auto-upload/domain";
+import { NATIVE_MESSAGE_MAX_BYTES } from "@yanxu/domain";
 
 export class NativeMessageReader {
 	private carry = Buffer.alloc(0);

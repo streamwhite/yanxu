@@ -1,4 +1,4 @@
-import type { AppliedJobPayload, HostOutboundMessage } from "@auto-upload/domain";
+import type { AppliedJobPayload, HostOutboundMessage } from "@yanxu/domain";
 import { mergeCoverStreamIntoApplyPayload } from "./merge-cover-stream-into-payload.js";
 import { mergeHorizontalCoverStreamIntoApplyPayload } from "./merge-horizontal-cover-stream-into-payload.js";
 import { mergeVideoStreamIntoApplyPayload } from "./merge-video-stream-into-payload.js";

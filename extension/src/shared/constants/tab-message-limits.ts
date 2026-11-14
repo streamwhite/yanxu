@@ -1,4 +1,4 @@
-import { BYTES_PER_MIB } from "@auto-upload/domain";
+import { BYTES_PER_MIB } from "@yanxu/domain";
 
 /** Chrome `tabs.sendMessage` maximum serialized message size. */
 export const TAB_MESSAGE_MAX_BYTES = 64 * BYTES_PER_MIB;

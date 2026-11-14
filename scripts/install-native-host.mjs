@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const NATIVE_HOST_NAME = "com.auto_upload.upload_host";
+const NATIVE_HOST_NAME = "com.yanxu.upload_host";
 
 const ROOT_DIR = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
 
@@ -21,11 +21,11 @@ function parseExtensionId(argv) {
 	if (flag) return flag.slice("--extension-id=".length).trim();
 	const index = argv.indexOf("--extension-id");
 	if (index >= 0 && argv[index + 1]) return argv[index + 1].trim();
-	return process.env.AUTO_UPLOAD_EXTENSION_ID?.trim() ?? "";
+	return process.env.YANXU_EXTENSION_ID?.trim() ?? "";
 }
 
 async function resolveChromeConfigDir() {
-	const fromEnv = process.env.AUTO_UPLOAD_CHROME_CONFIG_DIR?.trim();
+	const fromEnv = process.env.YANXU_CHROME_CONFIG_DIR?.trim();
 	if (fromEnv) return fromEnv;
 
 	for (const candidate of CHROME_CONFIG_DIR_CANDIDATES) {
@@ -45,7 +45,7 @@ async function main() {
 	if (!extensionId) {
 		console.error(
 			"Usage: pnpm install:native-host -- --extension-id=<id from chrome://extensions>\n" +
-				"   or: AUTO_UPLOAD_EXTENSION_ID=<id> pnpm install:native-host",
+				"   or: YANXU_EXTENSION_ID=<id> pnpm install:native-host",
 		);
 		process.exit(1);
 	}
@@ -59,7 +59,7 @@ async function main() {
 	const manifestPath = path.join(hostsDir, `${NATIVE_HOST_NAME}.json`);
 	const manifest = {
 		name: NATIVE_HOST_NAME,
-		description: "auto-upload semi-auto publisher native host",
+		description: "Yanxu multi-platform creator submission native host",
 		path: HOST_WRAPPER,
 		type: "stdio",
 		allowed_origins: [`chrome-extension://${extensionId}/`],

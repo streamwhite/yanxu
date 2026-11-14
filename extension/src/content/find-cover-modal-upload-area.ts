@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { findDouyinCoverDragArea } from "../platforms/douyin/find-douyin-cover-drag-area.js";
 import { DOUYIN_COVER_MODAL_UPLOAD_AREA_SELECTORS } from "../platforms/douyin/douyin-cover-selectors.js";
 import { uploadAreaLooksLikeChannelsCoverModal } from "./upload-area-looks-like-channels-cover-modal.js";

@@ -16,7 +16,7 @@ import {
 	setContentEditableText,
 	setFormControlValue,
 } from "./dom.js";
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import type { ApplyPageField } from "./page-field-apply.js";
 import { reportApplyProgress } from "./report-apply-progress.js";
 import { BatchProgressKind } from "../shared/batch-progress.js";

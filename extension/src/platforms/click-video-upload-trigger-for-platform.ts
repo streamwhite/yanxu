@@ -1,4 +1,4 @@
-import { Platform, type PlatformId } from "@auto-upload/domain";
+import { Platform, type PlatformId } from "@yanxu/domain";
 import { clickBilibiliVideoUploadTrigger } from "./bilibili/bilibili-video-upload-trigger.js";
 import { clickChannelsVideoUploadTrigger } from "./channels/channels-video-upload-trigger.js";
 import { clickDouyinVideoUploadTrigger } from "./douyin/douyin-video-upload-trigger.js";

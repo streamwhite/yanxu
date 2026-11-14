@@ -1,4 +1,4 @@
-import type { PlatformId } from "@auto-upload/domain";
+import type { PlatformId } from "@yanxu/domain";
 import type { BatchApplySlot } from "../sw/build-batch-apply-slots.js";
 
 export function filterBatchApplySlotsByItemIndices(

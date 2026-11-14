@@ -1,4 +1,4 @@
-import { Platform } from "@auto-upload/domain";
+import { Platform } from "@yanxu/domain";
 import {
 	CHANNELS_SUBMIT_PER_TAB_BUFFER_MS,
 	CHANNELS_SUBMIT_TIMEOUT_BUFFER_MS,

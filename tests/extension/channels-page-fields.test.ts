@@ -1,4 +1,4 @@
-import { BilibiliSourceType, CHANNELS_DEFAULT_MARK_TAG_OPTION } from "@auto-upload/domain";
+import { BilibiliSourceType, CHANNELS_DEFAULT_MARK_TAG_OPTION } from "@yanxu/domain";
 import { buildDefaultChannelsPageFields } from "../../extension/src/platforms/channels/channels-default-fields";
 import {
 	CHANNELS_DESCRIPTION_PLACEHOLDER,

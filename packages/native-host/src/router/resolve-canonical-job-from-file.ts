@@ -6,7 +6,7 @@ import {
 	type CanonicalJob,
 	type PlatformId,
 	validateJobFile,
-} from "@auto-upload/domain";
+} from "@yanxu/domain";
 
 export type ResolvedCanonicalJobFromFile =
 	| { ok: true; job: CanonicalJob }

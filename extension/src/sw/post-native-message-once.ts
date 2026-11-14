@@ -1,4 +1,4 @@
-import { NATIVE_HOST_NAME } from "@auto-upload/domain";
+import { NATIVE_HOST_NAME } from "@yanxu/domain";
 
 const NATIVE_REPLY_TIMEOUT_MS = 120_000 as const;
 const DISCONNECT_GRACE_MS = 50 as const;

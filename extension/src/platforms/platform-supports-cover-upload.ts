@@ -1,4 +1,4 @@
-import { PLATFORM_IDS, type PlatformId } from "@auto-upload/domain";
+import { PLATFORM_IDS, type PlatformId } from "@yanxu/domain";
 
 const COVER_UPLOAD_PLATFORMS: ReadonlySet<PlatformId> = new Set(PLATFORM_IDS);
 

@@ -1,4 +1,4 @@
-import { normalizeChannelsTitle } from "@auto-upload/domain";
+import { normalizeChannelsTitle } from "@yanxu/domain";
 
 describe("normalizeChannelsTitle", () => {
 	it("replaces dot with 点 for wechat title fill", () => {
