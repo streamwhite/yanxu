@@ -1,6 +1,7 @@
 import { BatchAssetKind } from "../constants/batch-asset-kind.js";
 import type { BatchJob } from "../schema/batch-job.js";
 import { listHorizontalCoverPathCandidates } from "../assets/list-batch-cover-path-candidates.js";
+import { batchItemRequiresCoverAsset } from "./batch-item-requires-cover-asset.js";
 import { resolveBatchItemAssets } from "./resolve-batch-item-assets.js";
 
 export type RequiredBatchAsset = {
@@ -31,7 +32,7 @@ export function listRequiredBatchAssets(
 			absolutePath: resolved.localVideoPath,
 		});
 
-		if (resolved.localCoverPath !== undefined) {
+		if (batchItemRequiresCoverAsset(item) && resolved.localCoverPath !== undefined) {
 			assets.push({
 				itemIndex,
 				kind: BatchAssetKind.Cover,
@@ -50,4 +51,3 @@ export function listRequiredBatchAssets(
 
 	return assets;
 }
-

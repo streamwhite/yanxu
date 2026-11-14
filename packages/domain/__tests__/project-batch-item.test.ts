@@ -62,7 +62,7 @@ describe("projectBatchItemToCanonicalJob", () => {
 		expect(bilibili.assets.localVideoPath).toBe("/tmp/media/clip-a.mp4");
 	});
 
-	it("uses name as description when item description is empty", () => {
+	it("keeps an explicitly empty description blank", () => {
 		const batchWithEmptyDesc = {
 			jobVersion: 3 as const,
 			assetsParentFolder: "/tmp/media",
@@ -83,6 +83,6 @@ describe("projectBatchItemToCanonicalJob", () => {
 		if (douyin.platform !== "douyin" || !douyin.douyin) {
 			throw new Error("expected douyin job");
 		}
-		expect(douyin.douyin.description).toBe("被忽视的趋势改变着AI市场");
+		expect(douyin.douyin.description).toBe("");
 	});
 });

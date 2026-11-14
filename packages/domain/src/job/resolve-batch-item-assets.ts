@@ -1,6 +1,5 @@
 import { resolveAssetPathFromParentFolder } from "../assets/resolve-asset-path-from-parent-folder.js";
 import type { BatchJob, BatchJobItem } from "../schema/batch-job";
-import { batchItemRequiresCoverAsset } from "./batch-item-requires-cover-asset.js";
 import {
 	deriveBatchItemCoverFileName,
 	deriveBatchItemVideoFileName,
@@ -18,7 +17,7 @@ export function resolveBatchItemAssets(
 	const videoFileName = deriveBatchItemVideoFileName(item.name);
 	const localVideoPath = resolveAssetPathFromParentFolder(batch.assetsParentFolder, videoFileName);
 
-	const localCoverPath = batchItemRequiresCoverAsset(item)
+	const localCoverPath = item.includeCover !== false
 		? resolveAssetPathFromParentFolder(
 				batch.assetsParentFolder,
 				deriveBatchItemCoverFileName(item.name),

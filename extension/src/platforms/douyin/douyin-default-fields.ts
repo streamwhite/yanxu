@@ -25,7 +25,7 @@ export function buildDefaultDouyinPageFields(job: CanonicalJob): ApplyPageField[
 		});
 	}
 
-	if (description !== undefined) {
+	if (description) {
 		fields.push({
 			locator: { css: primarySelector(DOUYIN_DESCRIPTION_SELECTORS) },
 			selectorFallbacks: DOUYIN_DESCRIPTION_SELECTORS,

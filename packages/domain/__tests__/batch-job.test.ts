@@ -53,8 +53,11 @@ describe("batch job v3", () => {
 		expect(assets.localCoverPath).toBe("/tmp/uploads/clip-a.png");
 	});
 
-	it("lists required video and cover paths for every item", () => {
-		const result = validateJobFile(baseBatch);
+	it("lists cover paths as required only when explicitly enabled", () => {
+		const result = validateJobFile({
+			...baseBatch,
+			items: [{ ...baseBatch.items[0], includeCover: true }, baseBatch.items[1]],
+		});
 		if (!result.ok || result.kind !== "batch") throw new Error("expected batch");
 
 		const required = listRequiredBatchAssets(result.job);

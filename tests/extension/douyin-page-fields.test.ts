@@ -22,4 +22,17 @@ describe("buildDefaultDouyinPageFields", () => {
 			css: `div[contenteditable="true"][data-placeholder="${DOUYIN_DESCRIPTION_PLACEHOLDER}"]`,
 		});
 	});
+
+	it("does not create a required description field when the description is blank", () => {
+		const fields = buildDefaultDouyinPageFields({
+			jobVersion: 2,
+			platform: "douyin",
+			targets: ["douyin"],
+			publish: { mode: "semi", submit: "manual" },
+			douyin: { title: "My title", description: "" },
+			assets: { localVideoPath: "/tmp/v.mp4" },
+		});
+
+		expect(fields.map((field) => field.fieldLabel)).toEqual(["标题"]);
+	});
 });

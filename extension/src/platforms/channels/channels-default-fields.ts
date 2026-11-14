@@ -53,7 +53,7 @@ export function buildDefaultChannelsPageFields(job: CanonicalJob): ApplyPageFiel
 		});
 	}
 
-	if (description !== undefined) {
+	if (description) {
 		fields.push({
 			locator: { css: primarySelector(CHANNELS_DESCRIPTION_SELECTORS) },
 			selectorFallbacks: CHANNELS_DESCRIPTION_SELECTORS,

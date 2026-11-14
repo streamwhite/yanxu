@@ -15,8 +15,12 @@
       <h1 class="h6 mb-1 fw-semibold">auto-upload</h1>
     </header>
 
-    <section class="mb-3">
-      <div class="mb-3">
+    <section class="workflow-step" aria-labelledby="stepPrepareTitle">
+      <h2 id="stepPrepareTitle" class="workflow-step-heading">
+        <span class="workflow-step-number" aria-hidden="true">01</span>
+        <span>准备任务</span>
+      </h2>
+      <div class="mb-2">
         <label class="form-label small fw-semibold" for="jobFilePathInput">批量任务文件路径</label>
         <input id="jobFilePathInput" class="form-control form-control-sm font-monospace" type="text"
           placeholder="/绝对路径/到/batch.job.json" autocomplete="off" spellcheck="false" />
@@ -41,7 +45,11 @@
       </div>
     </section>
 
-    <section class="mb-3">
+    <section class="workflow-step" aria-labelledby="stepOpenTabsTitle">
+      <h2 id="stepOpenTabsTitle" class="workflow-step-heading">
+        <span class="workflow-step-number" aria-hidden="true">02</span>
+        <span>打开上传页面</span>
+      </h2>
       <div class="d-grid">
         <button id="openAllTabsButton" type="button" class="btn btn-outline-secondary btn-sm">
           打开全部上传标签页
@@ -50,7 +58,11 @@
       <p id="openTabsHelp" class="form-text small text-muted mb-0 mt-2"></p>
     </section>
 
-    <section>
+    <section class="workflow-step" aria-labelledby="stepUploadFillTitle">
+      <h2 id="stepUploadFillTitle" class="workflow-step-heading">
+        <span class="workflow-step-number" aria-hidden="true">03</span>
+        <span>上传并填充</span>
+      </h2>
       <div class="form-check mb-2">
         <input id="submitHorizontalCoverCheckbox" class="form-check-input" type="checkbox" />
         <label class="form-check-label small" for="submitHorizontalCoverCheckbox">
@@ -65,9 +77,11 @@
       <p id="uploadFillHelp" class="form-text small text-muted mb-0 mt-2"></p>
     </section>
 
-    <section class="mb-0">
-      <h2 class="h6 small fw-semibold mb-1">发布（审核后）</h2>
-
+    <section class="workflow-step" aria-labelledby="stepPublishTitle">
+      <h2 id="stepPublishTitle" class="workflow-step-heading">
+        <span class="workflow-step-number" aria-hidden="true">04</span>
+        <span>发布（审核后）</span>
+      </h2>
       <div class="d-grid">
         <button id="submitAllPlatformsButton" type="button" class="btn btn-outline-primary btn-sm">
           提交全部平台

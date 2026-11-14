@@ -10,19 +10,19 @@ describe("resolveBatchItemDescription", () => {
 		).toBe("custom body");
 	});
 
-	it("falls back to name when description is omitted, empty, or whitespace", () => {
+	it("uses the name only when description is omitted", () => {
 		expect(resolveBatchItemDescription({ name: "title stem" })).toBe("title stem");
 		expect(
 			resolveBatchItemDescription({
 				name: "title stem",
 				description: "",
 			}),
-		).toBe("title stem");
+		).toBe("");
 		expect(
 			resolveBatchItemDescription({
 				name: "title stem",
 				description: "   ",
 			}),
-		).toBe("title stem");
+		).toBe("");
 	});
 });

@@ -29,6 +29,19 @@ describe("validateBatchJobAssetsFromFileJson", () => {
 		expect(result).toEqual({ ok: true });
 	});
 
+	it("allows a missing cover and blank description and tags", async () => {
+		await writeFile(join(tempDir, "clip-a.mp4"), "video");
+
+		const result = await validateBatchJobAssetsFromFileJson({
+			jobVersion: 3,
+			assetsParentFolder: tempDir,
+			publish: { mode: PublishMode.Semi, submit: SubmitPolicy.Manual },
+			items: [{ targets: ["bilibili"], name: "clip-a", description: "", tags: [""] }],
+		});
+
+		expect(result).toEqual({ ok: true });
+	});
+
 	it("accepts jpg cover files", async () => {
 		await writeFile(join(tempDir, "clip-a.mp4"), "video");
 		await writeFile(join(tempDir, "clip-a.jpg"), "cover");
@@ -47,7 +60,7 @@ describe("validateBatchJobAssetsFromFileJson", () => {
 		expect(result).toEqual({ ok: true });
 	});
 
-	it("reports every missing video and cover file before upload", async () => {
+	it("reports explicitly required covers and missing videos before upload", async () => {
 		await writeFile(join(tempDir, "clip-a.mp4"), "video");
 
 		const result = await validateBatchJobAssetsFromFileJson({
@@ -55,7 +68,7 @@ describe("validateBatchJobAssetsFromFileJson", () => {
 			assetsParentFolder: tempDir,
 			publish: { mode: PublishMode.Semi, submit: SubmitPolicy.Manual },
 			items: [
-				{ targets: ["bilibili"], name: "clip-a" },
+				{ targets: ["bilibili"], name: "clip-a", includeCover: true },
 				{ targets: ["douyin"], name: "clip-b" },
 			],
 		});
@@ -69,7 +82,7 @@ describe("validateBatchJobAssetsFromFileJson", () => {
 		expect(result.message).toContain("clip-b.mp4");
 	});
 
-	it("requires four media files for a two-item batch job like the example", async () => {
+	it("requires videos but allows both covers to be absent by default", async () => {
 		const result = await validateBatchJobAssetsFromFileJson({
 			jobVersion: 3,
 			assetsParentFolder: tempDir,
@@ -83,8 +96,7 @@ describe("validateBatchJobAssetsFromFileJson", () => {
 		expect(result.ok).toBe(false);
 		if (result.ok) return;
 		expect(result.message).toContain("clip-a.mp4");
-		expect(result.message).toContain("clip-a.png");
 		expect(result.message).toContain("clip-b.mp4");
-		expect(result.message).toContain("clip-b.png");
+		expect(result.message).not.toContain("cover file");
 	});
 });

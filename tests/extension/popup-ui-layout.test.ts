@@ -27,6 +27,14 @@ describe("popup UI layout", () => {
 		expect(uploadFillIndex).toBeGreaterThan(openTabsIndex);
 	});
 
+	it("presents the four popup areas as numbered workflow steps", () => {
+		expect(popupHtml.match(/class="workflow-step-number"/g)).toHaveLength(4);
+		expect(popupHtml).toMatch(/01[\s\S]*准备任务/);
+		expect(popupHtml).toMatch(/02[\s\S]*打开上传页面/);
+		expect(popupHtml).toMatch(/03[\s\S]*上传并填充/);
+		expect(popupHtml).toMatch(/04[\s\S]*发布（审核后）/);
+	});
+
 	it("keeps the video upload and horizontal cover controls together", () => {
 		expect(popupHtml).toMatch(
 			/id="submitHorizontalCoverCheckbox"[\s\S]*id="uploadAndFillAllTabsButton"/,

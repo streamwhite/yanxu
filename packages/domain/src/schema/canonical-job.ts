@@ -26,7 +26,7 @@ const PathString = z
 	.max(MAX_PATH_LENGTH, `Path must be at most ${String(MAX_PATH_LENGTH)} characters`);
 
 const Tags = z
-	.array(z.string().min(1).max(MAX_TAG_LENGTH))
+	.array(z.string().max(MAX_TAG_LENGTH))
 	.max(MAX_TAG_COUNT, `At most ${String(MAX_TAG_COUNT)} tags`)
 	.optional();
 

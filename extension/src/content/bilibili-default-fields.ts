@@ -61,7 +61,7 @@ export function buildDefaultBilibiliPageFields(job: CanonicalJob): ApplyPageFiel
 		});
 	}
 
-	if (description !== undefined) {
+	if (description) {
 		fields.push({
 			locator: { css: primarySelector(BILIBILI_DESCRIPTION_SELECTORS) },
 			selectorFallbacks: BILIBILI_DESCRIPTION_SELECTORS,
@@ -72,14 +72,16 @@ export function buildDefaultBilibiliPageFields(job: CanonicalJob): ApplyPageFiel
 
 	if (tags && tags.length > 0) {
 		const tagValues = tags.map((tag) => tag.trim()).filter(Boolean);
-		fields.push({
-			kind: PageFieldKind.TagsEnter,
-			locator: { css: primarySelector(BILIBILI_TAG_SELECTORS) },
-			selectorFallbacks: BILIBILI_TAG_SELECTORS,
-			value: tagValues.join(", "),
-			tagValues,
-			fieldLabel: `标签 (${String(tagValues.length)})`,
-		});
+		if (tagValues.length > 0) {
+			fields.push({
+				kind: PageFieldKind.TagsEnter,
+				locator: { css: primarySelector(BILIBILI_TAG_SELECTORS) },
+				selectorFallbacks: BILIBILI_TAG_SELECTORS,
+				value: tagValues.join(", "),
+				tagValues,
+				fieldLabel: `标签 (${String(tagValues.length)})`,
+			});
+		}
 	}
 
 	return fields;

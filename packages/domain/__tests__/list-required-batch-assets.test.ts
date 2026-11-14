@@ -17,8 +17,29 @@ describe("listRequiredBatchAssets", () => {
 		],
 	};
 
-	it("requires video and cover for every item by default", () => {
+	it("requires only videos by default because covers are optional", () => {
 		const parsed = validateJobFile(twoItemBatch);
+		if (!parsed.ok || parsed.kind !== "batch") throw new Error("expected batch");
+
+		expect(listRequiredBatchAssets(parsed.job)).toEqual([
+			{
+				itemIndex: 0,
+				kind: BatchAssetKind.Video,
+				absolutePath: "/home/z/Downloads/media/clip-a.mp4",
+			},
+			{
+				itemIndex: 1,
+				kind: BatchAssetKind.Video,
+				absolutePath: "/home/z/Downloads/media/clip-b.mp4",
+			},
+		]);
+	});
+
+	it("requires a cover only when includeCover is explicitly true", () => {
+		const parsed = validateJobFile({
+			...twoItemBatch,
+			items: [{ targets: ["bilibili"], name: "clip-a", includeCover: true }],
+		});
 		if (!parsed.ok || parsed.kind !== "batch") throw new Error("expected batch");
 
 		expect(listRequiredBatchAssets(parsed.job)).toEqual([
@@ -31,16 +52,6 @@ describe("listRequiredBatchAssets", () => {
 				itemIndex: 0,
 				kind: BatchAssetKind.Cover,
 				absolutePath: "/home/z/Downloads/media/clip-a.png",
-			},
-			{
-				itemIndex: 1,
-				kind: BatchAssetKind.Video,
-				absolutePath: "/home/z/Downloads/media/clip-b.mp4",
-			},
-			{
-				itemIndex: 1,
-				kind: BatchAssetKind.Cover,
-				absolutePath: "/home/z/Downloads/media/clip-b.png",
 			},
 		]);
 	});

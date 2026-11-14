@@ -12,6 +12,7 @@ function buildBatch(): BatchJob {
 			{
 				targets: ["bilibili"],
 				name: "item-a",
+				includeCover: true,
 			} as BatchJob["items"][number],
 		],
 	} as unknown as BatchJob;
