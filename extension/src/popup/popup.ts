@@ -387,7 +387,7 @@ async function bootstrap(): Promise<void> {
     }
 
     browserSourceReady = true;
-    browserFileSourceStatus.textContent = `任务：${summary.jobFileName}；素材：${summary.assetsDirName}`;
+    browserFileSourceStatus.textContent = `任务：${summary.jobAbsolutePath ?? summary.jobFileName}；素材：${summary.assetsAbsolutePath ?? summary.assetsDirName}`;
     openBrowserFileSourceButton.textContent = "更换文件";
     if (await browserFileSourceNeedsPermission(source)) {
       browserFileSourceStatus.textContent += "（需要恢复访问）";

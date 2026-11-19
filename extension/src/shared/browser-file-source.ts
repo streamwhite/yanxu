@@ -15,7 +15,9 @@ export type BrowserFileSource = {
 
 export type BrowserFileSourceSummary = {
 	jobFileName: string;
+	jobAbsolutePath?: string;
 	assetsDirName: string;
+	assetsAbsolutePath?: string;
 	updatedAt: number;
 };
 
@@ -95,15 +97,55 @@ export async function saveBrowserAssetsDirHandle(handle: FileSystemDirectoryHand
 	await refreshBrowserFileSourceSummary();
 }
 
+async function readAssetsAbsolutePath(jobFile: FileSystemFileHandle): Promise<string | undefined> {
+	try {
+		const text = await (await jobFile.getFile()).text();
+		const parsed = JSON.parse(text) as {
+			assetsParentFolder?: unknown;
+			assets?: { localVideoPath?: unknown };
+		};
+		if (typeof parsed.assetsParentFolder === "string") {
+			return parsed.assetsParentFolder;
+		}
+		if (typeof parsed.assets?.localVideoPath === "string") {
+			const normalized = parsed.assets.localVideoPath.replaceAll("\\", "/");
+			const slash = normalized.lastIndexOf("/");
+			return slash > 0 ? normalized.slice(0, slash) : undefined;
+		}
+	} catch {
+		//
+	}
+	return undefined;
+}
+
+async function readJobAbsolutePath(
+	source: BrowserFileSource,
+	assetsAbsolutePath: string | undefined,
+): Promise<string | undefined> {
+	if (!assetsAbsolutePath) return undefined;
+	try {
+		const relative = await source.assetsDir.resolve(source.jobFile);
+		if (!relative || relative.length === 0) return undefined;
+		const separator = assetsAbsolutePath.includes("\\") ? "\\" : "/";
+		const base = assetsAbsolutePath.replace(/[\\/]+$/, "");
+		return [base, ...relative].join(separator);
+	} catch {
+		return undefined;
+	}
+}
+
 export async function refreshBrowserFileSourceSummary(): Promise<void> {
 	const source = await loadBrowserFileSource();
 	if (!source) {
 		await chrome.storage.local.remove(BROWSER_FILE_SOURCE_SUMMARY_KEY);
 		return;
 	}
+	const assetsAbsolutePath = await readAssetsAbsolutePath(source.jobFile);
 	const summary: BrowserFileSourceSummary = {
 		jobFileName: source.jobFile.name,
+		jobAbsolutePath: await readJobAbsolutePath(source, assetsAbsolutePath),
 		assetsDirName: source.assetsDir.name,
+		assetsAbsolutePath,
 		updatedAt: Date.now(),
 	};
 	await chrome.storage.local.set({ [BROWSER_FILE_SOURCE_SUMMARY_KEY]: summary });

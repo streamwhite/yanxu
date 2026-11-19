@@ -2,6 +2,7 @@ import {
 	clearBrowserFileSource,
 	loadBrowserAssetsDirHandle,
 	loadBrowserFileSource,
+	loadBrowserFileSourceSummary,
 	loadBrowserJobFileHandle,
 	queryReadPermission,
 	requestReadPermission,
@@ -53,6 +54,7 @@ async function renderStatus(
 	}
 
 	const source = await loadBrowserFileSource();
+	const summary = await loadBrowserFileSourceSummary();
 	const [jobPermission, assetsPermission] = source
 		? await Promise.all([
 				queryReadPermission(source.jobFile),
@@ -60,7 +62,9 @@ async function renderStatus(
 			])
 		: ["granted", "granted"];
 
-	status.textContent = `任务文件：${jobFile.name}；素材目录：${assetsDir.name}`;
+	const assetsPath = summary?.assetsAbsolutePath ?? assetsDir.name;
+	const jobPath = summary?.jobAbsolutePath ?? jobFile.name;
+	status.textContent = `任务文件：${jobPath}；素材目录：${assetsPath}`;
 	restoreButton.classList.toggle(
 		"d-none",
 		jobPermission === "granted" && assetsPermission === "granted",
