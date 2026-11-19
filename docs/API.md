@@ -18,9 +18,10 @@ The job file consumed by `applyJobFromFile` is validated by [`CanonicalJobSchema
 - Text normalization: [`sanitizeText`](packages/domain/src/text/sanitize-text.ts), [`normalizeCanonicalJobTexts`](packages/domain/src/normalize/normalize-canonical-job-texts.ts)
 - Semi-auto guard for the extension MVP: [`assertExtensionSupportedPublishPolicy`](packages/domain/src/publish/assert-extension-supported-publish-policy.ts)
 
-Example job JSON (extension popup):
+Example job file:
 
-- Batch (multi-tab, **required**): [`examples/batch.job.example.json`](examples/batch.job.example.json)
+- Batch JSON (multi-tab): [`examples/batch.job.example.json`](examples/batch.job.example.json)
+- Batch CSV (Excel-friendly): [`examples/batch.job.example.csv`](examples/batch.job.example.csv). The extension converts CSV to the same batch job structure; assets are resolved from the selected directory by file name.
 
 Legacy v1/v2 single-platform examples remain for schema reference only: `examples/bilibili.job.example.json`, `examples/douyin.job.example.json`, `examples/channels.job.example.json`.
 
@@ -61,6 +62,7 @@ URLs allowed for content injection: [`isAllowedPlatformUrl`](packages/domain/src
 The extension can read the job file and assets directly through the File System Access API, without a native host:
 
 - Handle storage and permission checks: [`extension/src/shared/browser-file-source.ts`](extension/src/shared/browser-file-source.ts)
+- JSON / CSV job parsing: [`extension/src/shared/parse-job-file.ts`](extension/src/shared/parse-job-file.ts)
 - Browser-side host protocol: [`extension/src/sw/browser-host.ts`](extension/src/sw/browser-host.ts)
 - File/directory pickers: [`extension/src/options/browser-file-source-ui.ts`](extension/src/options/browser-file-source-ui.ts)
 - Sentinel job path: `browser://selected-job`

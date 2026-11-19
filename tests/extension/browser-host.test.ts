@@ -122,4 +122,21 @@ describe("browser file source host", () => {
 			},
 		});
 	});
+
+	it("reads a CSV job file", async () => {
+		const source: BrowserFileSource = {
+			jobFile: fakeFileHandle("batch.csv", ["名称,目标平台", "one,bilibili"].join("\n")),
+			assetsDir: fakeDirectory({}),
+		};
+
+		const batch = await handleBrowserHostInboundMessage(
+			{ type: "inspectJobFromFile", jobFilePath: JOB_PATH },
+			source,
+		);
+
+		expect(batch[0]).toMatchObject({
+			type: "jobFileOutline",
+			outline: { items: [{ itemIndex: 0, targets: ["bilibili"], name: "one" }] },
+		});
+	});
 });

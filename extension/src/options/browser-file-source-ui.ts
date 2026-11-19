@@ -84,7 +84,15 @@ async function chooseJobFile(
 	}
 	const [handle] = await picker({
 		multiple: false,
-		types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
+		types: [
+			{
+				description: "任务文件",
+				accept: {
+					"application/json": [".json"],
+					"text/csv": [".csv"],
+				},
+			},
+		],
 	});
 	if (!handle) return;
 	await saveBrowserJobFileHandle(handle);
