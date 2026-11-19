@@ -5,4 +5,4 @@ export const CHANNELS_SUBMIT_BATCH_INTERVAL_MIN_INPUT_ID =
 export const CHANNELS_BATCH_SETTINGS_SAVED_STATUS_ID =
 	"channelsBatchSettingsSavedStatus" as const;
 
-export const CHANNELS_BATCH_SETTINGS_SAVED_TEXT = "Saved" as const;
+export const CHANNELS_BATCH_SETTINGS_SAVED_TEXT = "已保存" as const;

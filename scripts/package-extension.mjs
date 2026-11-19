@@ -34,9 +34,23 @@ async function readManifestVersion() {
 	return manifest.version;
 }
 
+/** License files required when distributing the packaged extension. */
+const ROOT_DOC_ENTRIES = ["LICENSE", "NOTICE"];
+
 function createZip(archivePath) {
 	const args = ["-r", "-X", "-q", archivePath, ...ZIP_ENTRIES, "-x", ...SKIPPED_PATTERNS];
 	const result = spawnSync(ZIP_BINARY, args, { cwd: EXTENSION_DIR, stdio: "inherit" });
+	if (result.error) {
+		throw new Error(`failed to run ${ZIP_BINARY}: ${result.error.message}`);
+	}
+	if (result.status !== 0) {
+		throw new Error(`${ZIP_BINARY} exited with status ${String(result.status)}`);
+	}
+}
+
+function addRootDocs(archivePath) {
+	const args = ["-j", "-X", "-q", archivePath, ...ROOT_DOC_ENTRIES];
+	const result = spawnSync(ZIP_BINARY, args, { cwd: ROOT_DIR, stdio: "inherit" });
 	if (result.error) {
 		throw new Error(`failed to run ${ZIP_BINARY}: ${result.error.message}`);
 	}
@@ -56,6 +70,7 @@ async function main() {
 	await rm(edgeArchive, { force: true });
 
 	createZip(chromeArchive);
+	addRootDocs(chromeArchive);
 	await copyFile(chromeArchive, edgeArchive);
 
 	console.info(`[package] ${path.relative(ROOT_DIR, chromeArchive)}`);

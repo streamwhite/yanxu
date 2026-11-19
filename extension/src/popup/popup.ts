@@ -78,6 +78,22 @@ function setOutcome(text: string, variant?: PopupOutcomeVariant): void {
   out.classList.remove("d-none");
 }
 
+async function copyBatchProgressLog(progressLog: HTMLElement): Promise<void> {
+  const text = progressLog.textContent?.trim() ?? "";
+  if (!text) {
+    setOutcome("暂无日志", PopupOutcomeVariant.Secondary);
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    setOutcome("日志已复制", PopupOutcomeVariant.Success);
+  } catch (error: unknown) {
+    const detail = error instanceof Error ? error.message : "clipboard_write_failed";
+    setOutcome(`复制失败：${detail}`, PopupOutcomeVariant.Danger);
+  }
+}
+
 function setSubmitAllPlatformsTitle(button: HTMLButtonElement, channelsBatch: ChannelsSubmitBatchConfig): void {
   button.title = allPlatformsSubmitBusyLabel(channelsBatch);
 }
@@ -138,10 +154,7 @@ async function runRuntimeBatchAction(
       ? () => {}
       : listenBatchProgressLog(progressContainer, requestId);
 
-  if (progressContainer) {
-    progressContainer.textContent = "";
-    progressContainer.classList.remove("d-none");
-  }
+  if (progressContainer) progressContainer.textContent = "";
 
   try {
     await persistJobFilePath(jobFilePath);
@@ -317,6 +330,7 @@ async function bootstrap(): Promise<void> {
   const uploadAndFillAllTabsButton = byId("uploadAndFillAllTabsButton");
   const submitHorizontalCoverCheckbox = byId("submitHorizontalCoverCheckbox");
   const progressLog = byId("batchProgressLog");
+  const copyProgressLogButton = byId("copyBatchProgressLogButton");
   const batchPlatformScopeHelp = byId("batchPlatformScopeHelp");
   const platformItemSelectionSection = byId("platformItemSelectionSection");
   const platformItemSelectionLabelEl = byId("platformItemSelectionLabel");
@@ -325,6 +339,7 @@ async function bootstrap(): Promise<void> {
   if (!(batchPlatformScopeSelect instanceof HTMLSelectElement)) return;
   if (!(uploadAndFillAllTabsButton instanceof HTMLButtonElement)) return;
   if (!(progressLog instanceof HTMLElement)) return;
+  if (!(copyProgressLogButton instanceof HTMLButtonElement)) return;
   if (!(batchPlatformScopeHelp instanceof HTMLElement)) return;
   if (!(platformItemSelectionSection instanceof HTMLElement)) return;
   if (!(platformItemSelectionLabelEl instanceof HTMLElement)) return;
@@ -332,6 +347,17 @@ async function bootstrap(): Promise<void> {
 
   await loadStoredPathIntoInput(jobFilePathInput);
   await loadBatchPlatformScopeIntoSelect(batchPlatformScopeSelect);
+
+  const storedProgress = (await chrome.storage.local.get(BATCH_PROGRESS_STORAGE_KEY))[
+    BATCH_PROGRESS_STORAGE_KEY
+  ] as StoredBatchProgress | undefined;
+  if (storedProgress) {
+    renderBatchProgressLog(progressLog, storedProgress, storedProgress.requestId);
+  }
+
+  copyProgressLogButton.addEventListener("click", () => {
+    void copyBatchProgressLog(progressLog);
+  });
 
   const readBatchPlatformScope = (): BatchPlatformScope =>
     readBatchPlatformScopeSelect(batchPlatformScopeSelect);
@@ -362,7 +388,7 @@ async function bootstrap(): Promise<void> {
     const jobFilePath = jobFilePathInput.value.trim();
     if (!jobFilePath) {
       setOutcome(
-        "请输入批量任务 job.json 的绝对路径。",
+        "请输入任务文件绝对路径。",
         PopupOutcomeVariant.Secondary,
       );
       return null;
@@ -392,7 +418,7 @@ async function bootstrap(): Promise<void> {
     if (isSinglePlatformScope(batchPlatformScope)) {
       if (!hasPlatformItemSelection(platformItemSelectionList)) {
         setOutcome(
-          `请先加载 ${formatPlatformItemSelectionLabel(batchPlatformScope).toLowerCase()} —— 输入有效的批量任务路径。`,
+          "请先加载待上传条目。",
           PopupOutcomeVariant.Secondary,
         );
         return;
@@ -402,7 +428,7 @@ async function bootstrap(): Promise<void> {
       );
       if (selectedPlatformItemIndices.length === 0) {
         setOutcome(
-          `请至少选择一个要上传的${formatPlatformItemSelectionLabel(batchPlatformScope)}。`,
+          "请至少选择一个待上传条目。",
           PopupOutcomeVariant.Secondary,
         );
         return;

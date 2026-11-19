@@ -56,6 +56,11 @@ describe("popup UI layout", () => {
 		expect(popupHtml).not.toContain('id="openOptionsButton"');
 	});
 
+	it("keeps the progress log hidden and exposes a copy button", () => {
+		expect(popupHtml).toContain('id="copyBatchProgressLogButton"');
+		expect(popupHtml).toMatch(/<pre id="batchProgressLog"[^>]*hidden/);
+	});
+
 	it("moves the settle delay setting to the options page", () => {
 		expect(popupHtml).not.toContain('id="fieldsSettleMsInput"');
 		expect(optionsHtml).toContain('id="fieldsSettleMsInput"');

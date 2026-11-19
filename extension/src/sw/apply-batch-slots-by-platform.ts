@@ -48,14 +48,14 @@ async function requestUploadPermit(
 		return {
 			ok: false,
 			code: "upload_daily_limit_reached",
-			message: `该平台已达到滚动 24 小时 ${String(UPLOAD_DAILY_LIMIT)} 次上传上限；${availableAt} 后可继续`,
+			message: `已达 24 小时 ${String(UPLOAD_DAILY_LIMIT)} 次上传上限，${availableAt} 后可继续`,
 		};
 	} catch (error: unknown) {
 		const detail = error instanceof Error ? error.message : "rate_limit_check_failed";
 		return {
 			ok: false,
 			code: "upload_rate_limit_unavailable",
-			message: `无法确认上传额度，已停止上传：${detail}`,
+			message: `无法确认上传额度：${detail}`,
 		};
 	}
 }

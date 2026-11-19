@@ -27,5 +27,5 @@ echo "[setup-host] installing native messaging manifest…"
 pnpm install:native-host -- --extension-id="${EXTENSION_ID}"
 
 echo "[setup-host] done."
-echo "Load extension/dist as unpacked in Chromium, then fully restart the browser."
+echo "Load the repository's extension/ directory as unpacked in Chromium, then fully restart the browser."
 echo "Click the extension icon to open the control window (stays open until you close it)."

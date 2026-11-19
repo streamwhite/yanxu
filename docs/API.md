@@ -73,23 +73,39 @@ Common OS manifest locations (Chromium family):
 One-shot host setup (install, build, native manifest):
 
 ```bash
-./scripts/setup-host.sh <your_id_from_chrome_extensions>
+./scripts/setup-host.sh <your_id_from_chrome_extensions>   # Linux / macOS
 ```
 
-Or manually:
+Windows uses a prebuilt release bundle and does not need Node.js or npm:
+
+```text
+packages-out/yanxu-windows-<version>.zip
+├── extension/              # prebuilt extension
+├── yanxu-native-host.exe   # self-contained host, no Node.js required
+└── install-windows.ps1
+```
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\install-windows.ps1 <your_id_from_chrome_extensions>
+```
+
+Build the Windows bundle (maintainers, requires Node.js):
 
 ```bash
-pnpm build
-pnpm install:native-host -- --extension-id=<your_id_from_chrome_extensions>
+pnpm package:windows
 ```
+
+On Linux / macOS the build downloads the matching Windows Node runtime and produces a standalone `yanxu-native-host.exe` with Node SEA. On Windows the PowerShell installer writes the manifest to `%LOCALAPPDATA%\Yanxu\NativeMessagingHosts\` and registers the Chromium-family `HKCU\Software\...\NativeMessagingHosts` keys.
+
+The installer writes a per-install launcher under `packages/native-host/.runtime/` with Node's absolute path baked in (`run-native-host.sh` on Linux/macOS, `run-native-host.cmd` on Windows). On Windows it also registers the manifest under the Chromium-family `HKCU\Software\...\NativeMessagingHosts` keys.
 
 Then **fully restart** Chromium.
 
-**Linux note:** Chrome runs the manifest `path` as an **executable**, not `node <file>`. Use the wrapper [`packages/native-host/run-native-host.sh`](packages/native-host/run-native-host.sh) (not `dist/main.js` alone). `pnpm build` / `pnpm install:native-host` set mode `755` on the wrapper.
+**Native Messaging note:** Chrome runs the manifest `path` as an **executable**, not `node <file>`, and does not inherit the desktop shell `PATH`. Use the generated launcher on Linux/macOS or `yanxu-native-host.exe` on Windows (not `dist/main.js` alone). Re-run the installer after moving the repository or changing Node versions.
 
 Manual template [`com.yanxu.upload_host.json.template`](packages/native-host/dev/com.yanxu.upload_host.json.template):
 
-- `__YANXU_NATIVE_HOST_WRAPPER__` → absolute path to `packages/native-host/run-native-host.sh`
+- `__YANXU_NATIVE_HOST_WRAPPER__` → absolute path to the generated launcher
 - `__EXTENSION_ID__` → extension id from `chrome://extensions` (must match the profile you use)
 
 #### Chromium extension runtime messages

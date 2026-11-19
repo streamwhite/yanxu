@@ -22,11 +22,11 @@ export function allPlatformsSubmitBusyLabel(
   channelsBatch: ChannelsSubmitBatchConfig,
 ): string {
   const intervalMin = String(Math.round(channelsBatch.batchIntervalMs / MS_PER_MINUTE));
-  return `正在提交 bilibili 和 douyin 标签页，随后按每批 ${String(channelsBatch.batchSize)} 个分批提交视频号（每批间隔 ${intervalMin} 分钟）…`;
+  return `正在提交 bilibili、douyin；视频号每批 ${String(channelsBatch.batchSize)} 个，间隔 ${intervalMin} 分钟…`;
 }
 
 export function allPlatformsSubmitSuccessLabel(
   channelsBatch: ChannelsSubmitBatchConfig,
 ): string {
-  return `已在 bilibili、douyin 和视频号标签页点击提交。视频号按每批 ${String(channelsBatch.batchSize)} 个执行。请手动确认任何弹窗。`;
+  return `已提交全部平台（视频号每批 ${String(channelsBatch.batchSize)} 个），请确认弹窗。`;
 }

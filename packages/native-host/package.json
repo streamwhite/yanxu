@@ -7,7 +7,7 @@
     "yanxu-native-host": "./dist/main.js"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node ../../scripts/ensure-native-host-executable.mjs",
+    "build": "node ../../scripts/build-native-host.mjs && node ../../scripts/ensure-native-host-executable.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

@@ -56,13 +56,13 @@ function renderManualVideoBanner(payload: AppliedJobPayload): void {
 	banner.style.boxShadow = "0 10px 30px rgba(0,0,0,0.35)";
 
 	const title = document.createElement("div");
-	title.textContent = "semi-auto upload: attach large video manually";
+	title.textContent = "请手动选择视频";
 	title.style.fontWeight = "700";
 	title.style.marginBottom = "8px";
 
 	const hint = document.createElement("div");
 	const sizeText = formatBytes(video.sizeBytes);
-	hint.textContent = `Item ${String(payload.batch.itemIndex)} — Chrome limits silent file picking for large files (${sizeText}). Use the picker, or copy your path below.`;
+	hint.textContent = `文件 ${sizeText}，浏览器无法自动选择。请用上传框，或复制下方路径。`;
 
 	const path = document.createElement("pre");
 	path.textContent = video.absolutePath;
@@ -70,7 +70,7 @@ function renderManualVideoBanner(payload: AppliedJobPayload): void {
 	path.style.marginTop = "10px";
 
 	const copy = document.createElement("button");
-	copy.textContent = "Copy absolute video path";
+	copy.textContent = "复制视频路径";
 	copy.style.marginTop = "10px";
 	copy.style.padding = "8px 10px";
 

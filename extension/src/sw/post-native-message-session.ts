@@ -78,10 +78,11 @@ export function postNativeMessageSession(message: unknown): Promise<NativeSessio
 
 		port.onDisconnect.addListener(() => {
 			if (settled) return;
+			// lastError is only readable inside this callback; capture it before the grace timer.
+			const disconnectReason = chrome.runtime.lastError?.message ?? "native_port_closed";
 			globalThis.setTimeout(() => {
 				if (settled) return;
-				const messageText = chrome.runtime.lastError?.message ?? "native_port_closed";
-				finish({ ok: false, code: "native_port_closed", message: messageText });
+				finish({ ok: false, code: "native_port_closed", message: disconnectReason });
 			}, NATIVE_DISCONNECT_GRACE_MS);
 		});
 

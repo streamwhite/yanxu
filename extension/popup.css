@@ -39,14 +39,6 @@
 	font-size: 0.8125rem;
 }
 
-.batch-progress-log {
-	max-height: 140px;
-	overflow-y: auto;
-	white-space: pre-wrap;
-	word-break: break-word;
-	margin-bottom: 0;
-}
-
 .platform-item-selection-list {
 	max-height: 160px;
 	overflow-y: auto;

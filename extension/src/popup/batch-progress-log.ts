@@ -9,21 +9,13 @@ export function renderBatchProgressLog(
 	stored: StoredBatchProgress | undefined,
 	requestId: string,
 ): void {
-	if (!stored || stored.requestId !== requestId) {
+	if (!stored || stored.requestId !== requestId || stored.entries.length === 0) {
 		container.textContent = "";
-		container.classList.add("d-none");
-		return;
-	}
-
-	if (stored.entries.length === 0) {
-		container.textContent = "";
-		container.classList.add("d-none");
 		return;
 	}
 
 	const lines = stored.entries.map((entry) => formatBatchProgressLine(entry));
 	container.textContent = lines.join("\n");
-	container.classList.remove("d-none");
 }
 
 export function listenBatchProgressLog(container: HTMLElement, requestId: string): () => void {

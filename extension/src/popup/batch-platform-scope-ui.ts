@@ -19,7 +19,7 @@ export function batchPlatformScopeSinglePlatformHelp(
   scope: BatchPlatformScope,
 ): string {
   if (!isSinglePlatformScope(scope)) return '';
-  return `仅在 ${formatBatchPlatformScopeLabel(scope)} 上运行——请使用包含需重新上传条目的任务文件。`;
+  return `仅上传 ${formatBatchPlatformScopeLabel(scope)}，任务文件需含待上传条目。`;
 }
 
 export function platformItemSelectionLabel(platform: PlatformId): string {
@@ -30,26 +30,33 @@ export function batchPlatformScopeOpeningLabel(
   scope: BatchPlatformScope,
 ): string {
   return isSinglePlatformScope(scope)
-    ? `正在打开 ${PLATFORM_TAB_LABELS[scope]} 上传标签页…`
-    : '正在为全部平台打开上传标签页…';
+    ? `正在打开 ${PLATFORM_TAB_LABELS[scope]} 标签页…`
+    : '正在打开上传标签页…';
+}
+
+function formatSettleWait(fieldsSettleMs: number): string {
+  if (fieldsSettleMs <= 0) return '无需等待';
+  return fieldsSettleMs % 1000 === 0
+    ? `${String(fieldsSettleMs / 1000)} 秒`
+    : `${String(fieldsSettleMs)} 毫秒`;
 }
 
 export function batchPlatformScopeUploadBusyLabel(
   scope: BatchPlatformScope,
   fieldsSettleMs: number,
 ): string {
-  const waitLabel = String(fieldsSettleMs);
+  const waitLabel = formatSettleWait(fieldsSettleMs);
   return isSinglePlatformScope(scope)
-    ? `正在上传 ${PLATFORM_TAB_LABELS[scope]} 视频，等待 ${waitLabel} 毫秒后填充字段…`
-    : `正在上传视频，等待 ${waitLabel} 毫秒后填充字段…`;
+    ? `正在上传 ${PLATFORM_TAB_LABELS[scope]} 视频（等待 ${waitLabel}）…`
+    : `正在上传视频（等待 ${waitLabel}）…`;
 }
 
 export function batchPlatformScopeUploadSuccessLabel(
   scope: BatchPlatformScope,
 ): string {
   return isSinglePlatformScope(scope)
-    ? `${PLATFORM_TAB_LABELS[scope]} 上传与填充已完成。请在下方查看进度，然后手动发布。`
-    : '上传与填充已完成。请在下方查看进度，然后手动发布。';
+    ? `${PLATFORM_TAB_LABELS[scope]} 上传与填写已完成`
+    : '上传与填写已完成';
 }
 
 export function isBatchPlatformScopeValue(
