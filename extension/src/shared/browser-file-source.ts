@@ -19,10 +19,6 @@ export type BrowserFileSourceSummary = {
 	updatedAt: number;
 };
 
-export function isBrowserJobFilePath(jobFilePath: string): boolean {
-	return jobFilePath === BROWSER_JOB_FILE_PATH;
-}
-
 function openHandleDb(): Promise<IDBDatabase> {
 	return new Promise((resolve, reject) => {
 		const request = indexedDB.open(DB_NAME, DB_VERSION);

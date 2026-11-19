@@ -35,7 +35,7 @@ function shutdown(exitCode = 0) {
 process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
 
-console.info("[dev] watch: packages/domain + packages/native-host + extension/esbuild");
+console.info("[dev] watch: packages/domain + extension/esbuild");
 console.info("[dev] Reload the unpacked extension once per rebuild (see docs/API.md)");
 
 run("domain", "pnpm", [
@@ -43,15 +43,6 @@ run("domain", "pnpm", [
 	"tsc",
 	"-p",
 	"packages/domain/tsconfig.build.json",
-	"--watch",
-	"--preserveWatchOutput",
-]);
-
-run("native-host", "pnpm", [
-	"exec",
-	"tsc",
-	"-p",
-	"packages/native-host/tsconfig.build.json",
 	"--watch",
 	"--preserveWatchOutput",
 ]);

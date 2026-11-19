@@ -97,7 +97,7 @@ describe("sendApplyBatchToTab", () => {
 		});
 	});
 
-	it("streams whenever native host sent video or cover chunks", async () => {
+	it("streams whenever the host sent video or cover chunks", async () => {
 		sendMessageMock.mockResolvedValue({ ok: true });
 		const estimateSpy = jest.spyOn(estimateModule, "estimateJsonUtf8ByteLength");
 

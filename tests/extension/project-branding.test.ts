@@ -1,19 +1,14 @@
 import { existsSync, readFileSync } from "node:fs";
 
 describe("雁序 project branding", () => {
-	it("uses the product name in extension surfaces and runtime identifiers", () => {
+	it("uses the product name in extension surfaces", () => {
 		const manifest = readFileSync("extension/manifest.json", "utf8");
 		const popup = readFileSync("extension/popup.html", "utf8");
 		const options = readFileSync("extension/options.html", "utf8");
-		const nativeMessaging = readFileSync(
-			"packages/domain/src/constants/native-messaging.ts",
-			"utf8",
-		);
 
 		expect(manifest).toContain("雁序");
 		expect(popup).toContain("雁序");
 		expect(options).toContain("雁序");
-		expect(nativeMessaging).toContain("com.yanxu.upload_host");
 	});
 
 	it("ships toolbar icons for every manifest size", () => {

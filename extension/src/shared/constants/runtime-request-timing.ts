@@ -7,7 +7,7 @@ import {
 	type ChannelsSubmitBatchConfig,
 } from "../channels-submit-batch-config.js";
 
-/** Opening tabs only — short native host + tab create. */
+/** Opening tabs only — short file read + tab create. */
 export const RUNTIME_REQUEST_TIMEOUT_OPEN_TABS_MS = 60_000 as const;
 
 /** Upload/fill across many tabs with chunked video transfer. */

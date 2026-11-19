@@ -5,11 +5,14 @@ import {
 } from "@yanxu/domain";
 import { loadBrowserFileSource, queryReadPermission } from "../shared/browser-file-source.js";
 import { handleBrowserHostInboundMessage } from "./browser-host.js";
-import type { NativeSessionResult } from "./post-native-message-session.js";
+
+export type HostSessionResult =
+	| { ok: true; batch: HostOutboundMessage[] }
+	| { ok: false; code: string; message: string };
 
 export async function postBrowserHostSession(
 	message: HostInboundMessage,
-): Promise<NativeSessionResult> {
+): Promise<HostSessionResult> {
 	try {
 		const source = await loadBrowserFileSource();
 		if (!source) {

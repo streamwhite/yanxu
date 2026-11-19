@@ -1,6 +1,4 @@
-import { isBrowserJobFilePath } from "../shared/browser-file-source.js";
 import { postBrowserHostSession } from "./browser-host-session.js";
-import { postNativeMessageSession } from "./post-native-message-session.js";
 
 export type CheckBatchJobAssetsResult = { ok: true } | { ok: false; code: string; message: string };
 
@@ -8,17 +6,11 @@ export async function checkBatchJobAssets(
 	jobFilePath: string,
 	options: { includeHorizontalCover?: boolean } = {},
 ): Promise<CheckBatchJobAssetsResult> {
-	const session = isBrowserJobFilePath(jobFilePath)
-		? await postBrowserHostSession({
-				type: "checkBatchJobAssetsFromFile",
-				jobFilePath,
-				includeHorizontalCover: options.includeHorizontalCover,
-			})
-		: await postNativeMessageSession({
-				type: "checkBatchJobAssetsFromFile",
-				jobFilePath,
-				includeHorizontalCover: options.includeHorizontalCover,
-			});
+	const session = await postBrowserHostSession({
+		type: "checkBatchJobAssetsFromFile",
+		jobFilePath,
+		includeHorizontalCover: options.includeHorizontalCover,
+	});
 
 	if (!session.ok) {
 		return { ok: false, code: session.code, message: session.message };

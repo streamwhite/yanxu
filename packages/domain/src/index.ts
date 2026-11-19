@@ -7,7 +7,6 @@ export * from "./constants/channels";
 export * from "./constants/channels-mark-tag";
 export * from "./constants/douyin";
 export * from "./constants/limits";
-export * from "./constants/native-messaging";
 export * from "./constants/default-batch-targets";
 export * from "./constants/platform";
 export * from "./constants/platform-host-permissions";

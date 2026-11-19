@@ -1,7 +1,7 @@
 import { ApplyPhase, Platform } from "@yanxu/domain";
 import { applyBatchSlotsConcurrentByPlatform } from "../../extension/src/sw/apply-batch-slots-by-platform";
 import * as progressModule from "../../extension/src/shared/batch-progress-store";
-import * as applyItemModule from "../../extension/src/sw/apply-batch-item-via-native-host";
+import * as applyItemModule from "../../extension/src/sw/apply-batch-item-from-browser";
 import * as staggerModule from "../../extension/src/sw/wait-random-stagger-ms";
 import * as activateModule from "../../extension/src/sw/activate-tab-for-apply";
 import * as rateLimitModule from "../../extension/src/sw/upload-rate-limit";
@@ -20,7 +20,7 @@ describe("applyBatchSlotsConcurrentByPlatform", () => {
 			.spyOn(rateLimitModule, "acquireVideoUploadPermit")
 			.mockResolvedValue({ allowed: false, retryAt: 123_000 });
 		const applySpy = jest
-			.spyOn(applyItemModule, "applyBatchItemViaNativeHost")
+			.spyOn(applyItemModule, "applyBatchItemFromBrowser")
 			.mockResolvedValue({ ok: true });
 		jest.spyOn(staggerModule, "waitRandomStaggerMs").mockResolvedValue();
 		jest.spyOn(progressModule, "appendBatchProgress").mockResolvedValue();
@@ -40,7 +40,7 @@ describe("applyBatchSlotsConcurrentByPlatform", () => {
 	});
 
 	it("applies all slots on one platform concurrently after stagger", async () => {
-		const applySpy = jest.spyOn(applyItemModule, "applyBatchItemViaNativeHost").mockResolvedValue({
+		const applySpy = jest.spyOn(applyItemModule, "applyBatchItemFromBrowser").mockResolvedValue({
 			ok: true,
 		});
 		const staggerSpy = jest.spyOn(staggerModule, "waitRandomStaggerMs").mockResolvedValue();
@@ -64,7 +64,7 @@ describe("applyBatchSlotsConcurrentByPlatform", () => {
 	});
 
 	it("applies bilibili slots sequentially", async () => {
-		const applySpy = jest.spyOn(applyItemModule, "applyBatchItemViaNativeHost").mockResolvedValue({
+		const applySpy = jest.spyOn(applyItemModule, "applyBatchItemFromBrowser").mockResolvedValue({
 			ok: true,
 		});
 		const staggerSpy = jest.spyOn(staggerModule, "waitRandomStaggerMs").mockResolvedValue();
@@ -91,7 +91,7 @@ describe("applyBatchSlotsConcurrentByPlatform", () => {
 	});
 
 	it("applies channels slots sequentially", async () => {
-		const applySpy = jest.spyOn(applyItemModule, "applyBatchItemViaNativeHost").mockResolvedValue({
+		const applySpy = jest.spyOn(applyItemModule, "applyBatchItemFromBrowser").mockResolvedValue({
 			ok: true,
 		});
 		const staggerSpy = jest.spyOn(staggerModule, "waitRandomStaggerMs").mockResolvedValue();
@@ -119,7 +119,7 @@ describe("applyBatchSlotsConcurrentByPlatform", () => {
 
 	it("applies channels after other platforms so the tab stays focused", async () => {
 		const order: string[] = [];
-		jest.spyOn(applyItemModule, "applyBatchItemViaNativeHost").mockImplementation(async (input) => {
+		jest.spyOn(applyItemModule, "applyBatchItemFromBrowser").mockImplementation(async (input) => {
 			order.push(input.platform);
 			return { ok: true };
 		});
@@ -144,7 +144,7 @@ describe("applyBatchSlotsConcurrentByPlatform", () => {
 
 	it("runs every slot even when one tab fails", async () => {
 		const applySpy = jest
-			.spyOn(applyItemModule, "applyBatchItemViaNativeHost")
+			.spyOn(applyItemModule, "applyBatchItemFromBrowser")
 			.mockResolvedValueOnce({
 				ok: false,
 				code: "tab_apply_failed",

@@ -1,7 +1,5 @@
 import { JobFileOutlineSchema } from "@yanxu/domain";
-import { isBrowserJobFilePath } from "../shared/browser-file-source.js";
 import { postBrowserHostSession } from "./browser-host-session.js";
-import { postNativeMessageSession } from "./post-native-message-session.js";
 
 export type InspectJobOutlineResult =
 	| {
@@ -14,12 +12,7 @@ export type InspectJobOutlineResult =
 	| { ok: false; code: string; message: string };
 
 export async function inspectJobFileOutline(jobFilePath: string): Promise<InspectJobOutlineResult> {
-	const session = isBrowserJobFilePath(jobFilePath)
-		? await postBrowserHostSession({ type: "inspectJobFromFile", jobFilePath })
-		: await postNativeMessageSession({
-				type: "inspectJobFromFile",
-				jobFilePath,
-			});
+	const session = await postBrowserHostSession({ type: "inspectJobFromFile", jobFilePath });
 
 	if (!session.ok) {
 		return { ok: false, code: session.code, message: session.message };

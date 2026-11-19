@@ -1,5 +1,5 @@
 import { HostOutboundMessageSchema, type HostOutboundMessage } from "@yanxu/domain";
-import type { NativeSessionResult } from "./post-native-message-session.js";
+import type { HostSessionResult } from "./browser-host-session.js";
 
 export type ResolvedApplyJob =
 	| { ok: true; batch: HostOutboundMessage[] }
@@ -37,7 +37,7 @@ function parseOutboundBatch(batch: HostOutboundMessage[]): ResolvedApplyJob {
 	return { ok: true, batch };
 }
 
-export function resolveApplyJobFromNativeSession(session: NativeSessionResult): ResolvedApplyJob {
+export function resolveApplyJobFromHostSession(session: HostSessionResult): ResolvedApplyJob {
 	if (!session.ok) return session;
 
 	const messages: HostOutboundMessage[] = [];

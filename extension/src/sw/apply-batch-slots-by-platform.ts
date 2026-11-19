@@ -4,9 +4,9 @@ import type { ApplyJobFromRuntimeResult } from "../runtime/runtime-message.js";
 import { appendBatchProgress } from "../shared/batch-progress-store.js";
 import { BatchProgressKind } from "../shared/batch-progress.js";
 import {
-	applyBatchItemViaNativeHost,
-	type ApplyBatchItemViaNativeHostInput,
-} from "./apply-batch-item-via-native-host.js";
+	applyBatchItemFromBrowser,
+	type ApplyBatchItemInput,
+} from "./apply-batch-item-from-browser.js";
 import type { BatchApplySlot } from "./build-batch-apply-slots.js";
 import { formatBatchSlotFailure } from "./format-batch-slot-failure.js";
 import { waitRandomStaggerMs } from "./wait-random-stagger-ms.js";
@@ -74,7 +74,7 @@ async function applyOneSlotWithStagger(
 		if (denied) return denied;
 	}
 
-	const input: ApplyBatchItemViaNativeHostInput = {
+	const input: ApplyBatchItemInput = {
 		jobFilePath,
 		applyPhase,
 		tabId: slot.tabId,
@@ -83,7 +83,7 @@ async function applyOneSlotWithStagger(
 		includeHorizontalCover: options.includeHorizontalCover,
 	};
 
-	const result = await applyBatchItemViaNativeHost(input);
+	const result = await applyBatchItemFromBrowser(input);
 	if (!result.ok) return result;
 
 	const phaseLabel =

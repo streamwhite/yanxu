@@ -17,7 +17,6 @@ import {
 import {
   BROWSER_JOB_FILE_PATH,
   browserFileSourceNeedsPermission,
-  clearBrowserFileSource,
   loadBrowserFileSource,
   loadBrowserFileSourceSummary,
 } from "../shared/browser-file-source.js";
@@ -69,8 +68,6 @@ import {
 } from "./send-runtime-message.js";
 import { startUploadFlow } from "./start-upload-flow.js";
 
-const STORAGE_KEY_SEMI_JOB_FILE_PATH = "semiAutoJobFilePath" as const;
-
 function byId(elementId: string): HTMLElement | null {
   return document.getElementById(elementId);
 }
@@ -103,16 +100,6 @@ async function copyBatchProgressLog(progressLog: HTMLElement): Promise<void> {
 
 function setSubmitAllPlatformsTitle(button: HTMLButtonElement, channelsBatch: ChannelsSubmitBatchConfig): void {
   button.title = allPlatformsSubmitBusyLabel(channelsBatch);
-}
-
-async function loadStoredPathIntoInput(input: HTMLInputElement): Promise<void> {
-  const stored = await chrome.storage.local.get(STORAGE_KEY_SEMI_JOB_FILE_PATH);
-  const value = stored[STORAGE_KEY_SEMI_JOB_FILE_PATH];
-  if (typeof value === "string") input.value = value;
-}
-
-async function persistJobFilePath(path: string): Promise<void> {
-  await chrome.storage.local.set({ [STORAGE_KEY_SEMI_JOB_FILE_PATH]: path });
 }
 
 async function loadFieldsSettleMsFromStorage(): Promise<number> {
@@ -164,7 +151,6 @@ async function runRuntimeBatchAction(
   if (progressContainer) progressContainer.textContent = "";
 
   try {
-    await persistJobFilePath(jobFilePath);
     await wakeServiceWorker();
 
     const { result } =
@@ -332,10 +318,7 @@ async function openUploadTabsForJob(
 }
 
 async function bootstrap(): Promise<void> {
-  const jobFilePathInput = byId("jobFilePathInput");
-  const jobFilePathLabel = byId("jobFilePathLabel");
   const openBrowserFileSourceButton = byId("openBrowserFileSourceButton");
-  const clearBrowserFileSourceButton = byId("clearBrowserFileSourceButton");
   const browserFileSourceStatus = byId("browserFileSourceStatus");
   const batchPlatformScopeSelect = byId("batchPlatformScopeSelect");
   const uploadAndFillAllTabsButton = byId("uploadAndFillAllTabsButton");
@@ -346,10 +329,7 @@ async function bootstrap(): Promise<void> {
   const platformItemSelectionSection = byId("platformItemSelectionSection");
   const platformItemSelectionLabelEl = byId("platformItemSelectionLabel");
   const platformItemSelectionList = byId("platformItemSelectionList");
-  if (!(jobFilePathInput instanceof HTMLInputElement)) return;
-  if (!(jobFilePathLabel instanceof HTMLLabelElement)) return;
   if (!(openBrowserFileSourceButton instanceof HTMLButtonElement)) return;
-  if (!(clearBrowserFileSourceButton instanceof HTMLButtonElement)) return;
   if (!(browserFileSourceStatus instanceof HTMLElement)) return;
   if (!(batchPlatformScopeSelect instanceof HTMLSelectElement)) return;
   if (!(uploadAndFillAllTabsButton instanceof HTMLButtonElement)) return;
@@ -386,30 +366,28 @@ async function bootstrap(): Promise<void> {
     );
   };
 
+  let browserSourceReady = false;
+
   const reloadPlatformItemSelection = (): void => {
-    const jobFilePath = jobFilePathInput.value.trim();
     void refreshPlatformItemSelectionList(
-      jobFilePath,
+      browserSourceReady ? BROWSER_JOB_FILE_PATH : "",
       readBatchPlatformScope(),
       platformItemSelectionList,
     );
   };
 
-  const initJobSourceUi = async (): Promise<void> => {
+  const updateJobSourceStatus = async (): Promise<void> => {
     const summary = await loadBrowserFileSourceSummary();
     const source = summary === null ? null : await loadBrowserFileSource();
     if (!summary || !source) {
-      await loadStoredPathIntoInput(jobFilePathInput);
+      browserSourceReady = false;
+      browserFileSourceStatus.textContent = "尚未选择任务文件和素材目录。";
+      openBrowserFileSourceButton.textContent = "选择任务与素材";
       return;
     }
 
-    jobFilePathInput.value = BROWSER_JOB_FILE_PATH;
-    jobFilePathInput.readOnly = true;
-    jobFilePathInput.classList.add("d-none");
-    jobFilePathLabel.textContent = "本地任务文件";
+    browserSourceReady = true;
     browserFileSourceStatus.textContent = `任务：${summary.jobFileName}；素材：${summary.assetsDirName}`;
-    browserFileSourceStatus.classList.remove("d-none");
-    clearBrowserFileSourceButton.classList.remove("d-none");
     openBrowserFileSourceButton.textContent = "更换文件";
     if (await browserFileSourceNeedsPermission(source)) {
       browserFileSourceStatus.textContent += "（需要恢复访问）";
@@ -420,42 +398,20 @@ async function bootstrap(): Promise<void> {
     void chrome.runtime.openOptionsPage();
   });
 
-  clearBrowserFileSourceButton.addEventListener("click", () => {
-    void (async () => {
-      await clearBrowserFileSource();
-      jobFilePathInput.readOnly = false;
-      jobFilePathInput.classList.remove("d-none");
-      jobFilePathInput.value = "";
-      jobFilePathLabel.textContent = "任务文件路径";
-      browserFileSourceStatus.textContent = "";
-      browserFileSourceStatus.classList.add("d-none");
-      clearBrowserFileSourceButton.classList.add("d-none");
-      openBrowserFileSourceButton.textContent = "选择文件";
-      await persistJobFilePath("");
-      reloadPlatformItemSelection();
-    })();
-  });
-
-  await initJobSourceUi();
+  await updateJobSourceStatus();
   refreshBatchPlatformScopeUi();
   reloadPlatformItemSelection();
 
   const readJobPath = (): string | null => {
-    const jobFilePath = jobFilePathInput.value.trim();
-    if (!jobFilePath) {
+    if (!browserSourceReady) {
       setOutcome(
-        "请输入任务文件绝对路径。",
+        "请先在设置页选择任务文件和素材目录。",
         PopupOutcomeVariant.Secondary,
       );
       return null;
     }
-    return jobFilePath;
+    return BROWSER_JOB_FILE_PATH;
   };
-
-  jobFilePathInput.addEventListener("input", () => {
-    void persistJobFilePath(jobFilePathInput.value.trim());
-    reloadPlatformItemSelection();
-  });
 
   batchPlatformScopeSelect.addEventListener("change", () => {
     void persistBatchPlatformScope(readBatchPlatformScope());

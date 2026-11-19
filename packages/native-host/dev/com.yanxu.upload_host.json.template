@@ -1,7 +1,0 @@
-{
-  "name": "com.yanxu.upload_host",
-  "description": "Yanxu multi-platform creator submission native host",
-  "path": "/home/z/Documents/to-sync/projects/auto-upload/packages/native-host/dist/main.js",
-  "type": "stdio",
-  "allowed_origins": ["chrome-extension://icgamjidfldplplcdkacjgmikpebhmaj/"]
-}

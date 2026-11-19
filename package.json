@@ -7,13 +7,9 @@
     "lint:fix": "biome check --write .",
     "test": "jest --runInBand",
     "typecheck": "pnpm --filter @yanxu/domain build && pnpm -r run typecheck",
-    "build": "pnpm --filter @yanxu/domain build && pnpm --filter @yanxu/native-host build && node ./scripts/build-extension.mjs",
+    "build": "pnpm --filter @yanxu/domain build && node ./scripts/build-extension.mjs",
     "package": "pnpm build && node ./scripts/package-extension.mjs",
-    "package:windows": "pnpm build && node ./scripts/build-native-host-sea.mjs && node ./scripts/package-windows.mjs",
-    "build:native-host:sea": "node ./scripts/build-native-host-sea.mjs",
-    "dev": "node ./scripts/dev.mjs",
-    "install:native-host": "node ./scripts/install-native-host.mjs",
-    "setup:host": "./scripts/setup-host.sh"
+    "dev": "node ./scripts/dev.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.13",

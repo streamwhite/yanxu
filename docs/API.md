@@ -1,6 +1,6 @@
 ### API surface (semi-auto MVP)
 
-This package is currently split into `@yanxu/domain` (shared contracts + validators), `@yanxu/native-host` (Chrome Native Messaging stdin/stdout bridge), and a Chromium extension (`extension/`).
+This package is currently split into `@yanxu/domain` (shared contracts + validators) and a Chromium extension (`extension/`).
 
 #### Install / toolchain
 
@@ -22,7 +22,7 @@ Example job JSON (extension popup):
 
 - Batch (multi-tab, **required**): [`examples/batch.job.example.json`](examples/batch.job.example.json)
 
-Legacy v1/v2 single-platform examples remain for native-host / schema reference only: `examples/bilibili.job.example.json`, `examples/douyin.job.example.json`, `examples/channels.job.example.json`.
+Legacy v1/v2 single-platform examples remain for schema reference only: `examples/bilibili.job.example.json`, `examples/douyin.job.example.json`, `examples/channels.job.example.json`.
 
 **Job v2 `platform`:** `bilibili` | `douyin` | `channels`. `targets[0]` must match `platform`. Platform block (`bilibili`, `douyin`, `channels`) supplies default page fields; `pageFields` adds custom locators.
 
@@ -30,7 +30,7 @@ Legacy v1/v2 single-platform examples remain for native-host / schema reference 
 
 **One tab per job item per platform:** count how many `items[]` list a platform in `targets` — that is how many upload tabs you need for that platform. Example with 2 items where both include `douyin`: open **2 Douyin upload tabs**; tab with the lower tab id gets item 0’s video, the next tab gets item 1’s video. Platforms with only one matching item need one tab. Upload-page URLs are preferred; among ties, lower tab id wins.
 
-**All-tab actions preflight every platform (bilibili, douyin, channels / 视频号); if any platform is short, nothing is uploaded.** Before **Upload video (all tabs)** or **Fill fields (all tabs)**, the native host runs `checkBatchJobAssetsFromFile`: every item must have `{name}.mp4` on disk. Covers are optional by default: an existing cover is used, but absence is allowed. Set `includeCover: true` to require one; `includeCover: false` disables it. Missing required assets return `batch_assets_missing` (all listed) and **no tab is updated**.
+**All-tab actions preflight every platform (bilibili, douyin, channels / 视频号); if any platform is short, nothing is uploaded.** Before **Upload video (all tabs)** or **Fill fields (all tabs)**, the extension runs `checkBatchJobAssetsFromFile`: every item must have `{name}.mp4` in the selected assets directory. Covers are optional by default: an existing cover is used, but absence is allowed. Set `includeCover: true` to require one; `includeCover: false` disables it. Missing required assets return `batch_assets_missing` (all listed) and **no tab is updated**.
 
 **Job v2 `pageFields`:** each entry has `locator` (`css`, `id`, or `name`) and `value`. Optional `bilibili.title` / `description` / `tags` still map to default Bilibili selectors; `pageFields` are applied in addition. **`bilibili.tags`:** each tag is typed into the tag input and confirmed with **Enter** (not comma-separated).
 
@@ -52,13 +52,13 @@ Configured in [`packages/domain/src/constants/limits.ts`](packages/domain/src/co
 
 - `DEFAULT_MAX_DIRECT_ATTACH_BYTES`: max video size eligible for chunked base64 transfer to the browser context
 - `DEFAULT_MAX_COVER_INLINE_BYTES`: max cover bytes eligible for inline base64 embedding
-- `DEFAULT_TRANSFER_CHUNK_BYTES`: host-side base64 chunk sizing for streaming large-but-still-under-cap videos through Native Messaging frames
+- `DEFAULT_TRANSFER_CHUNK_BYTES`: base64 chunk sizing for streaming large-but-still-under-cap videos through extension messages
 
 URLs allowed for content injection: [`isAllowedPlatformUrl`](packages/domain/src/url/is-allowed-platform-url.ts), [`detectPlatformFromUrl`](packages/domain/src/url/detect-platform-from-url.ts). Bilibili helper: [`isAllowedBilibiliMatchUrl`](packages/domain/src/url/is-allowed-bilibili-url.ts).
 
 #### Browser file source (default)
 
-The extension can read the job file and assets directly through the File System Access API, without Native Messaging:
+The extension can read the job file and assets directly through the File System Access API, without a native host:
 
 - Handle storage and permission checks: [`extension/src/shared/browser-file-source.ts`](extension/src/shared/browser-file-source.ts)
 - Browser-side host protocol: [`extension/src/sw/browser-host.ts`](extension/src/sw/browser-host.ts)
@@ -66,58 +66,6 @@ The extension can read the job file and assets directly through the File System 
 - Sentinel job path: `browser://selected-job`
 
 Handles are stored in IndexedDB and read from the service worker. After a browser restart the permission may be `prompt`; the options page exposes a “恢复访问” action. Supported on Chrome / Edge; Brave requires enabling `File System Access API` in `brave://flags`.
-
-#### Chrome Native Messaging host (`@yanxu/native-host`)
-
-- Binary name configured in Chromium manifests: [`NATIVE_HOST_NAME`](packages/domain/src/constants/native-messaging.ts)
-- Implemented entrypoint: [`packages/native-host/src/main.ts`](packages/native-host/src/main.ts)
-- Message contracts: [`HostInboundMessageSchema`](packages/domain/src/messaging/host-protocol.ts), [`HostOutboundMessageSchema`](packages/domain/src/messaging/host-protocol.ts)
-
-Host install template: [`packages/native-host/dev/com.yanxu.upload_host.json.template`](packages/native-host/dev/com.yanxu.upload_host.json.template)
-
-Common OS manifest locations (Chromium family):
-
-- Linux: `~/.config/google-chrome/NativeMessagingHosts/<name>.json` (or the matching config dir for your Chromium-based browser)
-- macOS: `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/<name>.json`
-- Windows: registry + a JSON manifest on disk (see Chromium Native Messaging docs)
-
-One-shot host setup (install, build, native manifest):
-
-```bash
-./scripts/setup-host.sh <your_id_from_chrome_extensions>   # Linux / macOS
-```
-
-Windows uses a prebuilt release bundle and does not need Node.js or npm:
-
-```text
-packages-out/yanxu-windows-<version>.zip
-├── extension/              # prebuilt extension
-├── yanxu-native-host.exe   # self-contained host, no Node.js required
-└── install-windows.ps1
-```
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\install-windows.ps1 <your_id_from_chrome_extensions>
-```
-
-Build the Windows bundle (maintainers, requires Node.js):
-
-```bash
-pnpm package:windows
-```
-
-On Linux / macOS the build downloads the matching Windows Node runtime and produces a standalone `yanxu-native-host.exe` with Node SEA. On Windows the PowerShell installer writes the manifest to `%LOCALAPPDATA%\Yanxu\NativeMessagingHosts\` and registers the Chromium-family `HKCU\Software\...\NativeMessagingHosts` keys.
-
-The installer writes a per-install launcher under `packages/native-host/.runtime/` with Node's absolute path baked in (`run-native-host.sh` on Linux/macOS, `run-native-host.cmd` on Windows). On Windows it also registers the manifest under the Chromium-family `HKCU\Software\...\NativeMessagingHosts` keys.
-
-Then **fully restart** Chromium.
-
-**Native Messaging note:** Chrome runs the manifest `path` as an **executable**, not `node <file>`, and does not inherit the desktop shell `PATH`. Use the generated launcher on Linux/macOS or `yanxu-native-host.exe` on Windows (not `dist/main.js` alone). Re-run the installer after moving the repository or changing Node versions.
-
-Manual template [`com.yanxu.upload_host.json.template`](packages/native-host/dev/com.yanxu.upload_host.json.template):
-
-- `__YANXU_NATIVE_HOST_WRAPPER__` → absolute path to the generated launcher
-- `__EXTENSION_ID__` → extension id from `chrome://extensions` (must match the profile you use)
 
 #### Chromium extension runtime messages
 
@@ -129,9 +77,9 @@ Popup → service worker (batch only):
 Host → browser (`applyJobReady.payload`) attachments:
 
 - `attachments.video`:
-  - `inlineBase64Chunks`: videos under policy `maxDirectAttachBytes` (default 32 MiB); small files (≤ ~400 KiB) inline in one `applyJobReady`, larger ones via `videoStreamStart` + `videoStreamChunk` frames then assembled in the service worker
-  - `manualLargeFile`: videos over `maxDirectAttachBytes`; in-page banner to pick manually or copy the absolute path
-- Multi-frame native host replies (stream + final `applyJobReady`) are collected by [`postNativeMessageSession`](extension/src/sw/post-native-message-session.ts)
+  - `inlineBase64Chunks`: videos under policy `maxDirectAttachBytes` (default 1 GiB); small files (≤ ~400 KiB) inline in one `applyJobReady`, larger ones via `videoStreamStart` + `videoStreamChunk` frames then assembled in the service worker
+  - `manualLargeFile`: videos over `maxDirectAttachBytes`; in-page banner to select the video manually
+- Multi-frame host replies (stream + final `applyJobReady`) are collected by [`postBrowserHostSession`](extension/src/sw/browser-host-session.ts)
 - `attachments.cover`:
   - `inlineBase64` if small enough for one frame; larger covers use `coverStreamStart` / `coverStreamChunk` (merged in the service worker); over policy max → `skipped`
   - On **Fill fields**, all text/radio/tag/partition fields run first; **cover is last** on platforms with cover UI (bilibili: poll until cover trigger ready, then `.cover-img` → `.upload-area` → `input[type=file]`). Close the modal manually after review.
@@ -144,23 +92,22 @@ Service worker → content script:
 
 Chromium **does not** auto-reload unpacked extensions when `extension/dist/*` changes. You still **reload once per successful rebuild** (fast: pin `chrome://extensions` or use a reloader shortcut). You **do not** re-“Load unpacked” every time.
 
-- **Watch everything:** [`pnpm dev`](package.json) runs three concurrent watchers:
+- **Watch everything:** [`pnpm dev`](package.json) runs two concurrent watchers:
   - `tsc --watch` → [`packages/domain`](packages/domain) `dist/`
-  - `tsc --watch` → [`packages/native-host`](packages/native-host) `dist/`
   - [`esbuild --watch`](scripts/build-extension.mjs) → [`extension/dist`](extension/dist) (prints a line when a rebuild finishes)
-- **Editor integration:** [.vscode/tasks.json](.vscode/tasks.json) — default build task runs `pnpm dev` in a dedicated terminal. [.vscode/launch.json](.vscode/launch.json) — **Chrome: Bilibili + load extension** launches Chromium with `--load-extension=${workspaceFolder}/extension` and a **persistent** `userDataDir` under [`.vscode/chrome-profile-dev`](.vscode/launch.json) so the unpacked **extension ID stays stable** for Native Messaging (register `allowed_origins` once against that ID).
+- **Editor integration:** [.vscode/tasks.json](.vscode/tasks.json) — default build task runs `pnpm dev` in a dedicated terminal. [.vscode/launch.json](.vscode/launch.json) — **Chrome: Bilibili + load extension** launches Chromium with `--load-extension=${workspaceFolder}/extension` and a **persistent** `userDataDir` under [`.vscode/chrome-profile-dev`](.vscode/launch.json).
 - **Inspect:** MV3 **service worker** → Extensions → your extension → “Service worker” → _inspect_. **Popup** → extension icon popup → inspect. **Content script** → normal page DevTools on the Bilibli tab.
 
 **“Message port closed” / long-running popup actions**
 
 - Run `pnpm build`, then **Reload** the extension on `chrome://extensions`.
 - The service worker **acks immediately**; the real result is read from **`chrome.storage.local`** (do not treat DevTools “message port closed” as the final outcome).
-- **Upload video first**: files **> ~400 KiB** and **≤ policy max** (default 32 MiB) stream as chunked native messages and attach silently; files **> max** show the manual banner.
+- **Upload video first**: files **> ~400 KiB** and **≤ policy max** (default 1 GiB) stream as chunked extension messages and attach silently; files **> max** show the manual banner.
 - **`Receiving end does not exist`**: focus the **Bilibili upload tab**, **refresh** it after reloading the extension, then retry. The extension will inject the content script automatically if needed.
 
 #### Build outputs
 
-- Workspace build: [`pnpm build`](package.json) builds `@yanxu/domain`, `@yanxu/native-host`, and bundles `extension/dist/*` via [`scripts/build-extension.mjs`](scripts/build-extension.mjs)
+- Workspace build: [`pnpm build`](package.json) builds `@yanxu/domain` and bundles `extension/dist/*` via [`scripts/build-extension.mjs`](scripts/build-extension.mjs)
 - Load unpacked: select the [`extension`](extension/manifest.json) directory (after `pnpm build`)
 
 ## fields

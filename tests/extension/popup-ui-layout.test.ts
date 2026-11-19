@@ -11,10 +11,10 @@ describe("popup UI layout", () => {
 		expect(popupHtml).not.toContain("Batch job (v3)");
 	});
 
-	it("groups the job file path and platform scope as one preparation section", () => {
-		expect(popupHtml).toContain('id="jobFilePathInput"');
+	it("groups the local job source and platform scope as one preparation section", () => {
+		expect(popupHtml).toContain('id="openBrowserFileSourceButton"');
 		expect(popupHtml).toContain('id="batchPlatformScopeSelect"');
-		const prepStart = popupHtml.indexOf('id="jobFilePathInput"');
+		const prepStart = popupHtml.indexOf('id="openBrowserFileSourceButton"');
 		const prepEnd = popupHtml.indexOf("</section>", prepStart);
 		const scopeIndex = popupHtml.indexOf('id="batchPlatformScopeSelect"');
 		const uploadFillIndex = popupHtml.indexOf('id="uploadAndFillAllTabsButton"');
@@ -61,9 +61,9 @@ describe("popup UI layout", () => {
 		expect(popupHtml).toMatch(/<pre id="batchProgressLog"[^>]*hidden/);
 	});
 
-	it("offers file-system access as an alternative to native paths", () => {
+	it("offers file-system access for the local job source", () => {
 		expect(popupHtml).toContain('id="openBrowserFileSourceButton"');
-		expect(popupHtml).toContain('id="clearBrowserFileSourceButton"');
+		expect(popupHtml).not.toContain('id="jobFilePathInput"');
 		expect(popupHtml).toContain('id="browserFileSourceStatus"');
 		expect(optionsHtml).toContain('id="chooseBrowserJobFileButton"');
 		expect(optionsHtml).toContain('id="chooseBrowserAssetsDirButton"');
