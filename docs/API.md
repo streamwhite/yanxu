@@ -56,6 +56,17 @@ Configured in [`packages/domain/src/constants/limits.ts`](packages/domain/src/co
 
 URLs allowed for content injection: [`isAllowedPlatformUrl`](packages/domain/src/url/is-allowed-platform-url.ts), [`detectPlatformFromUrl`](packages/domain/src/url/detect-platform-from-url.ts). Bilibili helper: [`isAllowedBilibiliMatchUrl`](packages/domain/src/url/is-allowed-bilibili-url.ts).
 
+#### Browser file source (default)
+
+The extension can read the job file and assets directly through the File System Access API, without Native Messaging:
+
+- Handle storage and permission checks: [`extension/src/shared/browser-file-source.ts`](extension/src/shared/browser-file-source.ts)
+- Browser-side host protocol: [`extension/src/sw/browser-host.ts`](extension/src/sw/browser-host.ts)
+- File/directory pickers: [`extension/src/options/browser-file-source-ui.ts`](extension/src/options/browser-file-source-ui.ts)
+- Sentinel job path: `browser://selected-job`
+
+Handles are stored in IndexedDB and read from the service worker. After a browser restart the permission may be `prompt`; the options page exposes a “恢复访问” action. Supported on Chrome / Edge; Brave requires enabling `File System Access API` in `brave://flags`.
+
 #### Chrome Native Messaging host (`@yanxu/native-host`)
 
 - Binary name configured in Chromium manifests: [`NATIVE_HOST_NAME`](packages/domain/src/constants/native-messaging.ts)

@@ -15,6 +15,13 @@ import {
   type StoredBatchProgress,
 } from "../shared/batch-progress.js";
 import {
+  BROWSER_JOB_FILE_PATH,
+  browserFileSourceNeedsPermission,
+  clearBrowserFileSource,
+  loadBrowserFileSource,
+  loadBrowserFileSourceSummary,
+} from "../shared/browser-file-source.js";
+import {
   resolveChannelsSubmitBatchConfig,
   STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
   STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE,
@@ -326,6 +333,10 @@ async function openUploadTabsForJob(
 
 async function bootstrap(): Promise<void> {
   const jobFilePathInput = byId("jobFilePathInput");
+  const jobFilePathLabel = byId("jobFilePathLabel");
+  const openBrowserFileSourceButton = byId("openBrowserFileSourceButton");
+  const clearBrowserFileSourceButton = byId("clearBrowserFileSourceButton");
+  const browserFileSourceStatus = byId("browserFileSourceStatus");
   const batchPlatformScopeSelect = byId("batchPlatformScopeSelect");
   const uploadAndFillAllTabsButton = byId("uploadAndFillAllTabsButton");
   const submitHorizontalCoverCheckbox = byId("submitHorizontalCoverCheckbox");
@@ -336,6 +347,10 @@ async function bootstrap(): Promise<void> {
   const platformItemSelectionLabelEl = byId("platformItemSelectionLabel");
   const platformItemSelectionList = byId("platformItemSelectionList");
   if (!(jobFilePathInput instanceof HTMLInputElement)) return;
+  if (!(jobFilePathLabel instanceof HTMLLabelElement)) return;
+  if (!(openBrowserFileSourceButton instanceof HTMLButtonElement)) return;
+  if (!(clearBrowserFileSourceButton instanceof HTMLButtonElement)) return;
+  if (!(browserFileSourceStatus instanceof HTMLElement)) return;
   if (!(batchPlatformScopeSelect instanceof HTMLSelectElement)) return;
   if (!(uploadAndFillAllTabsButton instanceof HTMLButtonElement)) return;
   if (!(progressLog instanceof HTMLElement)) return;
@@ -345,7 +360,6 @@ async function bootstrap(): Promise<void> {
   if (!(platformItemSelectionLabelEl instanceof HTMLElement)) return;
   if (!(platformItemSelectionList instanceof HTMLElement)) return;
 
-  await loadStoredPathIntoInput(jobFilePathInput);
   await loadBatchPlatformScopeIntoSelect(batchPlatformScopeSelect);
 
   const storedProgress = (await chrome.storage.local.get(BATCH_PROGRESS_STORAGE_KEY))[
@@ -381,6 +395,48 @@ async function bootstrap(): Promise<void> {
     );
   };
 
+  const initJobSourceUi = async (): Promise<void> => {
+    const summary = await loadBrowserFileSourceSummary();
+    const source = summary === null ? null : await loadBrowserFileSource();
+    if (!summary || !source) {
+      await loadStoredPathIntoInput(jobFilePathInput);
+      return;
+    }
+
+    jobFilePathInput.value = BROWSER_JOB_FILE_PATH;
+    jobFilePathInput.readOnly = true;
+    jobFilePathInput.classList.add("d-none");
+    jobFilePathLabel.textContent = "本地任务文件";
+    browserFileSourceStatus.textContent = `任务：${summary.jobFileName}；素材：${summary.assetsDirName}`;
+    browserFileSourceStatus.classList.remove("d-none");
+    clearBrowserFileSourceButton.classList.remove("d-none");
+    openBrowserFileSourceButton.textContent = "更换文件";
+    if (await browserFileSourceNeedsPermission(source)) {
+      browserFileSourceStatus.textContent += "（需要恢复访问）";
+    }
+  };
+
+  openBrowserFileSourceButton.addEventListener("click", () => {
+    void chrome.runtime.openOptionsPage();
+  });
+
+  clearBrowserFileSourceButton.addEventListener("click", () => {
+    void (async () => {
+      await clearBrowserFileSource();
+      jobFilePathInput.readOnly = false;
+      jobFilePathInput.classList.remove("d-none");
+      jobFilePathInput.value = "";
+      jobFilePathLabel.textContent = "任务文件路径";
+      browserFileSourceStatus.textContent = "";
+      browserFileSourceStatus.classList.add("d-none");
+      clearBrowserFileSourceButton.classList.add("d-none");
+      openBrowserFileSourceButton.textContent = "选择文件";
+      await persistJobFilePath("");
+      reloadPlatformItemSelection();
+    })();
+  });
+
+  await initJobSourceUi();
   refreshBatchPlatformScopeUi();
   reloadPlatformItemSelection();
 

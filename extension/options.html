@@ -20,6 +20,33 @@
 
     <section class="card">
       <div class="card-body">
+        <h2 class="h6 fw-semibold mb-3">本地任务文件</h2>
+        <p class="form-text small mb-3">
+          选择任务 JSON 和素材目录，扩展会直接读取文件，不需要安装本机程序。
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          <button id="chooseBrowserJobFileButton" class="btn btn-outline-primary btn-sm" type="button">
+            选择任务文件
+          </button>
+          <button id="chooseBrowserAssetsDirButton" class="btn btn-outline-primary btn-sm" type="button">
+            选择素材目录
+          </button>
+          <button id="restoreBrowserSourcePermissionButton" class="btn btn-outline-secondary btn-sm d-none"
+            type="button">
+            恢复访问
+          </button>
+          <button id="clearBrowserFileSourceButton" class="btn btn-link btn-sm p-0 text-secondary d-none"
+            type="button">
+            清除
+          </button>
+        </div>
+        <p id="browserFileSourceStatus" class="form-text small text-muted mb-0 mt-2" role="status"
+          aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="card mt-3">
+      <div class="card-body">
         <h2 class="h6 fw-semibold mb-3">视频号发布</h2>
         <div class="row g-3">
           <div class="col-sm-6">

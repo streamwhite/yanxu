@@ -5,6 +5,8 @@ import {
 	activateTabForApply,
 } from "./activate-tab-for-apply.js";
 import { BILIBILI_ACTIVATE_TAB_SETTLE_MS } from "../platforms/constants/platform-video-upload-timing.js";
+import { isBrowserJobFilePath } from "../shared/browser-file-source.js";
+import { postBrowserHostSession } from "./browser-host-session.js";
 import { postNativeMessageSession } from "./post-native-message-session.js";
 import { resolveApplyJobFromNativeSession } from "./resolve-apply-job-from-native-batch.js";
 import { withChannelsTabKeptActive } from "./keep-channels-tab-active-while.js";
@@ -31,14 +33,23 @@ export async function applyBatchItemViaNativeHost(
 		await activateTabForApply(tab.tabId, BILIBILI_ACTIVATE_TAB_SETTLE_MS);
 	}
 
-	const session = await postNativeMessageSession({
-		type: "applyBatchItemFromFile",
-		jobFilePath: input.jobFilePath,
-		applyPhase: input.applyPhase,
-		itemIndex: input.itemIndex,
-		platform: input.platform,
-		includeHorizontalCover: input.includeHorizontalCover,
-	});
+	const session = isBrowserJobFilePath(input.jobFilePath)
+		? await postBrowserHostSession({
+				type: "applyBatchItemFromFile",
+				jobFilePath: input.jobFilePath,
+				applyPhase: input.applyPhase,
+				itemIndex: input.itemIndex,
+				platform: input.platform,
+				includeHorizontalCover: input.includeHorizontalCover,
+			})
+		: await postNativeMessageSession({
+				type: "applyBatchItemFromFile",
+				jobFilePath: input.jobFilePath,
+				applyPhase: input.applyPhase,
+				itemIndex: input.itemIndex,
+				platform: input.platform,
+				includeHorizontalCover: input.includeHorizontalCover,
+			});
 	const resolved = resolveApplyJobFromNativeSession(session);
 	if (!resolved.ok) return resolved;
 

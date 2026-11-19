@@ -31,9 +31,21 @@
         <span>准备</span>
       </h2>
       <div class="mb-2">
-        <label class="form-label small fw-semibold" for="jobFilePathInput">任务文件路径</label>
-        <input id="jobFilePathInput" class="form-control form-control-sm font-monospace" type="text"
-          placeholder="/绝对路径/到/batch.job.json" autocomplete="off" spellcheck="false" />
+        <label id="jobFilePathLabel" class="form-label small fw-semibold" for="jobFilePathInput">任务文件路径</label>
+        <div class="d-flex gap-2">
+          <input id="jobFilePathInput" class="form-control form-control-sm font-monospace" type="text"
+            placeholder="/绝对路径/到/batch.job.json" autocomplete="off" spellcheck="false" />
+          <button id="openBrowserFileSourceButton" class="btn btn-outline-secondary btn-sm text-nowrap"
+            type="button">
+            选择文件
+          </button>
+        </div>
+        <p id="browserFileSourceStatus" class="form-text small text-muted mb-0 mt-1 d-none" role="status"
+          aria-live="polite"></p>
+        <button id="clearBrowserFileSourceButton" class="btn btn-link btn-sm p-0 text-secondary mt-1 d-none"
+          type="button">
+          改用路径
+        </button>
       </div>
 
       <div>

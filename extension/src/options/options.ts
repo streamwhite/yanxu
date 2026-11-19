@@ -6,6 +6,7 @@ import {
 	STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
 	STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE,
 } from "../shared/channels-submit-batch-config.js";
+import { initBrowserFileSourceUi } from "./browser-file-source-ui.js";
 import { initFieldsSettleSettings } from "./fields-settle-settings.js";
 import {
 	CHANNELS_BATCH_SETTINGS_SAVED_STATUS_ID,
@@ -71,6 +72,7 @@ async function persistSettings(
 }
 
 async function bootstrap(): Promise<void> {
+	await initBrowserFileSourceUi();
 	await initFieldsSettleSettings();
 
 	const batchSizeInput = byId(CHANNELS_SUBMIT_BATCH_SIZE_INPUT_ID);

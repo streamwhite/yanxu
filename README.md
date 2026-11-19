@@ -9,19 +9,39 @@
 - `extension/`：浏览器扩展，负责操作投稿页面。
 - `packages/native-host/`：本机 Native Messaging Host，负责读取任务 JSON、视频和封面文件。
 
-只加载扩展、没有安装本机程序时，扩展会报 `native_port_closed` 或 `Specified native messaging host not found`。本机程序通过浏览器的 Native Messaging 清单启动，清单必须放在**当前所用浏览器**对应的位置。
+扩展支持两种读取本地文件的方式：
+
+- **浏览器文件模式（推荐）**：只需加载扩展，在设置页选择任务文件和素材目录。不需要本机程序。
+- **路径模式**：通过本机 Native Messaging Host 读取绝对路径。未安装本机程序时会报 `native_port_closed` 或 `Specified native messaging host not found`。
 
 ### 准备
 
-1. Windows 用户不需要安装 Node.js，直接使用下方 Windows 发布包。
-2. Linux / macOS 从源码安装需要 Node.js 20 或更高版本，以及 pnpm。
+1. 浏览器文件模式：三个平台都只需要加载扩展，不需要 Node.js 或本机程序。
+2. 路径模式：Linux / macOS 需要 Node.js 20 或更高版本及 pnpm；Windows 使用发布包里的独立本机程序。
 3. 在 `chrome://extensions`（Edge 为 `edge://extensions`）开启开发者模式，选择“加载已解压的扩展程序”，加载扩展目录。
 4. 复制扩展卡片上的扩展 ID（32 位小写字母）。
-5. 执行下面对应系统的安装步骤。
+5. 按下面推荐方式或可选的本机程序方式继续。
 
 Linux / macOS 源码安装时，安装脚本会把 Node 的绝对路径写入 `packages/native-host/.runtime/` 下的启动器，因此不依赖浏览器进程的 `PATH`。如果之后移动了仓库、切换了 Node 版本，或重新加载扩展后 ID 变了，需要重新运行一次安装命令。
 
-### Ubuntu / Linux
+### 推荐：浏览器文件模式（无需本机程序）
+
+加载扩展后即可使用，不需要 Node.js、Native Messaging 清单、注册表或本机程序：
+
+1. 打开扩展设置页（弹窗里的“选择文件”，或在 `chrome://extensions` 里打开“扩展程序选项”）。
+2. 在“本地任务文件”中点击“选择任务文件”，选择 `job.json`。
+3. 点击“选择素材目录”，选择视频和封面所在目录。
+4. 重新打开弹窗，直接点击“开始”。
+
+浏览器重启后如果权限失效，设置页会显示“恢复访问”，点一次即可。
+
+浏览器文件模式依赖 File System Access API：Chrome、Edge 支持；Brave 默认关闭，需要在 `brave://flags` 启用 `File System Access API`。
+
+### 可选：安装本机程序（Native Messaging）
+
+只有在需要继续使用“绝对路径”模式时，才需要执行下面的步骤。
+
+#### Ubuntu / Linux
 
 一键安装（安装依赖、构建并写入清单）：
 
@@ -68,7 +88,7 @@ test -x packages/native-host/.runtime/run-native-host.sh && echo launcher-ok
 
 最后**完全退出浏览器**（关闭所有窗口，并确认没有后台进程），再重新打开。仅刷新扩展页面不够。
 
-### macOS
+#### macOS
 
 在“终端”中执行：
 
@@ -108,7 +128,7 @@ cat "$HOME/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.ya
 
 然后在 Chrome 菜单中“退出 Google Chrome”（`Cmd+Q`），确认活动监视器里没有残留进程后再启动。
 
-### Windows（无需 Node.js / pnpm）
+#### Windows
 
 Windows 使用预构建发布包 `yanxu-windows-<version>.zip`，由维护者执行 `pnpm package:windows` 生成。压缩包内包含：
 
@@ -161,9 +181,19 @@ pnpm package:windows
 
 ## 使用
 
-准备一个批量任务 JSON（可参考 [`examples/batch.job.example.json`](examples/batch.job.example.json)），在扩展控制窗口中填写其绝对路径，然后点击“开始”：扩展会自动打开上传页面、上传视频并填充字段。检查各平台页面后，再手动提交。
+### 浏览器文件模式（推荐）
 
-每个条目需要有 `{name}.mp4` 视频，放在 `assetsParentFolder` 指定目录。封面可选；字段格式、平台范围及其他选项见 [`docs/API.md`](docs/API.md)。
+在扩展设置页选择任务文件和素材目录后，弹窗里直接点击“开始”。扩展会读取 JSON、视频和封面并填充发布字段，检查各平台页面后手动提交。
+
+视频和封面放在所选素材目录下：
+
+- 视频：`{name}.mp4`
+- 封面：`{name}.png` / `{name}.jpg` / `{name}.jpeg`
+- 横向封面：`{name}-4x3.png` 等
+
+### 路径模式（需要本机程序）
+
+在扩展控制窗口中填写批量任务 JSON 的绝对路径，然后点击“开始”。每个条目需要有 `{name}.mp4` 视频，放在 `assetsParentFolder` 指定目录。封面可选；字段格式、平台范围及其他选项见 [`docs/API.md`](docs/API.md)。
 
 上传之后会停留在封面位置,确认封面后可以提交.
 

@@ -61,6 +61,15 @@ describe("popup UI layout", () => {
 		expect(popupHtml).toMatch(/<pre id="batchProgressLog"[^>]*hidden/);
 	});
 
+	it("offers file-system access as an alternative to native paths", () => {
+		expect(popupHtml).toContain('id="openBrowserFileSourceButton"');
+		expect(popupHtml).toContain('id="clearBrowserFileSourceButton"');
+		expect(popupHtml).toContain('id="browserFileSourceStatus"');
+		expect(optionsHtml).toContain('id="chooseBrowserJobFileButton"');
+		expect(optionsHtml).toContain('id="chooseBrowserAssetsDirButton"');
+		expect(optionsHtml).toContain('id="restoreBrowserSourcePermissionButton"');
+	});
+
 	it("moves the settle delay setting to the options page", () => {
 		expect(popupHtml).not.toContain('id="fieldsSettleMsInput"');
 		expect(optionsHtml).toContain('id="fieldsSettleMsInput"');

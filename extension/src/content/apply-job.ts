@@ -32,6 +32,10 @@ function formatBytes(bytes: number): string {
 	return `${(bytes / (1024 * 1024)).toFixed(1)} MiB`;
 }
 
+function looksLikeAbsolutePath(value: string): boolean {
+	return value.startsWith("/") || /^[A-Za-z]:[\\/]/.test(value);
+}
+
 function removeExistingBanner(): void {
 	document.getElementById(SEMI_AUTO_BANNER_ID)?.remove();
 }
@@ -62,7 +66,10 @@ function renderManualVideoBanner(payload: AppliedJobPayload): void {
 
 	const hint = document.createElement("div");
 	const sizeText = formatBytes(video.sizeBytes);
-	hint.textContent = `文件 ${sizeText}，浏览器无法自动选择。请用上传框，或复制下方路径。`;
+	const hasAbsolutePath = looksLikeAbsolutePath(video.absolutePath);
+	hint.textContent = hasAbsolutePath
+		? `文件 ${sizeText}，浏览器无法自动选择。请用上传框，或复制下方路径。`
+		: `文件 ${sizeText}，请在页面手动选择视频。`;
 
 	const path = document.createElement("pre");
 	path.textContent = video.absolutePath;
@@ -78,7 +85,11 @@ function renderManualVideoBanner(payload: AppliedJobPayload): void {
 		void navigator.clipboard.writeText(video.absolutePath);
 	});
 
-	banner.append(title, hint, path, copy);
+	if (hasAbsolutePath) {
+		banner.append(title, hint, path, copy);
+	} else {
+		banner.append(title, hint);
+	}
 	document.documentElement.append(banner);
 }
 
