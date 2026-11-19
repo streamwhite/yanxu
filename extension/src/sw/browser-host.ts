@@ -25,7 +25,7 @@ import {
 	type PlatformId,
 } from "@yanxu/domain";
 import { BROWSER_JOB_FILE_PATH, type BrowserFileSource } from "../shared/browser-file-source.js";
-import { parseJobFileText } from "../shared/parse-job-file.js";
+import { parseJobFile } from "../shared/parse-job-file.js";
 import { TAB_MESSAGE_SAFE_BYTES } from "../shared/constants/tab-message-limits.js";
 import { estimateJsonUtf8ByteLength } from "../shared/estimate-json-utf8-byte-length.js";
 
@@ -127,8 +127,7 @@ async function findFirstFileHandle(
 
 async function readJobFileJson(source: BrowserFileSource): Promise<unknown> {
 	const file = await source.jobFile.getFile();
-	const text = await file.text();
-	return parseJobFileText(file.name, text);
+	return parseJobFile(file);
 }
 
 function resolveCanonicalJob(

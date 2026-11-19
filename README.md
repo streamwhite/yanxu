@@ -19,14 +19,16 @@
 
 在设置页选择任务文件和素材目录后，打开弹窗点击“开始”。扩展会读取 JSON、视频和封面并填充发布字段；检查各平台页面后手动提交。
 
-任务文件支持 JSON 和 CSV。CSV 更适合用 Excel 维护：
+任务文件支持 JSON、CSV 和 XLSX：
 
-- 示例：[`examples/batch.job.example.csv`](examples/batch.job.example.csv)
+- XLSX 可直接用 Excel 编辑，扩展读取第一个工作表
+- CSV 适合轻量维护
 - 表头支持中文或英文
 - 标签、目标平台用 `|` 分隔
 - 目标平台可写 `bilibili` / `douyin` / `channels`，或 `B站` / `抖音` / `视频号`
 - 封面列可写 `是` / `否`
-- Excel 保存时选择 **CSV UTF-8**
+
+CSV 示例：[`examples/batch.job.example.csv`](examples/batch.job.example.csv)
 
 常用列：
 

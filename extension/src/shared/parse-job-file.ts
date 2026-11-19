@@ -1,8 +1,10 @@
 import { BilibiliSourceType, type PlatformId } from "@yanxu/domain";
+import { readSheet } from "read-excel-file/universal";
 
-export const CSV_ASSETS_PARENT_FOLDER = "/yanxu-selected-assets" as const;
+export const JOB_ASSETS_PARENT_FOLDER = "/yanxu-selected-assets" as const;
 
 const CSV_EXTENSION = ".csv" as const;
+const XLSX_EXTENSION = ".xlsx" as const;
 const DEFAULT_JOB_VERSION = 3 as const;
 const BOM = "\uFEFF" as const;
 
@@ -58,6 +60,16 @@ const SOURCE_TYPE_ALIASES: Readonly<Record<string, BilibiliSourceType>> = {
 
 function isCsvFileName(fileName: string): boolean {
 	return fileName.toLowerCase().endsWith(CSV_EXTENSION);
+}
+
+function isXlsxFileName(fileName: string): boolean {
+	return fileName.toLowerCase().endsWith(XLSX_EXTENSION);
+}
+
+function cellToString(value: unknown): string {
+	if (value === null || value === undefined) return "";
+	if (value instanceof Date) return value.toISOString().slice(0, 10);
+	return String(value).trim();
 }
 
 function parseCsvRows(text: string): string[][] {
@@ -132,28 +144,44 @@ function splitList(value: string): string[] {
 		.filter((part) => part.length > 0);
 }
 
-function parseTargets(value: string, rowNumber: number): PlatformId[] | undefined {
+function parseTargets(
+	value: string,
+	rowNumber: number,
+	sourceLabel: string,
+): PlatformId[] | undefined {
 	const parts = splitList(value);
 	if (parts.length === 0) return undefined;
 	return parts.map((part) => {
 		const platform = PLATFORM_ALIASES[part.toLowerCase()];
-		if (!platform) throw new Error(`CSV 第 ${String(rowNumber)} 行的目标平台无效：${part}`);
+		if (!platform) {
+			throw new Error(`${sourceLabel} 第 ${String(rowNumber)} 行的目标平台无效：${part}`);
+		}
 		return platform;
 	});
 }
 
-function parseIncludeCover(value: string, rowNumber: number): boolean | undefined {
+function parseIncludeCover(
+	value: string,
+	rowNumber: number,
+	sourceLabel: string,
+): boolean | undefined {
 	if (value.length === 0) return undefined;
 	const normalized = value.toLowerCase();
 	if (TRUE_VALUES.has(normalized)) return true;
 	if (FALSE_VALUES.has(normalized)) return false;
-	throw new Error(`CSV 第 ${String(rowNumber)} 行的封面值无效：${value}`);
+	throw new Error(`${sourceLabel} 第 ${String(rowNumber)} 行的封面值无效：${value}`);
 }
 
-function parseSourceType(value: string, rowNumber: number): BilibiliSourceType | undefined {
+function parseSourceType(
+	value: string,
+	rowNumber: number,
+	sourceLabel: string,
+): BilibiliSourceType | undefined {
 	if (value.length === 0) return undefined;
 	const sourceType = SOURCE_TYPE_ALIASES[value.toLowerCase()];
-	if (!sourceType) throw new Error(`CSV 第 ${String(rowNumber)} 行的来源无效：${value}`);
+	if (!sourceType) {
+		throw new Error(`${sourceLabel} 第 ${String(rowNumber)} 行的来源无效：${value}`);
+	}
 	return sourceType;
 }
 
@@ -161,15 +189,24 @@ function buildItem(
 	cells: string[],
 	headerIndex: Map<CsvHeaderKey, number>,
 	rowNumber: number,
+	sourceLabel: string,
 ): CsvJobItem {
 	const name = readCell(cells, headerIndex, "name");
-	if (!name) throw new Error(`CSV 第 ${String(rowNumber)} 行缺少名称`);
+	if (!name) throw new Error(`${sourceLabel} 第 ${String(rowNumber)} 行缺少名称`);
 
 	const description = readCell(cells, headerIndex, "description");
 	const tags = splitList(readCell(cells, headerIndex, "tags"));
-	const targets = parseTargets(readCell(cells, headerIndex, "targets"), rowNumber);
-	const includeCover = parseIncludeCover(readCell(cells, headerIndex, "includeCover"), rowNumber);
-	const sourceType = parseSourceType(readCell(cells, headerIndex, "sourceType"), rowNumber);
+	const targets = parseTargets(readCell(cells, headerIndex, "targets"), rowNumber, sourceLabel);
+	const includeCover = parseIncludeCover(
+		readCell(cells, headerIndex, "includeCover"),
+		rowNumber,
+		sourceLabel,
+	);
+	const sourceType = parseSourceType(
+		readCell(cells, headerIndex, "sourceType"),
+		rowNumber,
+		sourceLabel,
+	);
 	const partition = readCell(cells, headerIndex, "partition");
 	const creativeStatement = readCell(cells, headerIndex, "creativeStatement");
 	const creativeStatementAuth = readCell(cells, headerIndex, "creativeStatementAuth");
@@ -189,27 +226,48 @@ function buildItem(
 	};
 }
 
-export function parseCsvJob(text: string): unknown {
-	const rows = parseCsvRows(text);
-	if (rows.length < 2) throw new Error("CSV 至少需要表头和一行任务");
+function buildJobFromRows(rows: string[][], sourceLabel: string): unknown {
+	if (rows.length < 2) throw new Error(`${sourceLabel} 至少需要表头和一行任务`);
 
 	const headerIndex = buildHeaderIndex(rows[0]);
-	if (!headerIndex.has("name")) throw new Error("CSV 缺少名称列（name / 名称）");
+	if (!headerIndex.has("name")) {
+		throw new Error(`${sourceLabel} 缺少名称列（name / 名称）`);
+	}
 
-	const items = rows.slice(1).map((cells, index) => buildItem(cells, headerIndex, index + 2));
+	const items = rows
+		.slice(1)
+		.map((cells, index) => buildItem(cells, headerIndex, index + 2, sourceLabel));
 	const seenNames = new Set<string>();
 	for (const item of items) {
-		if (seenNames.has(item.name)) throw new Error(`CSV 名称重复：${item.name}`);
+		if (seenNames.has(item.name)) {
+			throw new Error(`${sourceLabel} 名称重复：${item.name}`);
+		}
 		seenNames.add(item.name);
 	}
 
-	const assetsParentFolder = CSV_ASSETS_PARENT_FOLDER;
-
 	return {
 		jobVersion: DEFAULT_JOB_VERSION,
-		assetsParentFolder,
+		assetsParentFolder: JOB_ASSETS_PARENT_FOLDER,
 		items,
 	};
+}
+
+export function parseCsvJob(text: string): unknown {
+	return buildJobFromRows(parseCsvRows(text), "CSV");
+}
+
+async function parseXlsxJob(file: File): Promise<unknown> {
+	const rows = await readSheet(file);
+	const normalized = rows
+		.map((row) => row.map(cellToString))
+		.filter((row) => row.some((cell) => cell.length > 0));
+	return buildJobFromRows(normalized, "Excel");
+}
+
+export async function parseJobFile(file: File): Promise<unknown> {
+	if (isXlsxFileName(file.name)) return parseXlsxJob(file);
+	if (isCsvFileName(file.name)) return parseCsvJob(await file.text());
+	return JSON.parse(await file.text()) as unknown;
 }
 
 export function parseJobFileText(fileName: string, text: string): unknown {

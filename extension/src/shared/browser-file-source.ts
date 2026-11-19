@@ -1,4 +1,4 @@
-import { CSV_ASSETS_PARENT_FOLDER, parseJobFileText } from "./parse-job-file.js";
+import { JOB_ASSETS_PARENT_FOLDER, parseJobFile } from "./parse-job-file.js";
 
 export const BROWSER_JOB_FILE_PATH = "browser://selected-job" as const;
 
@@ -101,14 +101,14 @@ export async function saveBrowserAssetsDirHandle(handle: FileSystemDirectoryHand
 
 async function readAssetsAbsolutePath(jobFile: FileSystemFileHandle): Promise<string | undefined> {
 	try {
-		const text = await (await jobFile.getFile()).text();
-		const parsed = parseJobFileText(jobFile.name, text) as {
+		const file = await jobFile.getFile();
+		const parsed = (await parseJobFile(file)) as {
 			assetsParentFolder?: unknown;
 			assets?: { localVideoPath?: unknown };
 		};
 		if (
 			typeof parsed.assetsParentFolder === "string" &&
-			parsed.assetsParentFolder !== CSV_ASSETS_PARENT_FOLDER
+			parsed.assetsParentFolder !== JOB_ASSETS_PARENT_FOLDER
 		) {
 			return parsed.assetsParentFolder;
 		}
