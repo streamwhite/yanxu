@@ -21,8 +21,9 @@ The job file consumed by `applyJobFromFile` is validated by [`CanonicalJobSchema
 Example job file:
 
 - Batch JSON (multi-tab): [`examples/batch.job.example.json`](examples/batch.job.example.json)
-- Batch CSV (Excel-friendly): [`examples/batch.job.example.csv`](examples/batch.job.example.csv)
-- Batch XLSX: select any `.xlsx` job file; the first worksheet is used. CSV/XLSX are converted to the same batch job structure, and assets are resolved from the selected directory by file name.
+- Batch XLSX: select any `.xlsx` job file; the first worksheet is used. XLSX files are converted to the same batch job structure, and assets are resolved from the selected directory by file name.
+
+The bundled JSON example uses Chinese keys (`任务列表`, `名称`, `描述`, `标签`, `来源`, `B站分区`, `创作声明`, `创作声明授权`, `视频号标注`) and covers every supported field plus full and minimal items. For this Chinese-key format, the parser supplies `jobVersion: 3` and the selected-assets sentinel when `jobVersion` and `assetsParentFolder` are omitted. Platforms are chosen in the popup, and a cover is filled only when a matching image exists.
 
 Legacy v1/v2 single-platform examples remain for schema reference only: `examples/bilibili.job.example.json`, `examples/douyin.job.example.json`, `examples/channels.job.example.json`.
 
@@ -42,7 +43,9 @@ Legacy v1/v2 single-platform examples remain for schema reference only: `example
 
 **`bilibili.creativeStatement` / `bilibili.creativeStatementAuth`:** optional; default to **内容无需标注** and **内容为自制：未经作者允许，禁止转载** (`.statement-content .bcc-select` dropdown). Omitted from batch JSON when defaults apply.
 
-**Popup actions (batch only):** Click the toolbar icon to open a **persistent control window** (stays open until you close it). **开始** first opens one upload tab per job item for each targeted platform (`bilibili`, `douyin`, `视频号`; canonical upload URLs in [`PLATFORM_UPLOAD_PAGE_URLS`](packages/domain/src/constants/platform-upload-page-urls.ts)), then runs `videoOnly`, waits **`fieldsSettleMs`** (default 4000, configurable on the extension **options page**, stored in `semiAutoFieldsSettleMs`), then `fieldsOnly`. Video attachments use the upload pacing below; fields are applied after the settle interval, with 视频号 / `channels` processed sequentially and its tab activated before each action. Progress logs use short field names (e.g. `描述`, `标题`) instead of CSS selectors. Legacy runtime messages `runtime.uploadAllTabs` / `runtime.fillAllTabs` / `runtime.openPlatformTabs` remain for automation; use `runtime.openAllPlatformTabs` to open every platform at once. Non-batch job files return `batch_job_required`.
+**Popup actions (batch only):** Click the toolbar icon to open a **persistent control window** (stays open until you close it). **开始** first opens one upload tab per job item for each targeted platform (`bilibili`, `douyin`, `视频号`; canonical upload URLs in [`PLATFORM_UPLOAD_PAGE_URLS`](packages/domain/src/constants/platform-upload-page-urls.ts)), then runs `videoOnly`, waits **`fieldsSettleMs`** (default 1000 ms), then `fieldsOnly`. Video attachments use the upload pacing below; fields are applied after the settle interval, with 视频号 / `channels` processed sequentially and its tab activated before each action. Progress logs use short field names (e.g. `描述`, `标题`) instead of CSS selectors. Legacy runtime messages `runtime.uploadAllTabs` / `runtime.fillAllTabs` / `runtime.openPlatformTabs` remain for automation; use `runtime.openAllPlatformTabs` to open every platform at once. Non-batch job files return `batch_job_required`.
+
+**视频号 submission batches:** options default to 4 tabs per batch and a 3-second interval.
 
 **Upload pacing:** Each platform is limited to **30 upload starts in a rolling 24-hour window**. Reaching that limit stops remaining uploads for that platform and reports when it can resume; other platforms are unaffected. The rate history is stored locally and survives browser restarts.
 
@@ -63,12 +66,12 @@ URLs allowed for content injection: [`isAllowedPlatformUrl`](packages/domain/src
 The extension can read the job file and assets directly through the File System Access API, without a native host:
 
 - Handle storage and permission checks: [`extension/src/shared/browser-file-source.ts`](extension/src/shared/browser-file-source.ts)
-- JSON / CSV / XLSX job parsing: [`extension/src/shared/parse-job-file.ts`](extension/src/shared/parse-job-file.ts)
+- JSON / XLSX job parsing: [`extension/src/shared/parse-job-file.ts`](extension/src/shared/parse-job-file.ts)
 - Browser-side host protocol: [`extension/src/sw/browser-host.ts`](extension/src/sw/browser-host.ts)
 - File/directory pickers: [`extension/src/options/browser-file-source-ui.ts`](extension/src/options/browser-file-source-ui.ts)
 - Sentinel job path: `browser://selected-job`
 
-Handles are stored in IndexedDB and read from the service worker. After a browser restart the permission may be `prompt`; the options page exposes a “恢复访问” action. Supported on Chrome / Edge; Brave requires enabling `File System Access API` in `brave://flags`.
+Handles are stored in IndexedDB and read from the service worker. After a browser restart the permission may be `prompt`; the popup then opens the options page automatically, where the “恢复访问” action re-grants it. Supported on Chrome / Edge; Brave requires enabling `File System Access API` in `brave://flags`.
 
 #### Chromium extension runtime messages
 
@@ -85,7 +88,7 @@ Host → browser (`applyJobReady.payload`) attachments:
 - Multi-frame host replies (stream + final `applyJobReady`) are collected by [`postBrowserHostSession`](extension/src/sw/browser-host-session.ts)
 - `attachments.cover`:
   - `inlineBase64` if small enough for one frame; larger covers use `coverStreamStart` / `coverStreamChunk` (merged in the service worker); over policy max → `skipped`
-  - On **Fill fields**, all text/radio/tag/partition fields run first; **cover is last** on platforms with cover UI (bilibili: poll until cover trigger ready, then `.cover-img` → `.upload-area` → `input[type=file]`). Close the modal manually after review.
+  - On **Fill fields**, all text/radio/tag/partition fields run first; **cover is last** on platforms with cover UI. Bilibili: open the cover editor (`.cover-img` or `.cover-empty`), enable **双比例同步改动** so 4:3 and 16:9 stay in sync, then upload the `-4x3` file when horizontal covers are enabled. The editor stays open so you can review the crop and click **完成** yourself.
 
 Service worker → content script:
 

@@ -2,19 +2,20 @@ import { readFileSync } from "node:fs";
 
 const POPUP_HTML_PATH = "extension/popup.html";
 const OPTIONS_HTML_PATH = "extension/options.html";
+const POPUP_CSS_PATH = "extension/popup.css";
 
 describe("popup UI layout", () => {
 	const popupHtml = readFileSync(POPUP_HTML_PATH, "utf8");
 	const optionsHtml = readFileSync(OPTIONS_HTML_PATH, "utf8");
+	const popupCss = readFileSync(POPUP_CSS_PATH, "utf8");
 
 	it("hides the internal batch job tagline", () => {
 		expect(popupHtml).not.toContain("Batch job (v3)");
 	});
 
-	it("groups the local job source and platform scope as one preparation section", () => {
-		expect(popupHtml).toContain('id="openBrowserFileSourceButton"');
+	it("keeps platform scope in the preparation section", () => {
 		expect(popupHtml).toContain('id="batchPlatformScopeSelect"');
-		const prepStart = popupHtml.indexOf('id="openBrowserFileSourceButton"');
+		const prepStart = popupHtml.indexOf('id="stepPrepareTitle"');
 		const prepEnd = popupHtml.indexOf("</section>", prepStart);
 		const scopeIndex = popupHtml.indexOf('id="batchPlatformScopeSelect"');
 		const uploadFillIndex = popupHtml.indexOf('id="uploadAndFillAllTabsButton"');
@@ -61,7 +62,7 @@ describe("popup UI layout", () => {
 		expect(popupHtml).toMatch(/<pre id="batchProgressLog"[^>]*hidden/);
 	});
 
-	it("offers file-system access for the local job source", () => {
+	it("keeps the task source button and status in the popup", () => {
 		expect(popupHtml).toContain('id="openBrowserFileSourceButton"');
 		expect(popupHtml).not.toContain('id="jobFilePathInput"');
 		expect(popupHtml).toContain('id="browserFileSourceStatus"');
@@ -70,8 +71,14 @@ describe("popup UI layout", () => {
 		expect(optionsHtml).toContain('id="restoreBrowserSourcePermissionButton"');
 	});
 
-	it("moves the settle delay setting to the options page", () => {
+	it("renders the task source status in a smaller font", () => {
+		expect(popupHtml).toMatch(/id="browserFileSourceStatus"[^>]*class="[^"]*browser-file-source-status/);
+		expect(popupCss).toContain(".browser-file-source-status");
+	});
+
+	it("does not expose upload-to-fill delay settings", () => {
 		expect(popupHtml).not.toContain('id="fieldsSettleMsInput"');
-		expect(optionsHtml).toContain('id="fieldsSettleMsInput"');
+		expect(optionsHtml).not.toContain('id="fieldsSettleMsInput"');
+		expect(optionsHtml).not.toContain("上传与填充");
 	});
 });

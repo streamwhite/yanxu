@@ -12,8 +12,8 @@ const CJK_UNIFIED_IDEOGRAPHS = /[\u4e00-\u9fff]/;
 
 describe("popup user-facing text is Chinese", () => {
 	const channelsBatch = resolveChannelsSubmitBatchConfig({
-		batchSize: 5,
-		batchIntervalMin: 5,
+		batchSize: 4,
+		batchIntervalSeconds: 3,
 	});
 
 	it("localizes the submit labels", () => {

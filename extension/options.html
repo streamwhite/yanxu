@@ -17,20 +17,19 @@
 
     <section class="card">
       <div class="card-body">
-        <h2 class="h6 fw-semibold mb-3">本地任务文件</h2>
         <div class="d-flex flex-wrap gap-2">
           <button id="chooseBrowserJobFileButton" class="btn btn-outline-primary btn-sm" type="button">
-            选择任务文件
+            任务文件
           </button>
           <button id="chooseBrowserAssetsDirButton" class="btn btn-outline-primary btn-sm" type="button">
-            选择素材目录
+            素材文件夹
           </button>
           <button id="restoreBrowserSourcePermissionButton" class="btn btn-outline-secondary btn-sm d-none"
             type="button">
             恢复访问
           </button>
-          <button id="clearBrowserFileSourceButton" class="btn btn-link btn-sm p-0 text-secondary d-none"
-            title="清除" aria-label="清除" type="button">
+          <button id="clearBrowserFileSourceButton" class="btn btn-link btn-sm p-0 text-secondary d-none" title="清除"
+            aria-label="清除" type="button">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"
               aria-hidden="true">
               <path
@@ -40,51 +39,33 @@
             </svg>
           </button>
         </div>
-        <p id="browserFileSourceStatus" class="form-text small text-muted mb-0 mt-2" role="status"
-          aria-live="polite"></p>
+        <p id="browserFileSourceStatus" class="form-text small text-muted mb-0 mt-2" role="status" aria-live="polite">
+        </p>
       </div>
     </section>
 
     <section class="card mt-3">
       <div class="card-body">
-        <h2 class="h6 fw-semibold mb-3">视频号发布</h2>
+        <h2 class="h6 fw-semibold mb-3">视频号设置</h2>
         <div class="row g-3">
           <div class="col-sm-6">
             <label class="form-label small fw-semibold" for="channelsSubmitBatchSizeInput">
-              视频号每批数量
+              每批数量
             </label>
-            <input id="channelsSubmitBatchSizeInput" class="form-control form-control-sm" type="number" min="1"
-              max="20" step="1" />
+            <input id="channelsSubmitBatchSizeInput" class="form-control form-control-sm" type="number" min="1" max="20"
+              step="1" />
             <p class="form-text small mb-0">每批提交的标签页数量。</p>
           </div>
           <div class="col-sm-6">
-            <label class="form-label small fw-semibold" for="channelsSubmitBatchIntervalMinInput">
-              批次间隔（分钟）
+            <label class="form-label small fw-semibold" for="channelsSubmitBatchIntervalSecondsInput">
+              批次间隔（秒）
             </label>
-            <input id="channelsSubmitBatchIntervalMinInput" class="form-control form-control-sm" type="number" min="1"
-              max="60" step="1" />
+            <input id="channelsSubmitBatchIntervalSecondsInput" class="form-control form-control-sm" type="number"
+              min="1" max="60" step="1" />
             <p class="form-text small mb-0">每批之间的暂停时间。</p>
           </div>
         </div>
         <p id="channelsBatchSettingsSavedStatus" class="form-text small text-success mb-0 mt-3 d-none" role="status"
-          aria-live="polite"></p>
-      </div>
-    </section>
-
-    <section class="card mt-3">
-      <div class="card-body">
-        <h2 class="h6 fw-semibold mb-3">上传与填充</h2>
-        <div class="row g-3">
-          <div class="col-sm-6">
-            <label class="form-label small fw-semibold" for="fieldsSettleMsInput">
-              上传后、填充前的等待时间（毫秒）
-            </label>
-            <input id="fieldsSettleMsInput" class="form-control form-control-sm" type="number" min="0" max="120000"
-              step="500" />
-            <p class="form-text small mb-0">等待页面稳定后再填充字段和封面。</p>
-          </div>
-        </div>
-        <p id="fieldsSettleMsSavedStatus" class="form-text small text-success mb-0 mt-3 d-none" role="status"
           aria-live="polite"></p>
       </div>
     </section>

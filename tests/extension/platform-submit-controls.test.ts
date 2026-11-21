@@ -10,19 +10,19 @@ const POPUP_HTML_PATH = "extension/popup.html";
 
 describe("platform submit labels", () => {
   const channelsBatch = resolveChannelsSubmitBatchConfig({
-    batchSize: 5,
-    batchIntervalMin: 5,
+    batchSize: 4,
+    batchIntervalSeconds: 3,
   });
 
   it("describes bilibili, douyin, then batched 视频号 in busy label", () => {
     expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("bilibili、douyin");
-    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("每批 5 个");
-    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("间隔 5 分钟");
+    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("每批 4 个");
+    expect(allPlatformsSubmitBusyLabel(channelsBatch)).toContain("间隔 3 秒");
   });
 
   it("mentions all platforms and 视频号 batch size in success label", () => {
     expect(allPlatformsSubmitSuccessLabel(channelsBatch)).toContain("全部平台");
-    expect(allPlatformsSubmitSuccessLabel(channelsBatch)).toContain("每批 5 个");
+    expect(allPlatformsSubmitSuccessLabel(channelsBatch)).toContain("每批 4 个");
   });
 });
 

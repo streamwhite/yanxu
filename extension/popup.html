@@ -31,17 +31,12 @@
         <span>准备</span>
       </h2>
       <div class="mb-2">
-        <div class="d-flex align-items-center justify-content-between gap-2">
-          <span class="form-label small fw-semibold mb-0">本地任务文件</span>
-          <button id="openBrowserFileSourceButton" class="btn btn-outline-secondary btn-sm text-nowrap"
-            type="button">
-            选择任务与素材
-          </button>
-        </div>
-        <p id="browserFileSourceStatus" class="form-text small text-muted mb-0 mt-1" role="status"
-          aria-live="polite"></p>
+        <button id="openBrowserFileSourceButton" class="btn btn-outline-secondary btn-sm text-nowrap" type="button">
+          选择任务与素材
+        </button>
+        <p id="browserFileSourceStatus" class="form-text small browser-file-source-status text-muted mb-0 mt-1"
+          role="status" aria-live="polite"></p>
       </div>
-
       <div>
         <label class="form-label small fw-semibold" for="batchPlatformScopeSelect">平台范围</label>
         <select id="batchPlatformScopeSelect" class="form-select form-select-sm mb-2">

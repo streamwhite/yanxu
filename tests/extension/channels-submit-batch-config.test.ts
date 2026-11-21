@@ -1,5 +1,4 @@
 import {
-	channelsSubmitBatchIntervalMinToMs,
 	DEFAULT_CHANNELS_SUBMIT_BATCH_INTERVAL_MS,
 	DEFAULT_CHANNELS_SUBMIT_BATCH_SIZE,
 	resolveChannelsSubmitBatchConfig,
@@ -7,22 +6,24 @@ import {
 import { resolveChannelsSubmitTimeoutMs } from "../../extension/src/shared/constants/runtime-request-timing";
 
 describe("channelsSubmitBatchConfig", () => {
-	it("defaults batch size to 5 and interval to 5 minutes", () => {
+	it("defaults batch size to 4 and interval to 3 seconds", () => {
 		expect(resolveChannelsSubmitBatchConfig()).toEqual({
-			batchSize: DEFAULT_CHANNELS_SUBMIT_BATCH_SIZE,
-			batchIntervalMs: DEFAULT_CHANNELS_SUBMIT_BATCH_INTERVAL_MS,
+			batchSize: 4,
+			batchIntervalMs: 3_000,
 		});
+		expect(DEFAULT_CHANNELS_SUBMIT_BATCH_SIZE).toBe(4);
+		expect(DEFAULT_CHANNELS_SUBMIT_BATCH_INTERVAL_MS).toBe(3_000);
 	});
 
 	it("clamps invalid batch settings", () => {
 		expect(
 			resolveChannelsSubmitBatchConfig({
 				batchSize: 0,
-				batchIntervalMin: 999,
+				batchIntervalSeconds: 999,
 			}),
 		).toEqual({
 			batchSize: 1,
-			batchIntervalMs: channelsSubmitBatchIntervalMinToMs(60),
+			batchIntervalMs: 60_000,
 		});
 	});
 

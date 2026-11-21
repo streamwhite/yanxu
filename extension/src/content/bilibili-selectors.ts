@@ -78,7 +78,11 @@ export const BILIBILI_COVER_UPLOAD_TEXT = "上传封面" as const;
 
 export const BILIBILI_VIDEO_UPLOAD_DRAG_TEXT = "点击上传或将视频拖拽到此区域" as const;
 
-export const BILIBILI_COVER_TRIGGER_SELECTORS = [".cover-img"] as const;
+export const BILIBILI_COVER_TRIGGER_SELECTORS = [
+	".cover-img",
+	".cover-module-main .cover-empty",
+	".cover-empty",
+] as const;
 
 export const BILIBILI_COVER_MODAL_UPLOAD_AREA_SELECTORS = [".upload-area"] as const;
 

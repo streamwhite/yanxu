@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import {
 	CHANNELS_BATCH_SETTINGS_SAVED_STATUS_ID,
-	CHANNELS_SUBMIT_BATCH_INTERVAL_MIN_INPUT_ID,
+	CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS_INPUT_ID,
 	CHANNELS_SUBMIT_BATCH_SIZE_INPUT_ID,
 } from "../../extension/src/options/options-ui";
 
@@ -20,15 +20,18 @@ describe("channels batch settings options page", () => {
 	it("declares the 视频号 batch inputs on the options page", () => {
 		expect(optionsHtml).toContain(`id="${CHANNELS_SUBMIT_BATCH_SIZE_INPUT_ID}"`);
 		expect(optionsHtml).toContain(
-			`id="${CHANNELS_SUBMIT_BATCH_INTERVAL_MIN_INPUT_ID}"`,
+			`id="${CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS_INPUT_ID}"`,
 		);
+		expect(optionsHtml).toContain("素材文件夹");
+		expect(optionsHtml).toContain("任务文件");
+		expect(optionsHtml).not.toContain("本地任务文件");
 		expect(optionsHtml).toContain(`id="${CHANNELS_BATCH_SETTINGS_SAVED_STATUS_ID}"`);
 		expect(optionsHtml).toContain('src="./dist/options.js"');
 	});
 
 	it("keeps batch inputs and the settings link out of the popup", () => {
 		expect(popupHtml).not.toContain(CHANNELS_SUBMIT_BATCH_SIZE_INPUT_ID);
-		expect(popupHtml).not.toContain(CHANNELS_SUBMIT_BATCH_INTERVAL_MIN_INPUT_ID);
+		expect(popupHtml).not.toContain(CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS_INPUT_ID);
 		expect(popupHtml).not.toContain(`id="${OPEN_OPTIONS_BUTTON_ID}"`);
 	});
 

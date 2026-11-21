@@ -19,7 +19,7 @@ export async function postBrowserHostSession(
 			return {
 				ok: false,
 				code: "browser_source_missing",
-				message: "请先在设置页选择任务文件和素材目录。",
+				message: "请先在设置页选择任务文件和素材文件夹。",
 			};
 		}
 

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "雁序 — 多平台投稿助手",
   "description": "从本地批量任务填充 Bilibili、抖音和视频号投稿页面；检查后由用户手动发布。",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "permissions": ["scripting", "storage", "clipboardWrite", "tabs"],
   "icons": {
     "16": "icons/icon-16.png",

@@ -15,13 +15,13 @@ const HEADER_ALIASES = {
 	targets: ["targets", "目标平台", "平台"],
 	includeCover: ["includecover", "include_cover", "需要封面", "封面"],
 	sourceType: ["sourcetype", "source_type", "来源", "来源类型"],
-	partition: ["partition", "分区"],
+	partition: ["partition", "b站分区", "B站分区"],
 	creativeStatement: ["creativestatement", "creative_statement", "创作声明"],
 	creativeStatementAuth: ["creativestatementauth", "creative_statement_auth", "创作声明授权"],
 	markTag: ["marktag", "mark_tag", "视频号标注", "标注"],
 } as const;
 
-type CsvJobItem = {
+type SpreadsheetJobItem = {
 	name: string;
 	description?: string;
 	tags?: string[];
@@ -34,7 +34,21 @@ type CsvJobItem = {
 	markTag?: string;
 };
 
-type CsvHeaderKey = keyof typeof HEADER_ALIASES;
+type SpreadsheetHeaderKey = keyof typeof HEADER_ALIASES;
+
+const CHINESE_JSON_ITEMS_KEY = "任务列表" as const;
+const CHINESE_JSON_ITEM_FIELDS: Readonly<Record<SpreadsheetHeaderKey, string>> = {
+	name: "名称",
+	description: "描述",
+	tags: "标签",
+	targets: "目标平台",
+	includeCover: "需要封面",
+	sourceType: "来源",
+	partition: "B站分区",
+	creativeStatement: "创作声明",
+	creativeStatementAuth: "创作声明授权",
+	markTag: "视频号标注",
+};
 
 const PLATFORM_ALIASES: Readonly<Record<string, PlatformId>> = {
 	bilibili: "bilibili",
@@ -58,12 +72,14 @@ const SOURCE_TYPE_ALIASES: Readonly<Record<string, BilibiliSourceType>> = {
 	转载: BilibiliSourceType.Repost,
 };
 
-function isCsvFileName(fileName: string): boolean {
-	return fileName.toLowerCase().endsWith(CSV_EXTENSION);
-}
-
 function isXlsxFileName(fileName: string): boolean {
 	return fileName.toLowerCase().endsWith(XLSX_EXTENSION);
+}
+
+function rejectCsvFile(fileName: string): void {
+	if (fileName.toLowerCase().endsWith(CSV_EXTENSION)) {
+		throw new Error(`不支持的任务文件格式：${CSV_EXTENSION}`);
+	}
 }
 
 function cellToString(value: unknown): string {
@@ -72,55 +88,14 @@ function cellToString(value: unknown): string {
 	return String(value).trim();
 }
 
-function parseCsvRows(text: string): string[][] {
-	const rows: string[][] = [];
-	let row: string[] = [];
-	let field = "";
-	let inQuotes = false;
-
-	for (let index = 0; index < text.length; index += 1) {
-		const character = text[index];
-		if (inQuotes) {
-			if (character === '"') {
-				if (text[index + 1] === '"') {
-					field += '"';
-					index += 1;
-				} else {
-					inQuotes = false;
-				}
-			} else {
-				field += character;
-			}
-			continue;
-		}
-
-		if (character === '"') {
-			inQuotes = true;
-		} else if (character === ",") {
-			row.push(field);
-			field = "";
-		} else if (character === "\n") {
-			row.push(field);
-			rows.push(row);
-			row = [];
-			field = "";
-		} else if (character !== "\r") {
-			field += character;
-		}
-	}
-
-	if (field.length > 0 || row.length > 0) {
-		row.push(field);
-		rows.push(row);
-	}
-	rows[0] = rows[0].map((cell) => cell.replace(BOM, ""));
-	return rows.filter((cells) => cells.some((cell) => cell.trim().length > 0));
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function buildHeaderIndex(headerCells: string[]): Map<CsvHeaderKey, number> {
+function buildHeaderIndex(headerCells: string[]): Map<SpreadsheetHeaderKey, number> {
 	const normalized = headerCells.map((cell) => cell.trim().toLowerCase());
-	const indexByKey = new Map<CsvHeaderKey, number>();
-	for (const key of Object.keys(HEADER_ALIASES) as CsvHeaderKey[]) {
+	const indexByKey = new Map<SpreadsheetHeaderKey, number>();
+	for (const key of Object.keys(HEADER_ALIASES) as SpreadsheetHeaderKey[]) {
 		const aliases = HEADER_ALIASES[key];
 		const index = normalized.findIndex((cell) => (aliases as readonly string[]).includes(cell));
 		if (index >= 0) indexByKey.set(key, index);
@@ -130,8 +105,8 @@ function buildHeaderIndex(headerCells: string[]): Map<CsvHeaderKey, number> {
 
 function readCell(
 	cells: string[],
-	headerIndex: Map<CsvHeaderKey, number>,
-	key: CsvHeaderKey,
+	headerIndex: Map<SpreadsheetHeaderKey, number>,
+	key: SpreadsheetHeaderKey,
 ): string {
 	const index = headerIndex.get(key);
 	return index === undefined ? "" : (cells[index] ?? "").trim();
@@ -187,10 +162,10 @@ function parseSourceType(
 
 function buildItem(
 	cells: string[],
-	headerIndex: Map<CsvHeaderKey, number>,
+	headerIndex: Map<SpreadsheetHeaderKey, number>,
 	rowNumber: number,
 	sourceLabel: string,
-): CsvJobItem {
+): SpreadsheetJobItem {
 	const name = readCell(cells, headerIndex, "name");
 	if (!name) throw new Error(`${sourceLabel} 第 ${String(rowNumber)} 行缺少名称`);
 
@@ -252,8 +227,37 @@ function buildJobFromRows(rows: string[][], sourceLabel: string): unknown {
 	};
 }
 
-export function parseCsvJob(text: string): unknown {
-	return buildJobFromRows(parseCsvRows(text), "CSV");
+function normalizeJsonItem(value: unknown): unknown {
+	if (!isRecord(value)) return value;
+	const item = { ...value };
+	for (const [field, chineseField] of Object.entries(CHINESE_JSON_ITEM_FIELDS)) {
+		if (!(field in item) && chineseField in item) item[field] = item[chineseField];
+		delete item[chineseField];
+	}
+	if (Array.isArray(item.targets)) {
+		item.targets = item.targets.map((target) =>
+			typeof target === "string"
+				? (PLATFORM_ALIASES[target.toLowerCase()] ?? target)
+				: target,
+		);
+	}
+	if (typeof item.sourceType === "string") {
+		item.sourceType = SOURCE_TYPE_ALIASES[item.sourceType.toLowerCase()] ?? item.sourceType;
+	}
+	return item;
+}
+
+function normalizeJsonJob(value: unknown): unknown {
+	if (!isRecord(value) || !Array.isArray(value[CHINESE_JSON_ITEMS_KEY])) return value;
+	const job = { ...value };
+	const items = job[CHINESE_JSON_ITEMS_KEY] as unknown[];
+	delete job[CHINESE_JSON_ITEMS_KEY];
+	return {
+		...job,
+		jobVersion: job.jobVersion ?? DEFAULT_JOB_VERSION,
+		assetsParentFolder: job.assetsParentFolder ?? JOB_ASSETS_PARENT_FOLDER,
+		items: items.map(normalizeJsonItem),
+	};
 }
 
 async function parseXlsxJob(file: File): Promise<unknown> {
@@ -261,16 +265,17 @@ async function parseXlsxJob(file: File): Promise<unknown> {
 	const normalized = rows
 		.map((row) => row.map(cellToString))
 		.filter((row) => row.some((cell) => cell.length > 0));
+	normalized[0] = normalized[0]?.map((cell) => cell.replace(BOM, "")) ?? [];
 	return buildJobFromRows(normalized, "Excel");
 }
 
 export async function parseJobFile(file: File): Promise<unknown> {
+	rejectCsvFile(file.name);
 	if (isXlsxFileName(file.name)) return parseXlsxJob(file);
-	if (isCsvFileName(file.name)) return parseCsvJob(await file.text());
-	return JSON.parse(await file.text()) as unknown;
+	return normalizeJsonJob(JSON.parse(await file.text()) as unknown);
 }
 
 export function parseJobFileText(fileName: string, text: string): unknown {
-	if (!isCsvFileName(fileName)) return JSON.parse(text) as unknown;
-	return parseCsvJob(text);
+	rejectCsvFile(fileName);
+	return normalizeJsonJob(JSON.parse(text) as unknown);
 }

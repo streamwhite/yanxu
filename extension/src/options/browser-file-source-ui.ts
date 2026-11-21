@@ -35,19 +35,19 @@ async function renderStatus(
 	]);
 
 	if (!jobFile && !assetsDir) {
-		status.textContent = "尚未选择任务文件和素材目录。";
+		status.textContent = "尚未选择任务文件和素材文件夹。";
 		restoreButton.classList.add("d-none");
 		clearButton.classList.add("d-none");
 		return;
 	}
 	if (!jobFile) {
-		status.textContent = `素材目录：${assetsDir?.name ?? ""}；请选择任务文件。`;
+		status.textContent = `素材文件夹：${assetsDir?.name ?? ""}；请选择任务文件。`;
 		restoreButton.classList.add("d-none");
 		clearButton.classList.remove("d-none");
 		return;
 	}
 	if (!assetsDir) {
-		status.textContent = `任务文件：${jobFile.name}；请选择素材目录。`;
+		status.textContent = `任务：${jobFile.name}；请选择素材文件夹。`;
 		restoreButton.classList.add("d-none");
 		clearButton.classList.remove("d-none");
 		return;
@@ -64,11 +64,10 @@ async function renderStatus(
 
 	const assetsPath = summary?.assetsAbsolutePath ?? assetsDir.name;
 	const jobPath = summary?.jobAbsolutePath ?? jobFile.name;
-	status.textContent = `任务文件：${jobPath}；素材目录：${assetsPath}`;
-	restoreButton.classList.toggle(
-		"d-none",
-		jobPermission === "granted" && assetsPermission === "granted",
-	);
+	status.textContent = `任务：${jobPath}；素材文件夹：${assetsPath}`;
+	const needsRestore = jobPermission !== "granted" || assetsPermission !== "granted";
+	restoreButton.classList.toggle("d-none", !needsRestore);
+	if (needsRestore) restoreButton.focus();
 	clearButton.classList.remove("d-none");
 }
 
@@ -89,7 +88,6 @@ async function chooseJobFile(
 				description: "任务文件",
 				accept: {
 					"application/json": [".json"],
-					"text/csv": [".csv"],
 					"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
 				},
 			},
@@ -156,7 +154,7 @@ export async function initBrowserFileSourceUi(): Promise<void> {
 	chooseAssetsButton.addEventListener("click", () => {
 		void chooseAssetsDir(status, restoreButton, clearButton).catch((error: unknown) => {
 			if (isAbortError(error)) return;
-			status.textContent = `选择素材目录失败：${error instanceof Error ? error.message : "unknown_error"}`;
+			status.textContent = `选择素材文件夹失败：${error instanceof Error ? error.message : "unknown_error"}`;
 		});
 	});
 	restoreButton.addEventListener("click", () => {

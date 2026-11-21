@@ -15,21 +15,21 @@ import {
   type StoredBatchProgress,
 } from "../shared/batch-progress.js";
 import {
+  BROWSER_FILE_SOURCE_SUMMARY_KEY,
   BROWSER_JOB_FILE_PATH,
   browserFileSourceNeedsPermission,
   loadBrowserFileSource,
   loadBrowserFileSourceSummary,
 } from "../shared/browser-file-source.js";
+import { formatBrowserFileSourceStatus, isPermissionRestoreRequired } from "./browser-file-source-status.js";
 import {
   resolveChannelsSubmitBatchConfig,
-  STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
+  STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS,
   STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE,
   type ChannelsSubmitBatchConfig,
 } from "../shared/channels-submit-batch-config.js";
 import {
-  clampFieldsSettleMs,
   DEFAULT_FIELDS_SETTLE_MS,
-  STORAGE_KEY_FIELDS_SETTLE_MS,
 } from "../shared/fields-settle-config.js";
 import {
   listenBatchProgressLog,
@@ -102,12 +102,8 @@ function setSubmitAllPlatformsTitle(button: HTMLButtonElement, channelsBatch: Ch
   button.title = allPlatformsSubmitBusyLabel(channelsBatch);
 }
 
-async function loadFieldsSettleMsFromStorage(): Promise<number> {
-  const stored = await chrome.storage.local.get(STORAGE_KEY_FIELDS_SETTLE_MS);
-  const value = stored[STORAGE_KEY_FIELDS_SETTLE_MS];
-  return typeof value === "number"
-    ? clampFieldsSettleMs(value)
-    : DEFAULT_FIELDS_SETTLE_MS;
+function openOptionsForPermissionRestore(): void {
+  void chrome.runtime.openOptionsPage();
 }
 
 function readStoredNumber(value: unknown): number | undefined {
@@ -117,12 +113,12 @@ function readStoredNumber(value: unknown): number | undefined {
 async function loadChannelsSubmitBatchConfig(): Promise<ChannelsSubmitBatchConfig> {
   const stored = await chrome.storage.local.get([
     STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE,
-    STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
+    STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS,
   ]);
   return resolveChannelsSubmitBatchConfig({
     batchSize: readStoredNumber(stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_SIZE]),
-    batchIntervalMin: readStoredNumber(
-      stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN],
+    batchIntervalSeconds: readStoredNumber(
+      stored[STORAGE_KEY_CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS],
     ),
   });
 }
@@ -169,6 +165,7 @@ async function runRuntimeBatchAction(
       `失败（${result.code}）：${result.message}`,
       PopupOutcomeVariant.Danger,
     );
+    if (isPermissionRestoreRequired(result.code)) openOptionsForPermissionRestore();
   } catch (error: unknown) {
     const detail = error instanceof Error ? error.message : "unexpected_error";
     setOutcome(`失败：${detail}`, PopupOutcomeVariant.Danger);
@@ -376,21 +373,22 @@ async function bootstrap(): Promise<void> {
     );
   };
 
-  const updateJobSourceStatus = async (): Promise<void> => {
-    const summary = await loadBrowserFileSourceSummary();
-    const source = summary === null ? null : await loadBrowserFileSource();
-    if (!summary || !source) {
+  const updateJobSourceStatus = async (redirectOnRestore = false): Promise<void> => {
+    const source = await loadBrowserFileSource();
+    if (!source) {
       browserSourceReady = false;
-      browserFileSourceStatus.textContent = "尚未选择任务文件和素材目录。";
+      browserFileSourceStatus.textContent = "尚未选择任务文件和素材文件夹。";
       openBrowserFileSourceButton.textContent = "选择任务与素材";
       return;
     }
 
+    const summary = await loadBrowserFileSourceSummary();
     browserSourceReady = true;
-    browserFileSourceStatus.textContent = `任务：${summary.jobAbsolutePath ?? summary.jobFileName}；素材：${summary.assetsAbsolutePath ?? summary.assetsDirName}`;
+    browserFileSourceStatus.textContent = formatBrowserFileSourceStatus(source, summary);
     openBrowserFileSourceButton.textContent = "更换文件";
     if (await browserFileSourceNeedsPermission(source)) {
       browserFileSourceStatus.textContent += "（需要恢复访问）";
+      if (redirectOnRestore) openOptionsForPermissionRestore();
     }
   };
 
@@ -398,14 +396,26 @@ async function bootstrap(): Promise<void> {
     void chrome.runtime.openOptionsPage();
   });
 
-  await updateJobSourceStatus();
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName !== "local" || !(BROWSER_FILE_SOURCE_SUMMARY_KEY in changes)) return;
+    void updateJobSourceStatus()
+      .then(reloadPlatformItemSelection)
+      .catch((error: unknown) => {
+        setOutcome(
+          `读取任务文件状态失败：${error instanceof Error ? error.message : "unknown_error"}`,
+          PopupOutcomeVariant.Danger,
+        );
+      });
+  });
+
+  await updateJobSourceStatus(true);
   refreshBatchPlatformScopeUi();
   reloadPlatformItemSelection();
 
   const readJobPath = (): string | null => {
     if (!browserSourceReady) {
       setOutcome(
-        "请先在设置页选择任务文件和素材目录。",
+        "请先在设置页选择任务文件和素材文件夹。",
         PopupOutcomeVariant.Secondary,
       );
       return null;
@@ -448,7 +458,7 @@ async function bootstrap(): Promise<void> {
     }
 
     void (async () => {
-      const fieldsSettleMs = await loadFieldsSettleMsFromStorage();
+      const fieldsSettleMs = DEFAULT_FIELDS_SETTLE_MS;
       uploadAndFillAllTabsButton.disabled = true;
       try {
         const { stage, result } = await startUploadFlow(
@@ -474,6 +484,7 @@ async function bootstrap(): Promise<void> {
         );
         if (stage === "openTabs" && !result.ok) {
           setOutcome(`失败（${result.code}）：${result.message}`, PopupOutcomeVariant.Danger);
+          if (isPermissionRestoreRequired(result.code)) openOptionsForPermissionRestore();
         }
       } catch (error: unknown) {
         const detail = error instanceof Error ? error.message : "unexpected_error";

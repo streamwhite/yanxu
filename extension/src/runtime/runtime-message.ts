@@ -3,11 +3,11 @@ import { ApplyPhase, JobFileOutlineSchema, PLATFORM_IDS } from "@yanxu/domain";
 import { BATCH_PLATFORM_SCOPE_ALL } from "../shared/batch-platform-scope.js";
 import { MAX_FIELDS_SETTLE_MS, MIN_FIELDS_SETTLE_MS } from "../shared/fields-settle-config.js";
 import {
-	MAX_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
+	MAX_CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS,
 	MAX_CHANNELS_SUBMIT_BATCH_SIZE,
-	MIN_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN,
+	MIN_CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS,
 	MIN_CHANNELS_SUBMIT_BATCH_SIZE,
-	MS_PER_MINUTE,
+	MS_PER_SECOND,
 } from "../shared/channels-submit-batch-config.js";
 
 export const RuntimeMessageType = {
@@ -82,8 +82,8 @@ export const RuntimeSubmitPlatformTabsMessageSchema = z.object({
 	channelsSubmitBatchIntervalMs: z
 		.number()
 		.int()
-		.min(MIN_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN * MS_PER_MINUTE)
-		.max(MAX_CHANNELS_SUBMIT_BATCH_INTERVAL_MIN * MS_PER_MINUTE)
+		.min(MIN_CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS * MS_PER_SECOND)
+		.max(MAX_CHANNELS_SUBMIT_BATCH_INTERVAL_SECONDS * MS_PER_SECOND)
 		.optional(),
 });
 

@@ -1,4 +1,4 @@
-import { MS_PER_MINUTE, type ChannelsSubmitBatchConfig } from "../shared/channels-submit-batch-config.js";
+import { MS_PER_SECOND, type ChannelsSubmitBatchConfig } from "../shared/channels-submit-batch-config.js";
 
 export const SUBMIT_ALL_PLATFORMS_BUTTON_ID = "submitAllPlatformsButton" as const;
 
@@ -21,8 +21,8 @@ export function bindSubmitAllPlatformsButton(
 export function allPlatformsSubmitBusyLabel(
   channelsBatch: ChannelsSubmitBatchConfig,
 ): string {
-  const intervalMin = String(Math.round(channelsBatch.batchIntervalMs / MS_PER_MINUTE));
-  return `正在提交 bilibili、douyin；视频号每批 ${String(channelsBatch.batchSize)} 个，间隔 ${intervalMin} 分钟…`;
+  const intervalSeconds = String(Math.round(channelsBatch.batchIntervalMs / MS_PER_SECOND));
+  return `正在提交 bilibili、douyin；视频号每批 ${String(channelsBatch.batchSize)} 个，间隔 ${intervalSeconds} 秒…`;
 }
 
 export function allPlatformsSubmitSuccessLabel(

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT_DIR = path.join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const EXTENSION_DIR = path.join(ROOT_DIR, "extension");
-const OUTPUT_DIR = path.join(ROOT_DIR, "packages-out");
+const OUTPUT_DIR = path.join(ROOT_DIR, "release");
 const ZIP_BINARY = "zip";
 
 /** Runtime files only: store packages must not ship TypeScript sources. */
@@ -36,6 +36,10 @@ async function readManifestVersion() {
 
 /** License files required when distributing the packaged extension. */
 const ROOT_DOC_ENTRIES = ["LICENSE", "NOTICE"];
+const EXAMPLE_ENTRIES = [
+	"examples/batch.job.example.json",
+	"examples/batch.job.example.xlsx",
+];
 
 function createZip(archivePath) {
 	const args = ["-r", "-X", "-q", archivePath, ...ZIP_ENTRIES, "-x", ...SKIPPED_PATTERNS];
@@ -59,6 +63,17 @@ function addRootDocs(archivePath) {
 	}
 }
 
+function addExamples(archivePath) {
+	const args = ["-r", "-X", "-q", archivePath, ...EXAMPLE_ENTRIES];
+	const result = spawnSync(ZIP_BINARY, args, { cwd: ROOT_DIR, stdio: "inherit" });
+	if (result.error) {
+		throw new Error(`failed to run ${ZIP_BINARY}: ${result.error.message}`);
+	}
+	if (result.status !== 0) {
+		throw new Error(`${ZIP_BINARY} exited with status ${String(result.status)}`);
+	}
+}
+
 async function main() {
 	const version = await readManifestVersion();
 	await mkdir(OUTPUT_DIR, { recursive: true });
@@ -71,6 +86,7 @@ async function main() {
 
 	createZip(chromeArchive);
 	addRootDocs(chromeArchive);
+	addExamples(chromeArchive);
 	await copyFile(chromeArchive, edgeArchive);
 
 	console.info(`[package] ${path.relative(ROOT_DIR, chromeArchive)}`);
